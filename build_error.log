@@ -1,0 +1,41 @@
+
+> modbus-scanner@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+
+./src/app/layout.tsx
+36:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/page.tsx
+57:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/Navigation.tsx
+23:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+   Collecting page data ...
+Error: No native build was found for platform=linux arch=x64 runtime=node abi=127 uv=1 libc=glibc node=22.22.0 webpack=true
+    loaded from: /home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server
+
+    at m.resolve.m.path (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/chunks/375.js:1:173802)
+    at m (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/chunks/375.js:1:172104)
+    at 5219 (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/chunks/375.js:1:17202)
+    at t (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/webpack-runtime.js:1:128)
+    at 3097 (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/chunks/375.js:1:14046)
+    at t (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/webpack-runtime.js:1:128)
+    at 4143 (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/chunks/375.js:1:5652)
+    at t (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/webpack-runtime.js:1:128)
+    at 6426 (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/chunks/375.js:1:9371)
+    at t (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/webpack-runtime.js:1:128)
+
+> Build error occurred
+Error: Failed to collect page data for /api/modbus/read
+    at /home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/node_modules/next/dist/build/utils.js:1269:15
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'Error'
+}

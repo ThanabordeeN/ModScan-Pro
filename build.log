@@ -1,0 +1,30 @@
+
+> modbus-scanner@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+Error: No native build was found for platform=linux arch=x64 runtime=node abi=127 uv=1 libc=glibc node=22.22.0 webpack=true
+    loaded from: /home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server
+
+    at m.resolve.m.path (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/chunks/841.js:12:18475)
+    at m (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/chunks/841.js:12:16777)
+    at 5219 (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/chunks/841.js:1:17202)
+    at t (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/webpack-runtime.js:1:128)
+    at 3097 (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/chunks/841.js:1:14046)
+    at t (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/webpack-runtime.js:1:128)
+    at 4143 (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/chunks/841.js:1:5652)
+    at t (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/webpack-runtime.js:1:128)
+    at 6426 (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/chunks/841.js:1:9371)
+    at t (/home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/.next/server/webpack-runtime.js:1:128)
+
+> Build error occurred
+Error: Failed to collect page data for /api/modbus/read
+    at /home/cepheusn-22/Documents/2edge/EVR/ModbusLib/modbus-scanner/node_modules/next/dist/build/utils.js:1269:15
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'Error'
+}

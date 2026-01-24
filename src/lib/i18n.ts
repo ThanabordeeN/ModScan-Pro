@@ -7,6 +7,7 @@ export const i18n = {
     nav_read: 'อ่าน',
     nav_write: 'เขียน',
     nav_change_id: 'เปลี่ยน ID',
+    nav_remote: 'รีโมท',
     
     // Common
     common_port: 'Port',
@@ -160,6 +161,7 @@ export const i18n = {
     nav_read: 'Read',
     nav_write: 'Write',
     nav_change_id: 'Change ID',
+    nav_remote: 'Remote',
     
     // Common
     common_port: 'Port',

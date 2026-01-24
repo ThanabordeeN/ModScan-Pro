@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, Settings, BookOpen, PenLine } from 'lucide-react';
+import { Search, Settings, BookOpen, PenLine, Globe } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageToggle from './LanguageToggle';
 
@@ -15,6 +15,7 @@ export default function Navigation() {
     { href: '/read', label: t('nav_read'), icon: BookOpen },
     { href: '/write', label: t('nav_write'), icon: PenLine },
     { href: '/change-address', label: t('nav_change_id'), icon: Settings },
+    { href: '/remote', label: t('nav_remote'), icon: Globe },
   ];
 
   return (

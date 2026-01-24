@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { PenLine, Loader2, XCircle, RefreshCw, Usb, AlertCircle, CheckCircle2, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import ConnectionSettings from '@/components/ConnectionSettings';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
 import type { SerialPortInfo } from '@/types/modbus';
@@ -10,7 +11,7 @@ import { BAUD_RATES, PARITY_OPTIONS, STOP_BITS_OPTIONS, DATA_BITS_OPTIONS } from
 
 
 export default function WritePage() {
-  const { connection, setConnection, scannedDevices } = useModbus();
+  const { connection, setConnection, scannedDevices, isConnectionReady } = useModbus();
   const { t } = useLanguage();
 
   const WRITE_FUNCTION_CODES = [
@@ -20,10 +21,7 @@ export default function WritePage() {
     { value: 16, label: 'FC16 - Write Multiple Registers', description: t('write_fc16_desc'), type: 'multiple_registers' },
   ];
   
-  // Port list
-  const [ports, setPorts] = useState<SerialPortInfo[]>([]);
-  const [loadingPorts, setLoadingPorts] = useState(false);
-  const [portError, setPortError] = useState<string | null>(null);
+
   
   // Write settings
   const [slaveAddress, setSlaveAddress] = useState(1);
@@ -42,33 +40,7 @@ export default function WritePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const fetchPorts = async () => {
-    setLoadingPorts(true);
-    setPortError(null);
-    
-    try {
-      const response = await fetch('/api/serial');
-      const data = await response.json();
-      
-      if (data.success) {
-        setPorts(data.ports);
-        if (data.ports.length > 0 && !connection.port) {
-          setConnection({ ...connection, port: data.ports[0].path });
-        }
-      } else {
-        setPortError(data.error || 'Failed to fetch ports');
-      }
-    } catch {
-      setPortError(t('err_connect_failed'));
-    } finally {
-      setLoadingPorts(false);
-    }
-  };
 
-  useEffect(() => {
-    fetchPorts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Reset values and messages when function code changes
   useEffect(() => {
@@ -81,7 +53,7 @@ export default function WritePage() {
   }, [functionCode]);
 
   const handleWrite = async () => {
-    if (!connection.port) {
+    if (!isConnectionReady) {
       setError(t('write_err_port'));
       return;
     }
@@ -91,11 +63,14 @@ export default function WritePage() {
     setSuccess(null);
 
     const requestBody: Record<string, unknown> = {
+      type: connection.type,
       port: connection.port,
       baudRate: connection.baudRate,
       parity: connection.parity,
       stopBits: connection.stopBits,
       dataBits: connection.dataBits,
+      tcpIp: connection.tcpIp,
+      tcpPort: connection.tcpPort,
       slaveAddress,
       functionCode,
       address,
@@ -181,97 +156,8 @@ export default function WritePage() {
         </div>
       </div>
 
-      {/* Connection Settings */}
-      <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-            <Usb className="w-5 h-5 text-purple-700" />
-            {t('write_connection_settings')}
-          </h2>
-          <button
-            onClick={fetchPorts}
-            disabled={loadingPorts}
-            className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 text-slate-600 ${loadingPorts ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-
-        {portError && (
-          <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-red-600" />
-            <span className="text-sm text-red-600">{portError}</span>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div className="col-span-2 md:col-span-1">
-            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_port')}</label>
-            <select
-              value={connection.port}
-              onChange={(e) => setConnection({ ...connection, port: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-            >
-              <option value="">{t('common_select_port')}</option>
-              {ports.map((port) => (
-                <option key={port.path} value={port.path}>{port.path}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_rate')}</label>
-            <select
-              value={connection.baudRate}
-              onChange={(e) => setConnection({ ...connection, baudRate: Number(e.target.value) })}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-            >
-              {BAUD_RATES.map((rate) => (
-                <option key={rate} value={rate}>{rate}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_data_bits')}</label>
-            <select
-              value={connection.dataBits}
-              onChange={(e) => setConnection({ ...connection, dataBits: Number(e.target.value) as 7 | 8 })}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-            >
-              {DATA_BITS_OPTIONS.map((bits) => (
-                <option key={bits} value={bits}>{bits}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_parity')}</label>
-            <select
-              value={connection.parity}
-              onChange={(e) => setConnection({ ...connection, parity: e.target.value as 'none' | 'even' | 'odd' })}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-            >
-              {PARITY_OPTIONS.map((p) => (
-                <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_stop_bits')}</label>
-            <select
-              value={connection.stopBits}
-              onChange={(e) => setConnection({ ...connection, stopBits: Number(e.target.value) as 1 | 2 })}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-            >
-              {STOP_BITS_OPTIONS.map((bits) => (
-                <option key={bits} value={bits}>{bits}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
+       {/* Connection Settings */}
+      <ConnectionSettings disabled={writing} />
 
       {/* Scanned Devices Quick Select */}
       {scannedDevices.length > 0 && (
@@ -511,7 +397,7 @@ export default function WritePage() {
 
         <button
           onClick={handleWrite}
-          disabled={writing || !connection.port}
+          disabled={writing || !isConnectionReady}
           className="w-full py-3 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
         >
           {writing ? (

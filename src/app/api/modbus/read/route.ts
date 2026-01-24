@@ -3,11 +3,14 @@ import { readModbusData, ReadFunctionCode } from '@/lib/modbus';
 import type { ConnectionConfig } from '@/types/modbus';
 
 interface ReadRequest {
+  type?: 'serial' | 'tcp';
   port: string;
   baudRate: number;
   parity: 'none' | 'even' | 'odd';
   stopBits: 1 | 2;
   dataBits: 7 | 8;
+  tcpIp?: string;
+  tcpPort?: number;
   slaveAddress: number;
   functionCode: ReadFunctionCode;
   registerAddress: number;
@@ -19,10 +22,17 @@ export async function POST(request: NextRequest) {
   try {
     const body: ReadRequest = await request.json();
     
-    const { port, baudRate, parity, stopBits, dataBits, slaveAddress, functionCode, registerAddress, quantity, timeout } = body;
+    const { port, baudRate, parity, stopBits, dataBits, slaveAddress, functionCode, registerAddress, quantity, timeout, type, tcpIp, tcpPort } = body;
     
     // Validate input
-    if (!port) {
+    if (type === 'tcp') {
+      if (!tcpIp || !tcpPort) {
+        return NextResponse.json(
+          { success: false, error: 'TCP IP and Port are required' },
+          { status: 400 }
+        );
+      }
+    } else if (!port) {
       return NextResponse.json(
         { success: false, error: 'Serial port is required' },
         { status: 400 }
@@ -51,11 +61,14 @@ export async function POST(request: NextRequest) {
     }
     
     const config: ConnectionConfig = {
+      type: type || 'serial',
       port,
       baudRate: baudRate || 9600,
       dataBits: dataBits || 8,
       stopBits: stopBits || 1,
       parity: parity || 'none',
+      tcpIp,
+      tcpPort,
     };
     
     const result = await readModbusData(

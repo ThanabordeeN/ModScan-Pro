@@ -28,6 +28,25 @@ export async function listSerialPorts(): Promise<SerialPortInfo[]> {
   }
 }
 
+async function connectClient(client: ModbusRTU, config: ConnectionConfig): Promise<void> {
+  if (config.type === 'tcp') {
+    if (!config.tcpIp || !config.tcpPort) {
+      throw new Error('TCP IP and Port are required');
+    }
+    await client.connectTCP(config.tcpIp, { port: config.tcpPort });
+  } else {
+    if (!config.port) {
+      throw new Error('Serial Port is required');
+    }
+    await client.connectRTUBuffered(config.port, {
+      baudRate: config.baudRate,
+      dataBits: config.dataBits,
+      stopBits: config.stopBits,
+      parity: config.parity,
+    });
+  }
+}
+
 export async function scanModbusAddress(
   config: ConnectionConfig,
   address: number,
@@ -36,12 +55,7 @@ export async function scanModbusAddress(
   const client = new ModbusRTU();
   
   try {
-    await client.connectRTUBuffered(config.port, {
-      baudRate: config.baudRate,
-      dataBits: config.dataBits,
-      stopBits: config.stopBits,
-      parity: config.parity,
-    });
+    await connectClient(client, config);
     
     client.setID(address);
     client.setTimeout(timeout);
@@ -79,12 +93,7 @@ export async function scanAddressRange(
   const client = new ModbusRTU();
   
   try {
-    await client.connectRTUBuffered(config.port, {
-      baudRate: config.baudRate,
-      dataBits: config.dataBits,
-      stopBits: config.stopBits,
-      parity: config.parity,
-    });
+    await connectClient(client, config);
     
     client.setTimeout(timeout);
     
@@ -135,12 +144,7 @@ export async function changeModbusAddress(
       return { success: false, error: 'New address must be between 1 and 247' };
     }
     
-    await client.connectRTUBuffered(config.port, {
-      baudRate: config.baudRate,
-      dataBits: config.dataBits,
-      stopBits: config.stopBits,
-      parity: config.parity,
-    });
+    await connectClient(client, config);
     
     client.setID(currentAddress);
     client.setTimeout(timeout);
@@ -159,12 +163,7 @@ export async function changeModbusAddress(
     // Verify the change by trying to communicate with new address
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    await client.connectRTUBuffered(config.port, {
-      baudRate: config.baudRate,
-      dataBits: config.dataBits,
-      stopBits: config.stopBits,
-      parity: config.parity,
-    });
+    await connectClient(client, config);
     
     client.setID(newAddress);
     client.setTimeout(timeout);
@@ -206,12 +205,7 @@ export async function readModbusData(
   const client = new ModbusRTU();
   
   try {
-    await client.connectRTUBuffered(config.port, {
-      baudRate: config.baudRate,
-      dataBits: config.dataBits,
-      stopBits: config.stopBits,
-      parity: config.parity,
-    });
+    await connectClient(client, config);
     
     client.setID(slaveAddress);
     client.setTimeout(timeout);
@@ -281,12 +275,7 @@ export async function writeSingleCoil(
   const client = new ModbusRTU();
   
   try {
-    await client.connectRTUBuffered(config.port, {
-      baudRate: config.baudRate,
-      dataBits: config.dataBits,
-      stopBits: config.stopBits,
-      parity: config.parity,
-    });
+    await connectClient(client, config);
     
     client.setID(slaveAddress);
     client.setTimeout(timeout);
@@ -315,12 +304,7 @@ export async function writeSingleRegister(
   const client = new ModbusRTU();
   
   try {
-    await client.connectRTUBuffered(config.port, {
-      baudRate: config.baudRate,
-      dataBits: config.dataBits,
-      stopBits: config.stopBits,
-      parity: config.parity,
-    });
+    await connectClient(client, config);
     
     client.setID(slaveAddress);
     client.setTimeout(timeout);
@@ -349,12 +333,7 @@ export async function writeMultipleCoils(
   const client = new ModbusRTU();
   
   try {
-    await client.connectRTUBuffered(config.port, {
-      baudRate: config.baudRate,
-      dataBits: config.dataBits,
-      stopBits: config.stopBits,
-      parity: config.parity,
-    });
+    await connectClient(client, config);
     
     client.setID(slaveAddress);
     client.setTimeout(timeout);
@@ -383,12 +362,7 @@ export async function writeMultipleRegisters(
   const client = new ModbusRTU();
   
   try {
-    await client.connectRTUBuffered(config.port, {
-      baudRate: config.baudRate,
-      dataBits: config.dataBits,
-      stopBits: config.stopBits,
-      parity: config.parity,
-    });
+    await connectClient(client, config);
     
     client.setID(slaveAddress);
     client.setTimeout(timeout);
@@ -422,12 +396,7 @@ export async function readModbusDataBatch(
   const results: ReadResult[] = [];
 
   try {
-    await client.connectRTUBuffered(config.port, {
-      baudRate: config.baudRate,
-      dataBits: config.dataBits,
-      stopBits: config.stopBits,
-      parity: config.parity,
-    });
+    await connectClient(client, config);
     
     client.setTimeout(timeout);
 

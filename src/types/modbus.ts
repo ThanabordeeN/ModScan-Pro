@@ -51,11 +51,14 @@ export interface ChangeAddressResult {
 }
 
 export interface ConnectionConfig {
-  port: string;
-  baudRate: number;
-  dataBits: 7 | 8;
-  stopBits: 1 | 2;
-  parity: 'none' | 'even' | 'odd';
+  type: 'serial' | 'tcp';
+  port: string; // Used for serial
+  baudRate: number; // Used for serial
+  dataBits: 7 | 8; // Used for serial
+  stopBits: 1 | 2; // Used for serial
+  parity: 'none' | 'even' | 'odd'; // Used for serial
+  tcpIp?: string; // Used for tcp
+  tcpPort?: number; // Used for tcp
 }
 
 // Common baud rates

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { BookOpen, Loader2, XCircle, RefreshCw, Usb, AlertCircle, CheckCircle2, Play, Square, Timer, Trash2, History, Plus, Minus } from 'lucide-react';
+import ConnectionSettings from '@/components/ConnectionSettings';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
 import type { SerialPortInfo } from '@/types/modbus';
@@ -26,7 +27,7 @@ interface ReadRange {
 
 
 export default function ReadPage() {
-  const { connection, setConnection, scannedDevices } = useModbus();
+  const { connection, setConnection, scannedDevices, isConnectionReady } = useModbus();
   const { t } = useLanguage();
 
   const READ_FUNCTION_CODES = [
@@ -35,12 +36,7 @@ export default function ReadPage() {
     { value: 3, label: 'FC03 - Read Holding Registers', description: t('read_holding_desc') || 'Read Holding Register (4x)' },
     { value: 4, label: 'FC04 - Read Input Registers', description: t('read_input_desc') || 'Read Input Register (3x)' },
   ];
-  
-  // Port list
-  const [ports, setPorts] = useState<SerialPortInfo[]>([]);
-  const [loadingPorts, setLoadingPorts] = useState(false);
-  const [portError, setPortError] = useState<string | null>(null);
-  
+
   // Read settings
   const [ranges, setRanges] = useState<ReadRange[]>([
     { id: 'default', slaveAddress: 1, functionCode: 3, registerAddress: 0, quantity: 10 }
@@ -62,33 +58,7 @@ export default function ReadPage() {
   const [error, setError] = useState<string | null>(null);
   const [readData, setReadData] = useState<{rangeId: string, data: number[]}[] | null>(null);
 
-  const fetchPorts = async () => {
-    setLoadingPorts(true);
-    setPortError(null);
-    
-    try {
-      const response = await fetch('/api/serial');
-      const data = await response.json();
-      
-      if (data.success) {
-        setPorts(data.ports);
-        if (data.ports.length > 0 && !connection.port) {
-          setConnection({ ...connection, port: data.ports[0].path });
-        }
-      } else {
-        setPortError(data.error || 'Failed to fetch ports');
-      }
-    } catch {
-      setPortError('Failed to connect to server');
-    } finally {
-      setLoadingPorts(false);
-    }
-  };
 
-  useEffect(() => {
-    fetchPorts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Reset data and error when ranges change
   useEffect(() => {
@@ -103,7 +73,7 @@ export default function ReadPage() {
   }, []);
 
   const handleRead = async () => {
-    if (!connection.port) {
+    if (!isConnectionReady) {
       setError(t('err_select_port'));
       return;
     }
@@ -135,11 +105,14 @@ export default function ReadPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          type: connection.type,
           port: connection.port,
           baudRate: connection.baudRate,
           parity: connection.parity,
           stopBits: connection.stopBits,
           dataBits: connection.dataBits,
+          tcpIp: connection.tcpIp,
+          tcpPort: connection.tcpPort,
           requests,
           timeout,
         }),
@@ -200,8 +173,8 @@ export default function ReadPage() {
   };
 
   const startAutoRefresh = () => {
-    if (!connection.port) {
-      setError('กรุณาเลือก Serial Port ก่อน');
+    if (!isConnectionReady) {
+      setError('กรุณาเลือก Serial Port / Connection ก่อน');
       return;
     }
     setIsAutoRefresh(true);
@@ -273,102 +246,7 @@ export default function ReadPage() {
       </div>
 
       {/* Connection Settings */}
-      <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-            <Usb className="w-5 h-5 text-emerald-700" />
-            {t('read_connection_settings')}
-          </h2>
-          <button
-            onClick={fetchPorts}
-            disabled={loadingPorts || isAutoRefresh}
-            className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 text-slate-600 ${loadingPorts ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-
-        {portError && (
-          <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-red-600" />
-            <span className="text-sm text-red-600">{portError}</span>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {/* ... Port Selections (Existing) ... */}
-           <div className="col-span-2 md:col-span-1">
-            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_port')}</label>
-            <select
-              value={connection.port}
-              onChange={(e) => setConnection({ ...connection, port: e.target.value })}
-              disabled={isAutoRefresh}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 disabled:text-slate-500"
-            >
-              <option value="">{t('common_select_port')}</option>
-              {ports.map((port) => (
-                <option key={port.path} value={port.path}>{port.path}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_rate')}</label>
-            <select
-              value={connection.baudRate}
-              onChange={(e) => setConnection({ ...connection, baudRate: Number(e.target.value) })}
-              disabled={isAutoRefresh}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 disabled:text-slate-500"
-            >
-              {BAUD_RATES.map((rate) => (
-                <option key={rate} value={rate}>{rate}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_data_bits')}</label>
-            <select
-              value={connection.dataBits}
-              onChange={(e) => setConnection({ ...connection, dataBits: Number(e.target.value) as 7 | 8 })}
-              disabled={isAutoRefresh}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 disabled:text-slate-500"
-            >
-              {DATA_BITS_OPTIONS.map((bits) => (
-                <option key={bits} value={bits}>{bits}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_parity')}</label>
-            <select
-              value={connection.parity}
-              onChange={(e) => setConnection({ ...connection, parity: e.target.value as 'none' | 'even' | 'odd' })}
-              disabled={isAutoRefresh}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 disabled:text-slate-500"
-            >
-              {PARITY_OPTIONS.map((p) => (
-                <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_stop_bits')}</label>
-            <select
-              value={connection.stopBits}
-              onChange={(e) => setConnection({ ...connection, stopBits: Number(e.target.value) as 1 | 2 })}
-              disabled={isAutoRefresh}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 disabled:text-slate-500"
-            >
-              {STOP_BITS_OPTIONS.map((bits) => (
-                <option key={bits} value={bits}>{bits}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
+      <ConnectionSettings disabled={reading || isAutoRefresh} />
 
       {/* Scanned Devices Quick Select */}
       {scannedDevices.length > 0 && (
@@ -525,7 +403,7 @@ export default function ReadPage() {
                <div className="flex gap-2 w-full md:w-auto">
                  <button
                   onClick={handleRead}
-                  disabled={reading || !connection.port || isAutoRefresh}
+                  disabled={reading || !isConnectionReady || isAutoRefresh}
                   className="flex-1 md:flex-none py-2 px-4 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:bg-slate-50 disabled:text-slate-400 text-slate-700 font-medium transition-all duration-200 flex items-center justify-center gap-2"
                 >
                   {reading && !isAutoRefresh ? (
@@ -538,7 +416,7 @@ export default function ReadPage() {
 
                 <button
                   onClick={toggleAutoRefresh}
-                  disabled={!connection.port && !isAutoRefresh}
+                  disabled={!isConnectionReady && !isAutoRefresh}
                   className={`flex-1 md:flex-none py-2 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm ${
                     isAutoRefresh 
                       ? 'bg-red-500 hover:bg-red-600 text-white' 

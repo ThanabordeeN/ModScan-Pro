@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "js-cookie": "^3.0.5",
+    "localtunnel": "^2.0.2",
     "lucide-react": "^0.562.0",
     "modbus-serial": "^8.0.23",
     "next": "14.2.35",
@@ -18,6 +20,8 @@
     "serialport": "^13.0.0"
   },
   "devDependencies": {
+    "@types/js-cookie": "^3.0.6",
+    "@types/localtunnel": "^2.0.4",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

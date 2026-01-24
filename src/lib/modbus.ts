@@ -5,14 +5,23 @@ import type { SerialPortInfo, ModbusDevice, ConnectionConfig } from '@/types/mod
 export async function listSerialPorts(): Promise<SerialPortInfo[]> {
   try {
     const ports = await SerialPort.list();
-    return ports.map(port => ({
-      path: port.path,
-      manufacturer: port.manufacturer,
-      serialNumber: port.serialNumber,
-      pnpId: port.pnpId,
-      vendorId: port.vendorId,
-      productId: port.productId,
-    }));
+    return ports
+      .filter(port => {
+        // Filter out linux standard serial ports that often appear even if not present/connected
+        // unless they have explicit vendor/product IDs indicating a real device
+        if (port.path.includes('ttyS') || port.path.includes('ttyprintk')) {
+          return !!(port.vendorId || port.productId);
+        }
+        return true;
+      })
+      .map(port => ({
+        path: port.path,
+        manufacturer: port.manufacturer,
+        serialNumber: port.serialNumber,
+        pnpId: port.pnpId,
+        vendorId: port.vendorId,
+        productId: port.productId,
+      }));
   } catch (error) {
     console.error('Error listing serial ports:', error);
     return [];
@@ -392,6 +401,84 @@ export async function writeMultipleRegisters(
     try { await client.close(() => {}); } catch {}
     return {
       success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+    };
+  }
+}
+
+export interface BatchReadRequest {
+  slaveAddress: number;
+  functionCode: ReadFunctionCode;
+  registerAddress: number;
+  quantity: number;
+}
+
+export async function readModbusDataBatch(
+  config: ConnectionConfig,
+  requests: BatchReadRequest[],
+  timeout: number = 1000
+): Promise<{ results: ReadResult[], error?: string }> {
+  const client = new ModbusRTU();
+  const results: ReadResult[] = [];
+
+  try {
+    await client.connectRTUBuffered(config.port, {
+      baudRate: config.baudRate,
+      dataBits: config.dataBits,
+      stopBits: config.stopBits,
+      parity: config.parity,
+    });
+    
+    client.setTimeout(timeout);
+
+    for (const req of requests) {
+      client.setID(req.slaveAddress);
+      
+      try {
+        let data: number[];
+        
+        switch (req.functionCode) {
+          case 1: {
+            const result = await client.readCoils(req.registerAddress, req.quantity);
+            data = result.data.map(v => v ? 1 : 0);
+            break;
+          }
+          case 2: {
+            const result = await client.readDiscreteInputs(req.registerAddress, req.quantity);
+            data = result.data.map(v => v ? 1 : 0);
+            break;
+          }
+          case 3: {
+            const result = await client.readHoldingRegisters(req.registerAddress, req.quantity);
+            data = result.data;
+            break;
+          }
+          case 4: {
+            const result = await client.readInputRegisters(req.registerAddress, req.quantity);
+            data = result.data;
+            break;
+          }
+          default:
+            throw new Error(`Unsupported function code: ${req.functionCode}`);
+        }
+        
+        results.push({ success: true, data });
+      } catch (error) {
+         results.push({
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error occurred',
+        });
+      }
+    }
+    
+    await client.close(() => {});
+    return { results };
+
+  } catch (error) {
+    try { await client.close(() => {}); } catch {}
+    
+    return {
+      results: [],
       error: error instanceof Error ? error.message : 'Unknown error occurred',
     };
   }

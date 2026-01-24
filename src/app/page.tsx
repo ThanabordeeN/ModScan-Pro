@@ -2,38 +2,40 @@
 
 import Link from 'next/link';
 import { Search, BookOpen, PenLine, Settings, ArrowRight, Zap } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function Home() {
+  const { t } = useLanguage();
   const features = [
     {
       href: '/scan',
       icon: Search,
-      title: 'สแกนอุปกรณ์',
-      description: 'ค้นหาอุปกรณ์ Modbus ในช่วง Address 1-247',
+      title: t('nav_scan'),
+      description: t('home_scan_desc'),
       color: 'cyan',
       tags: ['FC03'],
     },
     {
       href: '/read',
       icon: BookOpen,
-      title: 'อ่านข้อมูล',
-      description: 'อ่าน Coils และ Registers (FC01-04)',
+      title: t('nav_read'),
+      description: t('home_read_desc'),
       color: 'emerald',
       tags: ['FC01', 'FC02', 'FC03', 'FC04'],
     },
     {
       href: '/write',
       icon: PenLine,
-      title: 'เขียนข้อมูล',
-      description: 'เขียน Coils และ Registers (FC05, 06, 15, 16)',
+      title: t('nav_write'),
+      description: t('home_write_desc'),
       color: 'purple',
       tags: ['FC05', 'FC06', 'FC15', 'FC16'],
     },
     {
       href: '/change-address',
       icon: Settings,
-      title: 'เปลี่ยน Address',
-      description: 'เปลี่ยน Slave ID ของอุปกรณ์',
+      title: t('nav_change_id'),
+      description: t('home_change_id_desc'),
       color: 'amber',
       tags: ['Config'],
     },
@@ -57,10 +59,10 @@ export default function Home() {
           <img src="/logo.svg" alt="ModScan Pro" className="w-24 h-24" />
         </div>
         <h1 className="text-5xl font-bold text-slate-900 mb-4 tracking-tight">
-          ModScan Pro
+          {t('home_title')}
         </h1>
         <p className="text-lg text-slate-600 max-w-xl mx-auto">
-          เครื่องมือครบวงจรสำหรับอุปกรณ์ Modbus RTU
+          {t('home_subtitle')}
         </p>
         <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-xs font-medium text-slate-600">
           <span>By 2EDGE Technology Co.,Ltd</span>
@@ -110,9 +112,9 @@ export default function Home() {
         <div className="flex items-start gap-3">
           <Zap className="w-5 h-5 text-slate-900 mt-0.5" />
           <div>
-            <h3 className="text-sm font-medium text-slate-900 mb-1">เริ่มต้นใช้งาน</h3>
+            <h3 className="text-sm font-medium text-slate-900 mb-1">{t('home_start_title')}</h3>
             <p className="text-sm text-slate-600">
-              เชื่อมต่อ USB-to-RS485 → สแกนหาอุปกรณ์ → อ่าน/เขียนข้อมูล
+              {t('home_start_desc')}
             </p>
           </div>
         </div>

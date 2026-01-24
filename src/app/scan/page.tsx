@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { Search, Loader2, CheckCircle2, XCircle, RefreshCw, Usb, AlertCircle } from 'lucide-react';
 import { useModbus } from '@/context/ModbusContext';
+import { useLanguage } from '@/context/LanguageContext';
 import type { SerialPortInfo } from '@/types/modbus';
 import { BAUD_RATES, PARITY_OPTIONS, STOP_BITS_OPTIONS, DATA_BITS_OPTIONS } from '@/types/modbus';
 import { useEffect } from 'react';
 
 export default function ScanPage() {
   const { connection, setConnection, scannedDevices, setScannedDevices } = useModbus();
+  const { t } = useLanguage();
   
   // Port list
   const [ports, setPorts] = useState<SerialPortInfo[]>([]);
@@ -41,7 +43,7 @@ export default function ScanPage() {
         setPortError(data.error || 'Failed to fetch ports');
       }
     } catch {
-      setPortError('Failed to connect to server');
+      setPortError(t('err_connect_failed'));
     } finally {
       setLoadingPorts(false);
     }
@@ -54,7 +56,7 @@ export default function ScanPage() {
 
   const handleScan = async () => {
     if (!connection.port) {
-      setScanError('กรุณาเลือก Serial Port ก่อน');
+      setScanError(t('scan_err_port'));
       return;
     }
 
@@ -86,10 +88,10 @@ export default function ScanPage() {
         setScannedCount(data.scannedCount);
         setHasScanned(true);
       } else {
-        setScanError(data.error || 'การสแกนล้มเหลว');
+        setScanError(data.error || t('scan_err_failed'));
       }
     } catch {
-      setScanError('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์');
+      setScanError(t('err_connect_failed'));
     } finally {
       setScanning(false);
     }
@@ -103,8 +105,8 @@ export default function ScanPage() {
           <Search className="w-6 h-6" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">สแกนอุปกรณ์</h1>
-          <p className="text-sm text-slate-600">ค้นหาอุปกรณ์ Modbus ในช่วง Address ที่กำหนด</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t('scan_title')}</h1>
+          <p className="text-sm text-slate-600">{t('scan_subtitle')}</p>
         </div>
       </div>
 
@@ -113,7 +115,7 @@ export default function ScanPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
             <Usb className="w-5 h-5 text-cyan-700" />
-            การตั้งค่าการเชื่อมต่อ
+            {t('scan_connection_settings')}
           </h2>
           <button
             onClick={fetchPorts}
@@ -134,13 +136,13 @@ export default function ScanPage() {
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <div className="col-span-2 md:col-span-1">
-            <label className="block text-sm font-medium text-slate-600 mb-2">Serial Port</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_port')}</label>
             <select
               value={connection.port}
               onChange={(e) => setConnection({ ...connection, port: e.target.value })}
               className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
             >
-              <option value="">เลือก Port...</option>
+              <option value="">{t('common_select_port')}</option>
               {ports.map((port) => (
                 <option key={port.path} value={port.path}>
                   {port.path}
@@ -150,7 +152,7 @@ export default function ScanPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Baud Rate</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_rate')}</label>
             <select
               value={connection.baudRate}
               onChange={(e) => setConnection({ ...connection, baudRate: Number(e.target.value) })}
@@ -163,7 +165,7 @@ export default function ScanPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Data Bits</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_data_bits')}</label>
             <select
               value={connection.dataBits}
               onChange={(e) => setConnection({ ...connection, dataBits: Number(e.target.value) as 7 | 8 })}
@@ -176,7 +178,7 @@ export default function ScanPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Parity</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_parity')}</label>
             <select
               value={connection.parity}
               onChange={(e) => setConnection({ ...connection, parity: e.target.value as 'none' | 'even' | 'odd' })}
@@ -189,7 +191,7 @@ export default function ScanPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Stop Bits</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_stop_bits')}</label>
             <select
               value={connection.stopBits}
               onChange={(e) => setConnection({ ...connection, stopBits: Number(e.target.value) as 1 | 2 })}
@@ -205,11 +207,11 @@ export default function ScanPage() {
 
       {/* Scan Settings */}
       <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">ช่วง Address ที่ต้องการสแกน</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('scan_range_settings')}</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Start Address</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('scan_start_address')}</label>
             <input
               type="number"
               min={1}
@@ -221,7 +223,7 @@ export default function ScanPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">End Address</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('scan_end_address')}</label>
             <input
               type="number"
               min={1}
@@ -233,7 +235,7 @@ export default function ScanPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Timeout (ms)</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('scan_timeout')}</label>
             <input
               type="number"
               min={100}
@@ -254,12 +256,12 @@ export default function ScanPage() {
           {scanning ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              กำลังสแกน...
+              {t('scan_scanning')}
             </>
           ) : (
             <>
               <Search className="w-5 h-5" />
-              เริ่มสแกน
+              {t('scan_start_btn')}
             </>
           )}
         </button>
@@ -284,26 +286,26 @@ export default function ScanPage() {
       {hasScanned && !scanning && (
         <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">ผลการสแกน</h2>
+            <h2 className="text-lg font-semibold text-slate-900">{t('scan_results')}</h2>
             <span className="text-sm text-slate-500">
-              พบ {scannedDevices.length} อุปกรณ์ จาก {scannedCount} Address
+              {t('scan_found_count').replace('{found}', scannedDevices.length.toString()).replace('{scanned}', scannedCount.toString())}
             </span>
           </div>
 
           {scannedDevices.length === 0 ? (
             <div className="p-8 rounded-lg bg-slate-50 border border-slate-200 text-center">
               <XCircle className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-              <p className="text-slate-500">ไม่พบอุปกรณ์ในช่วง Address ที่กำหนด</p>
+              <p className="text-slate-500">{t('scan_no_devices')}</p>
             </div>
           ) : (
             <div className="overflow-hidden rounded-lg border border-slate-200">
               <table className="w-full">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Address</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Response</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">สถานะ</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Register[0]</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">{t('scan_header_address')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">{t('scan_header_response')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">{t('scan_header_status')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">{t('scan_header_register')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -318,7 +320,7 @@ export default function ScanPage() {
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center gap-1.5 text-emerald-600">
                           <CheckCircle2 className="w-4 h-4" />
-                          ออนไลน์
+                          {t('scan_status_online')}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-slate-700 font-mono">

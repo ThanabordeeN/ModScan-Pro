@@ -3,18 +3,22 @@
 import { useState, useEffect } from 'react';
 import { PenLine, Loader2, XCircle, RefreshCw, Usb, AlertCircle, CheckCircle2, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { useModbus } from '@/context/ModbusContext';
+import { useLanguage } from '@/context/LanguageContext';
 import type { SerialPortInfo } from '@/types/modbus';
 import { BAUD_RATES, PARITY_OPTIONS, STOP_BITS_OPTIONS, DATA_BITS_OPTIONS } from '@/types/modbus';
 
-const WRITE_FUNCTION_CODES = [
-  { value: 5, label: 'FC05 - Write Single Coil', description: 'เขียน Coil เดียว (ON/OFF)', type: 'single_coil' },
-  { value: 6, label: 'FC06 - Write Single Register', description: 'เขียน Register เดียว (0-65535)', type: 'single_register' },
-  { value: 15, label: 'FC15 - Write Multiple Coils', description: 'เขียนหลาย Coils พร้อมกัน', type: 'multiple_coils' },
-  { value: 16, label: 'FC16 - Write Multiple Registers', description: 'เขียนหลาย Registers พร้อมกัน', type: 'multiple_registers' },
-];
+
 
 export default function WritePage() {
   const { connection, setConnection, scannedDevices } = useModbus();
+  const { t } = useLanguage();
+
+  const WRITE_FUNCTION_CODES = [
+    { value: 5, label: 'FC05 - Write Single Coil', description: t('write_fc5_desc'), type: 'single_coil' },
+    { value: 6, label: 'FC06 - Write Single Register', description: t('write_fc6_desc'), type: 'single_register' },
+    { value: 15, label: 'FC15 - Write Multiple Coils', description: t('write_fc15_desc'), type: 'multiple_coils' },
+    { value: 16, label: 'FC16 - Write Multiple Registers', description: t('write_fc16_desc'), type: 'multiple_registers' },
+  ];
   
   // Port list
   const [ports, setPorts] = useState<SerialPortInfo[]>([]);
@@ -55,7 +59,7 @@ export default function WritePage() {
         setPortError(data.error || 'Failed to fetch ports');
       }
     } catch {
-      setPortError('Failed to connect to server');
+      setPortError(t('err_connect_failed'));
     } finally {
       setLoadingPorts(false);
     }
@@ -78,7 +82,7 @@ export default function WritePage() {
 
   const handleWrite = async () => {
     if (!connection.port) {
-      setError('กรุณาเลือก Serial Port ก่อน');
+      setError(t('write_err_port'));
       return;
     }
 
@@ -124,12 +128,12 @@ export default function WritePage() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess(data.message || 'เขียนข้อมูลสำเร็จ!');
+        setSuccess(data.message || t('write_success'));
       } else {
-        setError(data.error || 'การเขียนข้อมูลล้มเหลว');
+        setError(data.error || t('write_failed'));
       }
     } catch {
-      setError('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์');
+      setError(t('err_connect_failed'));
     } finally {
       setWriting(false);
     }
@@ -161,8 +165,8 @@ export default function WritePage() {
           <PenLine className="w-6 h-6" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">เขียนข้อมูล</h1>
-          <p className="text-sm text-slate-600">เขียนค่า Coils และ Registers ไปยังอุปกรณ์ Modbus</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t('write_title')}</h1>
+          <p className="text-sm text-slate-600">{t('write_subtitle')}</p>
         </div>
       </div>
 
@@ -171,8 +175,8 @@ export default function WritePage() {
         <div className="flex items-start gap-2">
           <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-amber-800 font-medium">คำเตือน: การเขียนข้อมูลจะเปลี่ยนแปลงค่าในอุปกรณ์</p>
-            <p className="text-sm text-amber-600 mt-1">โปรดตรวจสอบ Address และค่าที่ต้องการเขียนให้ถูกต้องก่อนกดยืนยัน</p>
+            <p className="text-sm text-amber-800 font-medium">{t('write_warning_title')}</p>
+            <p className="text-sm text-amber-600 mt-1">{t('write_warning_desc')}</p>
           </div>
         </div>
       </div>
@@ -182,7 +186,7 @@ export default function WritePage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
             <Usb className="w-5 h-5 text-purple-700" />
-            การตั้งค่าการเชื่อมต่อ
+            {t('write_connection_settings')}
           </h2>
           <button
             onClick={fetchPorts}
@@ -202,13 +206,13 @@ export default function WritePage() {
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <div className="col-span-2 md:col-span-1">
-            <label className="block text-sm font-medium text-slate-600 mb-2">Serial Port</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_port')}</label>
             <select
               value={connection.port}
               onChange={(e) => setConnection({ ...connection, port: e.target.value })}
               className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
             >
-              <option value="">เลือก Port...</option>
+              <option value="">{t('common_select_port')}</option>
               {ports.map((port) => (
                 <option key={port.path} value={port.path}>{port.path}</option>
               ))}
@@ -216,7 +220,7 @@ export default function WritePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Baud Rate</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_rate')}</label>
             <select
               value={connection.baudRate}
               onChange={(e) => setConnection({ ...connection, baudRate: Number(e.target.value) })}
@@ -229,7 +233,7 @@ export default function WritePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Data Bits</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_data_bits')}</label>
             <select
               value={connection.dataBits}
               onChange={(e) => setConnection({ ...connection, dataBits: Number(e.target.value) as 7 | 8 })}
@@ -242,7 +246,7 @@ export default function WritePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Parity</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_parity')}</label>
             <select
               value={connection.parity}
               onChange={(e) => setConnection({ ...connection, parity: e.target.value as 'none' | 'even' | 'odd' })}
@@ -255,7 +259,7 @@ export default function WritePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Stop Bits</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('common_stop_bits')}</label>
             <select
               value={connection.stopBits}
               onChange={(e) => setConnection({ ...connection, stopBits: Number(e.target.value) as 1 | 2 })}
@@ -274,7 +278,7 @@ export default function WritePage() {
         <div className="bg-white rounded-xl p-4 border border-purple-500/30 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <CheckCircle2 className="w-5 h-5 text-purple-600" />
-            <span className="text-sm font-medium text-slate-900">เลือกจากอุปกรณ์ที่สแกนได้:</span>
+            <span className="text-sm font-medium text-slate-900">{t('write_select_scanned')}</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {scannedDevices.map((device) => (
@@ -296,11 +300,11 @@ export default function WritePage() {
 
       {/* Write Settings */}
       <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">ตั้งค่าการเขียน</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('write_settings')}</h2>
         
         {/* Function Code Selection */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-600 mb-2">Function Code</label>
+          <label className="block text-sm font-medium text-slate-600 mb-2">{t('write_function_code')}</label>
           <select
             value={functionCode.toString()}
             onChange={(e) => {
@@ -322,7 +326,7 @@ export default function WritePage() {
         {/* Common Fields */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Slave Address</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('write_slave_address')}</label>
             <input
               type="number"
               min={1}
@@ -335,7 +339,7 @@ export default function WritePage() {
 
           <div>
             <label className="block text-sm font-medium text-slate-600 mb-2">
-              {functionCode === 5 || functionCode === 15 ? 'Coil Address' : 'Register Address'}
+              {functionCode === 5 || functionCode === 15 ? t('write_coil_address') : t('write_register_address')}
             </label>
             <input
               type="number"
@@ -348,7 +352,7 @@ export default function WritePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Timeout (ms)</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('write_timeout')}</label>
             <input
               type="number"
               min={100}
@@ -373,7 +377,7 @@ export default function WritePage() {
           {/* FC05 - Single Coil */}
           {functionCode === 5 && (
             <div className="flex items-center gap-4">
-              <span className="text-slate-600">ค่า Coil:</span>
+              <span className="text-slate-600">{t('write_value_coil')}</span>
               <button
                 onClick={() => setSingleCoilValue(!singleCoilValue)}
                 className={`px-6 py-3 rounded-lg font-medium transition-all ${
@@ -391,7 +395,7 @@ export default function WritePage() {
           {functionCode === 6 && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-600 mb-2">ค่า (Decimal)</label>
+                <label className="block text-sm font-medium text-slate-600 mb-2">{t('write_value_dec')}</label>
                 <input
                   type="number"
                   min={0}
@@ -402,13 +406,13 @@ export default function WritePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-600 mb-2">Hex</label>
+                <label className="block text-sm font-medium text-slate-600 mb-2">{t('write_value_hex')}</label>
                 <div className="px-3 py-2 rounded-lg bg-slate-100 border border-slate-300 text-slate-600 font-mono">
                   0x{singleRegisterValue.toString(16).toUpperCase().padStart(4, '0')}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-600 mb-2">Binary</label>
+                <label className="block text-sm font-medium text-slate-600 mb-2">{t('write_value_bin')}</label>
                 <div className="px-3 py-2 rounded-lg bg-slate-100 border border-slate-300 text-slate-600 font-mono text-xs overflow-hidden">
                   {singleRegisterValue.toString(2).padStart(16, '0')}
                 </div>
@@ -513,12 +517,12 @@ export default function WritePage() {
           {writing ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              กำลังเขียนข้อมูล...
+              {t('write_writing')}
             </>
           ) : (
             <>
               <PenLine className="w-5 h-5" />
-              เขียนข้อมูล
+              {t('write_btn')}
             </>
           )}
         </button>

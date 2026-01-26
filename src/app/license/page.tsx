@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Key, Copy, Check, Lock, Loader2, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { licenseAPI } from '@/lib/electron-api';
 
 export default function LicensePage() {
   const router = useRouter();
@@ -21,11 +22,10 @@ export default function LicensePage() {
 
   const checkStatus = async () => {
     try {
-      const res = await fetch('/api/license');
-      const data = await res.json();
+      const data = await licenseAPI.check();
       
       if (data.success) {
-        setMachineId(data.machineId);
+        setMachineId(data.machineId || '');
         if (data.valid) {
           setStatus('valid');
           setTimeout(() => router.push('/scan'), 2000); // Redirect if valid
@@ -55,15 +55,7 @@ export default function LicensePage() {
     setError(null);
 
     try {
-      const res = await fetch('/api/license', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ licenseKey: licenseKey.trim() }),
-      });
-
-      const data = await res.json();
+      const data = await licenseAPI.activate(licenseKey.trim());
 
       if (data.success && data.valid) {
         setStatus('valid');

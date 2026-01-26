@@ -7,6 +7,7 @@ import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
 import type { SerialPortInfo } from '@/types/modbus';
 import { useEffect } from 'react';
+import { modbusAPI } from '@/lib/electron-api';
 
 export default function ScanPage() {
   const { connection, setConnection, scannedDevices, setScannedDevices, isConnectionReady } = useModbus();
@@ -35,29 +36,23 @@ export default function ScanPage() {
     setHasScanned(false);
 
     try {
-      const response = await fetch('/api/modbus/scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: connection.type,
-          port: connection.port,
-          baudRate: connection.baudRate,
-          parity: connection.parity,
-          stopBits: connection.stopBits,
-          dataBits: connection.dataBits,
-          tcpIp: connection.tcpIp,
-          tcpPort: connection.tcpPort,
-          startAddress,
-          endAddress,
-          timeout,
-        }),
+      const data = await modbusAPI.scan({
+        type: connection.type,
+        port: connection.port,
+        baudRate: connection.baudRate,
+        parity: connection.parity,
+        stopBits: connection.stopBits,
+        dataBits: connection.dataBits,
+        tcpIp: connection.tcpIp,
+        tcpPort: connection.tcpPort,
+        startAddress,
+        endAddress,
+        timeout,
       });
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (data.success && data.devices) {
         setScannedDevices(data.devices);
-        setScannedCount(data.scannedCount);
+        setScannedCount(data.scannedCount || 0);
         setHasScanned(true);
       } else {
         setScanError(data.error || t('scan_err_failed'));

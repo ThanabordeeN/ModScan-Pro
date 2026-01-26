@@ -2,13 +2,21 @@
   "name": "modbus-scanner",
   "version": "0.1.0",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "electron:dev": "concurrently \"cross-env NODE_ENV=development npm run dev\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
+    "electron:build": "npm run build && electron-builder",
+    "electron:pack": "electron-builder --dir"
   },
   "dependencies": {
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^40.0.0",
+    "electron-builder": "^26.4.0",
     "js-cookie": "^3.0.5",
     "localtunnel": "^2.0.2",
     "lucide-react": "^0.562.0",
@@ -17,7 +25,8 @@
     "node-machine-id": "^1.1.12",
     "react": "^18",
     "react-dom": "^18",
-    "serialport": "^13.0.0"
+    "serialport": "^13.0.0",
+    "wait-on": "^9.0.3"
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.6",

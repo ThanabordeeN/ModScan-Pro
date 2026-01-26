@@ -7,6 +7,7 @@ import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
 import type { SerialPortInfo } from '@/types/modbus';
 import { BAUD_RATES, PARITY_OPTIONS, STOP_BITS_OPTIONS, DATA_BITS_OPTIONS } from '@/types/modbus';
+import { modbusAPI } from '@/lib/electron-api';
 
 interface LogEntry {
   id: number;
@@ -96,35 +97,29 @@ export default function ReadPage() {
     try {
       const requests = ranges.map(range => ({
         slaveAddress: range.slaveAddress,
-        functionCode: range.functionCode,
+        functionCode: range.functionCode as 1 | 2 | 3 | 4,
         registerAddress: range.registerAddress,
         quantity: range.quantity
       }));
 
-      const response = await fetch('/api/modbus/read-batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: connection.type,
-          port: connection.port,
-          baudRate: connection.baudRate,
-          parity: connection.parity,
-          stopBits: connection.stopBits,
-          dataBits: connection.dataBits,
-          tcpIp: connection.tcpIp,
-          tcpPort: connection.tcpPort,
-          requests,
-          timeout,
-        }),
+      const data = await modbusAPI.readBatch({
+        type: connection.type,
+        port: connection.port,
+        baudRate: connection.baudRate,
+        parity: connection.parity,
+        stopBits: connection.stopBits,
+        dataBits: connection.dataBits,
+        tcpIp: connection.tcpIp,
+        tcpPort: connection.tcpPort,
+        requests,
+        timeout,
       });
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (!data.error) {
         // Map results back to ranges
-        const mappedData = data.results.map((res: any, idx: number) => ({
+        const mappedData = data.results.map((res: { success: boolean; data?: number[] }, idx: number) => ({
           rangeId: ranges[idx].id,
-          data: res.success ? res.data : [] // Handle potential error per range
+          data: res.success && res.data ? res.data : []
         }));
 
         setReadData(mappedData);

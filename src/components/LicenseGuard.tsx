@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { licenseAPI } from '@/lib/electron-api';
 
 export default function LicenseGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -13,8 +14,7 @@ export default function LicenseGuard({ children }: { children: React.ReactNode }
   useEffect(() => {
     const checkLicense = async () => {
       try {
-        const res = await fetch('/api/license');
-        const data = await res.json();
+        const data = await licenseAPI.check();
         const isValid = data.success && data.valid;
 
         if (!isValid && pathname !== '/license') {

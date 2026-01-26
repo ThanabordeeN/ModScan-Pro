@@ -8,6 +8,7 @@ import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
 import type { SerialPortInfo } from '@/types/modbus';
 import { FUNCTION_CODE_OPTIONS } from '@/types/modbus';
+import { modbusAPI } from '@/lib/electron-api';
 
 export default function ChangeAddressPage() {
   const { connection, setConnection, scannedDevices, isConnectionReady } = useModbus();
@@ -45,31 +46,25 @@ export default function ChangeAddressPage() {
     setShowConfirm(false);
 
     try {
-      const response = await fetch('/api/modbus/change-address', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: connection.type,
-          port: connection.port,
-          baudRate: connection.baudRate,
-          parity: connection.parity,
-          stopBits: connection.stopBits,
-          dataBits: connection.dataBits,
-          tcpIp: connection.tcpIp,
-          tcpPort: connection.tcpPort,
-          currentAddress,
-          newAddress,
-          registerAddress,
-          functionCode,
-        }),
+      const data = await modbusAPI.changeAddress({
+        type: connection.type,
+        port: connection.port,
+        baudRate: connection.baudRate,
+        parity: connection.parity,
+        stopBits: connection.stopBits,
+        dataBits: connection.dataBits,
+        tcpIp: connection.tcpIp,
+        tcpPort: connection.tcpPort,
+        currentAddress,
+        newAddress,
+        registerAddress,
+        functionCode,
       });
-
-      const data = await response.json();
 
       if (data.success) {
         setResult({
           success: true,
-          message: t('change_id_success').replace('{old}', data.oldAddress).replace('{new}', data.newAddress),
+          message: t('change_id_success').replace('{old}', currentAddress.toString()).replace('{new}', newAddress.toString()),
         });
       } else {
         setResult({

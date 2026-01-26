@@ -7,6 +7,7 @@ import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
 import type { SerialPortInfo } from '@/types/modbus';
 import { BAUD_RATES, PARITY_OPTIONS, STOP_BITS_OPTIONS, DATA_BITS_OPTIONS } from '@/types/modbus';
+import { modbusAPI } from '@/lib/electron-api';
 
 
 
@@ -62,7 +63,24 @@ export default function WritePage() {
     setError(null);
     setSuccess(null);
 
-    const requestBody: Record<string, unknown> = {
+    const requestBody: {
+      type?: 'serial' | 'tcp';
+      port?: string;
+      baudRate?: number;
+      parity?: 'none' | 'even' | 'odd';
+      stopBits?: 1 | 2;
+      dataBits?: 7 | 8;
+      tcpIp?: string;
+      tcpPort?: number;
+      slaveAddress: number;
+      functionCode: 5 | 6 | 15 | 16;
+      address: number;
+      timeout?: number;
+      coilValue?: boolean;
+      value?: number;
+      coilValues?: boolean[];
+      values?: number[];
+    } = {
       type: connection.type,
       port: connection.port,
       baudRate: connection.baudRate,
@@ -94,16 +112,10 @@ export default function WritePage() {
     }
 
     try {
-      const response = await fetch('/api/modbus/write', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      });
-
-      const data = await response.json();
+      const data = await modbusAPI.write(requestBody);
 
       if (data.success) {
-        setSuccess(data.message || t('write_success'));
+        setSuccess(t('write_success'));
       } else {
         setError(data.error || t('write_failed'));
       }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Usb, Globe, RefreshCw, AlertCircle } from 'lucide-react';
 import { SerialPortInfo, BAUD_RATES, DATA_BITS_OPTIONS, PARITY_OPTIONS, STOP_BITS_OPTIONS } from '@/types/modbus';
 import { useModbus } from '@/context/ModbusContext';
+import { serialAPI } from '@/lib/electron-api';
 
 interface ConnectionSettingsProps {
     disabled?: boolean;
@@ -18,10 +19,9 @@ export default function ConnectionSettings({ disabled }: ConnectionSettingsProps
         setPortError(null);
 
         try {
-            const response = await fetch('/api/serial');
-            const data = await response.json();
+            const data = await serialAPI.listPorts();
 
-            if (data.success) {
+            if (data.success && data.ports) {
                 setPorts(data.ports);
                 if (data.ports.length > 0 && !connection.port && connection.type === 'serial') {
                     setConnection({ ...connection, port: data.ports[0].path });

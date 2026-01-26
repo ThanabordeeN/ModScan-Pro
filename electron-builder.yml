@@ -1,0 +1,48 @@
+appId: com.modscanpro.app
+productName: ModScan Pro
+copyright: Copyright © 2024
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - electron/**/*
+  - out/**/*
+  - package.json
+
+extraResources:
+  - from: src/lib/public_key.pem
+    to: public_key.pem
+
+mac:
+  category: public.app-category.developer-tools
+  target:
+    - dmg
+    - zip
+
+win:
+  target:
+    - nsis
+    - portable
+  icon: build/icon.ico
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Development
+  icon: build/icon.png
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+# Rebuild native modules for the target platform
+electronDownload:
+  cache: .cache/electron
+
+# Native module handling
+npmRebuild: true

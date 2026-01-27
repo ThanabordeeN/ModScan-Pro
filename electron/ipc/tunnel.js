@@ -46,6 +46,16 @@ const TunnelServiceManager = {
                 return { success: false, error: `Tunnel binary not found for ${process.platform}/${process.arch}` };
             }
 
+            // Ensure cloudflared is executable on Linux/macOS
+            if (process.platform !== 'win32') {
+                try {
+                    fs.chmodSync(cloudflaredPath, 0o755);
+                    console.log('TunnelService: Set execute permission for cloudflared');
+                } catch (chmodErr) {
+                    console.warn('TunnelService: Could not set execute permission:', chmodErr.message);
+                }
+            }
+
             // Spawn cloudflared process
             const child = spawn(cloudflaredPath, ['tunnel', '--url', `http://127.0.0.1:${port}`]);
 

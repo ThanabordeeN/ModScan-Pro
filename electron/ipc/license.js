@@ -16,12 +16,23 @@ function getLicenseFilePath() {
 }
 
 function getPublicKeyPath() {
-  // In production, public key is bundled with the app
-  if (process.env.NODE_ENV === 'development') {
+  // In development, look in src/lib
+  if (!app.isPackaged) {
     return path.join(process.cwd(), 'src', 'lib', 'public_key.pem');
   }
-  // In production, it should be in the resources folder
-  return path.join(process.resourcesPath, 'public_key.pem');
+  
+  // In production, try multiple locations where extraResources might land
+  const paths = [
+    path.join(process.resourcesPath, 'public_key.pem'),
+    path.join(process.resourcesPath, 'app.asar.unpacked', 'public_key.pem'),
+    path.join(path.dirname(process.execPath), 'resources', 'public_key.pem')
+  ];
+
+  for (const p of paths) {
+    if (fs.existsSync(p)) return p;
+  }
+
+  return paths[0]; // Default to first one
 }
 
 function getMachineId() {

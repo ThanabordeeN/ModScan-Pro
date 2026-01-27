@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * Simple Modbus TCP Simulator/Server
  * Run: node scripts/modbus-simulator.js [PORT]

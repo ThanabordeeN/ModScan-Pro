@@ -52,22 +52,53 @@
     "directories": {
       "output": "dist"
     },
+    "files": [
+      "electron/**/*",
+      "out/**/*",
+      "package.json",
+      "!**/node_modules",
+      "!src",
+      "!bin",
+      "!dist",
+      "!scripts",
+      "!.next",
+      "!**/*.ts",
+      "!**/*.tsx",
+      "!**/*.map",
+      "!**/*.md"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/serialport/**/*",
+      "**/node_modules/@serialport/**/*",
+      "**/node_modules/modbus-serial/**/*"
+    ],
     "extraResources": [
       {
-        "from": "bin",
-        "to": "bin",
-        "filter": [
-          "**/*"
-        ]
+        "from": "src/lib/public_key.pem",
+        "to": "public_key.pem"
       }
     ],
     "win": {
+      "extraResources": [
+        {
+          "from": "bin/cloudflared.exe",
+          "to": "bin/cloudflared.exe"
+        }
+      ],
       "target": [
-        "nsis"
+        "nsis",
+        "portable"
       ],
       "icon": "public/icon.ico"
     },
     "linux": {
+      "extraResources": [
+        {
+          "from": "bin/cloudflared-linux-amd64",
+          "to": "bin/cloudflared-linux-amd64"
+        }
+      ],
       "target": [
         "AppImage"
       ],
@@ -75,6 +106,16 @@
       "category": "Utility"
     },
     "mac": {
+      "extraResources": [
+        {
+          "from": "bin/cloudflared-darwin-amd64",
+          "to": "bin/cloudflared-darwin-amd64"
+        },
+        {
+          "from": "bin/cloudflared-darwin-arm64",
+          "to": "bin/cloudflared-darwin-arm64"
+        }
+      ],
       "target": [
         "dmg"
       ],

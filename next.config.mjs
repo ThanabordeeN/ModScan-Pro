@@ -1,10 +1,16 @@
 const nextConfig = {
-  output: 'export',
+  output: process.env.NODE_ENV === 'development' ? undefined : 'export',
   images: {
     unoptimized: true, // Required for static export
   },
-  experimental: {
-    serverComponentsExternalPackages: ['serialport', 'node-machine-id', 'modbus-serial'],
+  serverExternalPackages: ['serialport', 'node-machine-id', 'modbus-serial'],
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://127.0.0.1:3456/api/:path*',
+      },
+    ];
   },
 };
 

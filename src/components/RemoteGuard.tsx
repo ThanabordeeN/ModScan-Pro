@@ -3,6 +3,7 @@
 import { useState, useEffect, ReactNode } from 'react';
 import Cookies from 'js-cookie';
 import { Shield, Lock, AlertCircle } from 'lucide-react';
+import { tunnelAPI } from '@/lib/electron-api';
 
 export default function RemoteGuard({ children }: { children: ReactNode }) {
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -18,9 +19,9 @@ export default function RemoteGuard({ children }: { children: ReactNode }) {
   const checkAuth = async () => {
     // 1. Allow Localhost / Local IP
     const hostname = window.location.hostname;
-    if (hostname === 'localhost' || 
-        hostname === '127.0.0.1' ||
-        hostname.startsWith('192.168.')) {
+    if (hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname.startsWith('192.168.')) {
       setIsAuthorized(true);
       setLoading(false);
       return;
@@ -43,15 +44,9 @@ export default function RemoteGuard({ children }: { children: ReactNode }) {
     setError('');
 
     try {
-      const res = await fetch('/api/tunnel/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      });
+      const data = await tunnelAPI.login(password);
 
-      const data = await res.json();
-
-      if (res.ok && data.success) {
+      if (data.success) {
         // Set cookie for 1 day
         Cookies.set('remote_auth_token', 'true', { expires: 1 });
         setIsAuthorized(true);
@@ -91,7 +86,7 @@ export default function RemoteGuard({ children }: { children: ReactNode }) {
             <h1 className="text-2xl font-bold text-white mb-2">ModScan Pro Remote</h1>
             <p className="text-slate-400 text-sm">Restricted Access. Please authenticate.</p>
           </div>
-          
+
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -126,8 +121,8 @@ export default function RemoteGuard({ children }: { children: ReactNode }) {
             >
               {submitting ? 'Verifying...' : 'Authenticate'}
             </button>
-          </form> 
-          
+          </form>
+
           <p className="text-center text-xs text-slate-600 mt-6">
             Protected by RemoteGuard™ • Secure Tunneling
           </p>

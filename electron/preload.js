@@ -7,7 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   serial: {
     listPorts: () => ipcRenderer.invoke('serial:list-ports'),
   },
-  
+
   // Modbus operations
   modbus: {
     scan: (config) => ipcRenderer.invoke('modbus:scan', config),
@@ -16,14 +16,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
     readBatch: (config) => ipcRenderer.invoke('modbus:read-batch', config),
     changeAddress: (config) => ipcRenderer.invoke('modbus:change-address', config),
   },
-  
+
   // License operations
   license: {
     getMachineId: () => ipcRenderer.invoke('license:get-machine-id'),
     activate: (serialKey) => ipcRenderer.invoke('license:activate', serialKey),
     check: () => ipcRenderer.invoke('license:check'),
   },
-  
+
+  // Tunnel operations
+  tunnel: {
+    control: (data) => ipcRenderer.invoke('tunnel:control', data),
+    status: () => ipcRenderer.invoke('tunnel:status'),
+    login: (data) => ipcRenderer.invoke('tunnel:login', data),
+  },
+
   // Utility
   isElectron: true,
 });

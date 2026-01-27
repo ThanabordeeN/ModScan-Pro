@@ -67,8 +67,8 @@ function verifyLicense(inputKey) {
 
     const isValid = verifier.verify(publicKey, licenseKey, 'base64');
 
-    return { 
-      valid: isValid, 
+    return {
+      valid: isValid,
       machineId: currentMachineId,
       error: isValid ? undefined : 'Invalid license key for this machine'
     };
@@ -98,7 +98,7 @@ function saveLicense(key) {
  * Register license IPC handlers
  */
 function registerLicenseHandlers(ipcMain) {
-  
+
   ipcMain.handle('license:get-machine-id', async () => {
     try {
       const machineId = getMachineId();
@@ -107,7 +107,7 @@ function registerLicenseHandlers(ipcMain) {
       return { success: false, error: error.message };
     }
   });
-  
+
   ipcMain.handle('license:check', async () => {
     try {
       const status = verifyLicense();
@@ -116,7 +116,7 @@ function registerLicenseHandlers(ipcMain) {
       return { success: false, error: 'Internal error checking license' };
     }
   });
-  
+
   ipcMain.handle('license:activate', async (event, licenseKey) => {
     try {
       if (!licenseKey) {
@@ -151,4 +151,9 @@ function registerLicenseHandlers(ipcMain) {
   });
 }
 
-module.exports = { registerLicenseHandlers };
+module.exports = {
+  registerLicenseHandlers,
+  getMachineId,
+  verifyLicense,
+  saveLicense
+};

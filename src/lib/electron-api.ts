@@ -77,9 +77,9 @@ export interface ChangeAddressConfig extends ConnectionConfig {
 
 // Check if running in Electron
 export function isElectron(): boolean {
-  return typeof window !== 'undefined' && 
-         'electronAPI' in window && 
-         (window as ElectronWindow).electronAPI?.isElectron === true;
+  return typeof window !== 'undefined' &&
+    'electronAPI' in window &&
+    (window as ElectronWindow).electronAPI?.isElectron === true;
 }
 
 // Type for window with electronAPI
@@ -100,6 +100,11 @@ interface ElectronWindow extends Window {
       getMachineId: () => Promise<{ success: boolean; machineId?: string; error?: string }>;
       activate: (serialKey: string) => Promise<{ success: boolean; valid?: boolean; machineId?: string; error?: string }>;
       check: () => Promise<{ success: boolean; valid?: boolean; machineId?: string; error?: string }>;
+    };
+    tunnel: {
+      control: (data: { action: 'start' | 'stop'; password?: string }) => Promise<{ success: boolean; url?: string; error?: string }>;
+      status: () => Promise<{ isActive: boolean; url: string | null }>;
+      login: (data: { password: string }) => Promise<{ success: boolean; error?: string }>;
     };
   };
 }
@@ -224,6 +229,44 @@ export const licenseAPI = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ licenseKey }),
+    });
+    return res.json();
+  },
+};
+
+// Tunnel API
+export const tunnelAPI = {
+  async control(action: 'start' | 'stop', password?: string): Promise<{ success: boolean; url?: string; error?: string }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.tunnel.control({ action, password });
+    }
+    const res = await fetch('/api/tunnel/control', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, password }),
+    });
+    return res.json();
+  },
+
+  async status(): Promise<{ isActive: boolean; url: string | null }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.tunnel.status();
+    }
+    const res = await fetch('/api/tunnel/control');
+    return res.json();
+  },
+
+  async login(password: string): Promise<{ success: boolean; error?: string }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.tunnel.login({ password });
+    }
+    const res = await fetch('/api/tunnel/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
     });
     return res.json();
   },

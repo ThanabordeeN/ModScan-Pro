@@ -4,8 +4,8 @@ const { SerialPort } = require('serialport');
  * Register serial port IPC handlers
  * @param {Electron.IpcMain} ipcMain 
  */
-function registerSerialHandlers(ipcMain) {
-  ipcMain.handle('serial:list-ports', async () => {
+const SerialService = {
+  listPorts: async () => {
     try {
       const ports = await SerialPort.list();
       const filtered = ports
@@ -24,13 +24,23 @@ function registerSerialHandlers(ipcMain) {
           vendorId: port.vendorId,
           productId: port.productId,
         }));
-      
+
       return { success: true, ports: filtered };
     } catch (error) {
       console.error('Error listing serial ports:', error);
       return { success: false, error: 'Failed to list serial ports' };
     }
+  }
+};
+
+/**
+ * Register serial port IPC handlers
+ * @param {Electron.IpcMain} ipcMain 
+ */
+function registerSerialHandlers(ipcMain) {
+  ipcMain.handle('serial:list-ports', async () => {
+    return SerialService.listPorts();
   });
 }
 
-module.exports = { registerSerialHandlers };
+module.exports = { registerSerialHandlers, SerialService };

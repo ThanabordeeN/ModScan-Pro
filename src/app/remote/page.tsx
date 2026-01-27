@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { Lock, Power, Copy, Check, ExternalLink, ShieldAlert } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { tunnelAPI } from '@/lib/electron-api';
 
 export default function RemotePage() {
   const { } = useLanguage();
-  
+
   const [isActive, setIsActive] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
   const [password, setPassword] = useState('');
@@ -35,8 +36,7 @@ export default function RemotePage() {
 
   const checkStatus = async () => {
     try {
-      const res = await fetch('/api/tunnel/control');
-      const data = await res.json();
+      const data = await tunnelAPI.status();
       setIsActive(data.isActive);
       setUrl(data.url);
     } catch {
@@ -53,11 +53,7 @@ export default function RemotePage() {
     try {
       if (isActive) {
         // Stop
-        await fetch('/api/tunnel/control', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'stop' }),
-        });
+        await tunnelAPI.control('stop');
         setIsActive(false);
         setUrl(null);
         setPassword('');
@@ -69,14 +65,9 @@ export default function RemotePage() {
           return;
         }
 
-        const res = await fetch('/api/tunnel/control', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'start', password }),
-        });
-        const data = await res.json();
-        
-        if (data.success) {
+        const data = await tunnelAPI.control('start', password);
+
+        if (data.success && data.url) {
           setIsActive(true);
           setUrl(data.url);
         } else {
@@ -110,19 +101,19 @@ export default function RemotePage() {
 
       {publicIP && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-           <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-           <div className="text-sm text-slate-700">
-             <p className="font-bold text-slate-900 mb-1">First Time Access Code</p>
-             <p className="mb-2">If asked for a &quot;Tunnel Password&quot; when opening the link, enter this Public IP:</p>
-             <div className="flex items-center gap-2">
-               <code className="px-2 py-1 bg-white border border-amber-200 rounded font-mono font-bold text-amber-700">
-                 {publicIP}
-               </code>
-               <button onClick={copyIP} className="text-amber-600 hover:text-amber-800 underline text-xs">
-                 Copy IP
-               </button>
-             </div>
-           </div>
+          <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-slate-700">
+            <p className="font-bold text-slate-900 mb-1">First Time Access Code</p>
+            <p className="mb-2">If asked for a &quot;Tunnel Password&quot; when opening the link, enter this Public IP:</p>
+            <div className="flex items-center gap-2">
+              <code className="px-2 py-1 bg-white border border-amber-200 rounded font-mono font-bold text-amber-700">
+                {publicIP}
+              </code>
+              <button onClick={copyIP} className="text-amber-600 hover:text-amber-800 underline text-xs">
+                Copy IP
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -136,7 +127,7 @@ export default function RemotePage() {
                 {isActive ? 'Online - Tunnel Active' : 'Offline - Tunnel Inactive'}
               </span>
             </div>
-            
+
             {isActive && (
               <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-medium border border-emerald-100">
                 Secure Connection
@@ -190,7 +181,7 @@ export default function RemotePage() {
           ) : (
             <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
               <h3 className="text-sm font-medium text-slate-500 mb-3 uppercase tracking-wider">Public Access URL</h3>
-              
+
               <div className="flex items-center gap-2 mb-6">
                 <div className="flex-1 bg-white p-4 rounded-lg border border-slate-200 font-mono text-indigo-600 truncate">
                   {url}
@@ -226,14 +217,14 @@ export default function RemotePage() {
             </div>
           )}
         </div>
-        
+
         <div className="bg-slate-50 px-6 py-4 border-t border-slate-200">
           <div className="flex items-start gap-3">
-             <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-             <div className="text-sm text-slate-600">
-               <p className="font-semibold text-slate-800 mb-1">Security Notice</p>
-               <p>Your local server is exposed to the internet. Access is protected by your session password. Do not share your URL or password with untrusted parties. The tunnel will automatically close if the server restarts.</p>
-             </div>
+            <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-slate-600">
+              <p className="font-semibold text-slate-800 mb-1">Security Notice</p>
+              <p>Your local server is exposed to the internet. Access is protected by your session password. Do not share your URL or password with untrusted parties. The tunnel will automatically close if the server restarts.</p>
+            </div>
           </div>
         </div>
       </div>

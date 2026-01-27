@@ -25,18 +25,17 @@ async function connectClient(client, config) {
 /**
  * Register Modbus IPC handlers
  */
-function registerModbusHandlers(ipcMain) {
-  
-  // Scan for devices
-  ipcMain.handle('modbus:scan', async (event, config) => {
+// Define ModbusService to share logic between IPC and API
+const ModbusService = {
+  scan: async (config) => {
     const { startAddress, endAddress, timeout = 500 } = config;
     const client = new ModbusRTU();
     const devices = [];
-    
+
     try {
       await connectClient(client, config);
       client.setTimeout(timeout);
-      
+
       for (let address = startAddress; address <= endAddress; address++) {
         client.setID(address);
         try {
@@ -52,25 +51,24 @@ function registerModbusHandlers(ipcMain) {
           // Device not found at this address
         }
       }
-      
-      await client.close(() => {});
+
+      await client.close(() => { });
       return { success: true, devices, scannedCount: endAddress - startAddress + 1 };
     } catch (error) {
-      try { await client.close(() => {}); } catch {}
+      try { await client.close(() => { }); } catch { }
       return { success: false, error: error.message || 'Scan failed' };
     }
-  });
-  
-  // Read data
-  ipcMain.handle('modbus:read', async (event, config) => {
+  },
+
+  read: async (config) => {
     const { slaveAddress, functionCode, registerAddress, quantity, timeout = 1000 } = config;
     const client = new ModbusRTU();
-    
+
     try {
       await connectClient(client, config);
       client.setID(slaveAddress);
       client.setTimeout(timeout);
-      
+
       let data;
       switch (functionCode) {
         case 1: {
@@ -96,25 +94,24 @@ function registerModbusHandlers(ipcMain) {
         default:
           throw new Error(`Unsupported function code: ${functionCode}`);
       }
-      
-      await client.close(() => {});
+
+      await client.close(() => { });
       return { success: true, data, slaveAddress, functionCode, registerAddress, quantity };
     } catch (error) {
-      try { await client.close(() => {}); } catch {}
+      try { await client.close(() => { }); } catch { }
       return { success: false, error: error.message || 'Read failed' };
     }
-  });
-  
-  // Write data
-  ipcMain.handle('modbus:write', async (event, config) => {
+  },
+
+  write: async (config) => {
     const { slaveAddress, functionCode, address, value, values, coilValue, coilValues, timeout = 1000 } = config;
     const client = new ModbusRTU();
-    
+
     try {
       await connectClient(client, config);
       client.setID(slaveAddress);
       client.setTimeout(timeout);
-      
+
       switch (functionCode) {
         case 5: // Write Single Coil
           await client.writeCoil(address, coilValue);
@@ -131,25 +128,24 @@ function registerModbusHandlers(ipcMain) {
         default:
           throw new Error(`Unsupported function code: ${functionCode}`);
       }
-      
-      await client.close(() => {});
+
+      await client.close(() => { });
       return { success: true, functionCode, address, message: `Successfully wrote to address ${address}` };
     } catch (error) {
-      try { await client.close(() => {}); } catch {}
+      try { await client.close(() => { }); } catch { }
       return { success: false, error: error.message || 'Write failed' };
     }
-  });
-  
-  // Read batch
-  ipcMain.handle('modbus:read-batch', async (event, config) => {
+  },
+
+  readBatch: async (config) => {
     const { requests, timeout = 1000 } = config;
     const client = new ModbusRTU();
     const results = [];
-    
+
     try {
       await connectClient(client, config);
       client.setTimeout(timeout);
-      
+
       for (const req of requests) {
         client.setID(req.slaveAddress);
         try {
@@ -181,51 +177,81 @@ function registerModbusHandlers(ipcMain) {
           results.push({ success: false, error: error.message });
         }
       }
-      
-      await client.close(() => {});
+
+      await client.close(() => { });
       return { results };
     } catch (error) {
-      try { await client.close(() => {}); } catch {}
+      try { await client.close(() => { }); } catch { }
       return { results: [], error: error.message || 'Batch read failed' };
     }
-  });
-  
-  // Change address
-  ipcMain.handle('modbus:change-address', async (event, config) => {
+  },
+
+  changeAddress: async (config) => {
     const { currentAddress, newAddress, registerAddress = 0, functionCode = 6, timeout = 1000 } = config;
     const client = new ModbusRTU();
-    
+
     try {
       if (newAddress < 1 || newAddress > 247) {
         return { success: false, error: 'New address must be between 1 and 247' };
       }
-      
+
       await connectClient(client, config);
       client.setID(currentAddress);
       client.setTimeout(timeout);
-      
+
       if (functionCode === 6) {
         await client.writeRegister(registerAddress, newAddress);
       } else {
         await client.writeRegisters(registerAddress, [newAddress]);
       }
-      
-      await client.close(() => {});
-      
+
+      await client.close(() => { });
+
       // Verify change
       await new Promise(resolve => setTimeout(resolve, 500));
       await connectClient(client, config);
       client.setID(newAddress);
       client.setTimeout(timeout);
       await client.readHoldingRegisters(0, 1);
-      await client.close(() => {});
-      
+      await client.close(() => { });
+
       return { success: true };
     } catch (error) {
-      try { await client.close(() => {}); } catch {}
+      try { await client.close(() => { }); } catch { }
       return { success: false, error: error.message || 'Change address failed' };
     }
+  }
+};
+
+/**
+ * Register Modbus IPC handlers
+ */
+function registerModbusHandlers(ipcMain) {
+
+  // Scan for devices
+  ipcMain.handle('modbus:scan', async (event, config) => {
+    return ModbusService.scan(config);
+  });
+
+  // Read data
+  ipcMain.handle('modbus:read', async (event, config) => {
+    return ModbusService.read(config);
+  });
+
+  // Write data
+  ipcMain.handle('modbus:write', async (event, config) => {
+    return ModbusService.write(config);
+  });
+
+  // Read batch
+  ipcMain.handle('modbus:read-batch', async (event, config) => {
+    return ModbusService.readBatch(config);
+  });
+
+  // Change address
+  ipcMain.handle('modbus:change-address', async (event, config) => {
+    return ModbusService.changeAddress(config);
   });
 }
 
-module.exports = { registerModbusHandlers };
+module.exports = { registerModbusHandlers, ModbusService };

@@ -1,18 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PenLine, Loader2, XCircle, RefreshCw, Usb, AlertCircle, CheckCircle2, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { PenLine, Loader2, XCircle, CheckCircle2, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import ConnectionSettings from '@/components/ConnectionSettings';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
-import type { SerialPortInfo } from '@/types/modbus';
-import { BAUD_RATES, PARITY_OPTIONS, STOP_BITS_OPTIONS, DATA_BITS_OPTIONS } from '@/types/modbus';
 import { modbusAPI } from '@/lib/electron-api';
 
 
 
 export default function WritePage() {
-  const { connection, setConnection, scannedDevices, isConnectionReady } = useModbus();
+  const { connection, scannedDevices, isConnectionReady } = useModbus();
   const { t } = useLanguage();
 
   const WRITE_FUNCTION_CODES = [

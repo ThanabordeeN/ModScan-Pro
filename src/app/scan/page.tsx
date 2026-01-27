@@ -1,16 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Loader2, CheckCircle2, XCircle, RefreshCw, Usb, AlertCircle } from 'lucide-react';
+import { Search, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import ConnectionSettings from '@/components/ConnectionSettings';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
-import type { SerialPortInfo } from '@/types/modbus';
-import { useEffect } from 'react';
 import { modbusAPI } from '@/lib/electron-api';
 
 export default function ScanPage() {
-  const { connection, setConnection, scannedDevices, setScannedDevices, isConnectionReady } = useModbus();
+  const { connection, scannedDevices, setScannedDevices, isConnectionReady } = useModbus();
   const { t } = useLanguage();
   
   // Scan settings

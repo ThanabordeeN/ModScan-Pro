@@ -58,7 +58,7 @@ export default function RemoteGuard({ children }: { children: ReactNode }) {
       } else {
         setError(data.error || 'Invalid password');
       }
-    } catch (err) {
+    } catch {
       setError('Connection error');
     } finally {
       setSubmitting(false);

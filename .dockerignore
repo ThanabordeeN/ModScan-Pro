@@ -1,0 +1,28 @@
+# Build artifacts
+release/
+dist/
+.next/
+out/
+
+# Node modules
+node_modules/
+
+# Cache
+.cache/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# Test files
+*.test.*
+__tests__/

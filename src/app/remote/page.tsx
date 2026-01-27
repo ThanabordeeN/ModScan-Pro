@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Globe, Lock, Power, Copy, Check, ExternalLink, ShieldAlert } from 'lucide-react';
+import { Lock, Power, Copy, Check, ExternalLink, ShieldAlert } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function RemotePage() {
@@ -28,7 +28,7 @@ export default function RemotePage() {
       const res = await fetch('https://api.ipify.org?format=json');
       const data = await res.json();
       setPublicIP(data.ip);
-    } catch (err) {
+    } catch {
       console.error('Failed to fetch public IP');
     }
   };
@@ -39,7 +39,7 @@ export default function RemotePage() {
       const data = await res.json();
       setIsActive(data.isActive);
       setUrl(data.url);
-    } catch (err) {
+    } catch {
       console.error('Failed to check status');
     }
   };
@@ -83,7 +83,7 @@ export default function RemotePage() {
           setError(data.error || 'Failed to start tunnel');
         }
       }
-    } catch (err) {
+    } catch {
       setError('Connection failed');
     } finally {
       setLoading(false);
@@ -113,7 +113,7 @@ export default function RemotePage() {
            <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
            <div className="text-sm text-slate-700">
              <p className="font-bold text-slate-900 mb-1">First Time Access Code</p>
-             <p className="mb-2">If asked for a "Tunnel Password" when opening the link, enter this Public IP:</p>
+             <p className="mb-2">If asked for a &quot;Tunnel Password&quot; when opening the link, enter this Public IP:</p>
              <div className="flex items-center gap-2">
                <code className="px-2 py-1 bg-white border border-amber-200 rounded font-mono font-bold text-amber-700">
                  {publicIP}

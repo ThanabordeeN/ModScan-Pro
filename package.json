@@ -1,6 +1,11 @@
 {
   "name": "modbus-scanner",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "ModScan Pro - Professional Modbus Scanner and Diagnostic Tool",
+  "author": {
+    "name": "2Edge",
+    "email": "thanabordee.n@2edge.co"
+  },
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -15,10 +20,8 @@
   "dependencies": {
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
-    "electron": "^40.0.0",
-    "electron-builder": "^26.4.0",
     "js-cookie": "^3.0.5",
-    "localtunnel": "^2.0.2",
+    "localtunnel": "^1.8.3",
     "lucide-react": "^0.562.0",
     "modbus-serial": "^8.0.23",
     "next": "14.2.35",
@@ -34,8 +37,10 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "electron": "^40.0.0",
+    "electron-builder": "^23.0.6",
     "eslint": "^8",
-    "eslint-config-next": "14.2.35",
+    "eslint-config-next": "^16.1.5",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"

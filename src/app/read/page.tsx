@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { BookOpen, Loader2, XCircle, RefreshCw, Usb, AlertCircle, CheckCircle2, Play, Square, Timer, Trash2, History, Plus, Minus } from 'lucide-react';
+import { BookOpen, Loader2, XCircle, CheckCircle2, Play, Square, Timer, Trash2, History, Plus } from 'lucide-react';
 import ConnectionSettings from '@/components/ConnectionSettings';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
-import type { SerialPortInfo } from '@/types/modbus';
-import { BAUD_RATES, PARITY_OPTIONS, STOP_BITS_OPTIONS, DATA_BITS_OPTIONS } from '@/types/modbus';
 import { modbusAPI } from '@/lib/electron-api';
 
 interface LogEntry {
@@ -28,7 +26,7 @@ interface ReadRange {
 
 
 export default function ReadPage() {
-  const { connection, setConnection, scannedDevices, isConnectionReady } = useModbus();
+  const { connection, scannedDevices, isConnectionReady } = useModbus();
   const { t } = useLanguage();
 
   const READ_FUNCTION_CODES = [
@@ -131,8 +129,8 @@ export default function ReadPage() {
         // Let's create multiple log entries or one combined? 
         // For simplicity, let's add one entry per range that got data
         const newLogs: LogEntry[] = [];
-        data.results.forEach((res: any, idx: number) => {
-          if (res.success && res.data.length > 0) {
+        data.results.forEach((res: { success: boolean; data?: number[] }, idx: number) => {
+          if (res.success && res.data && res.data.length > 0) {
             newLogs.push({
               id: Date.now() + idx, // offset id slightly
               timestamp: now,
@@ -218,7 +216,7 @@ export default function ReadPage() {
     }
   };
 
-  const updateRange = (id: string, field: keyof ReadRange, value: any) => {
+  const updateRange = (id: string, field: keyof ReadRange, value: string | number | boolean) => {
     setRanges(ranges.map(r => {
       if (r.id === id) {
         return { ...r, [field]: value };
@@ -474,7 +472,7 @@ export default function ReadPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {readData.map((rangeResult, idx) => {
+                {readData.map((rangeResult) => {
                     const rangeConfig = ranges.find(r => r.id === rangeResult.rangeId);
                     if (!rangeConfig || rangeResult.data.length === 0) return null;
                     const isCoil = rangeConfig.functionCode === 1 || rangeConfig.functionCode === 2;

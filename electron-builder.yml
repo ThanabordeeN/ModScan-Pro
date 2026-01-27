@@ -9,6 +9,7 @@ directories:
 files:
   - electron/**/*
   - out/**/*
+  - build/**/*
   - package.json
 
 extraResources:
@@ -30,7 +31,6 @@ win:
 linux:
   target:
     - AppImage
-    - deb
   category: Development
   icon: build/icon.png
 

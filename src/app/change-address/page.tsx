@@ -1,17 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { Settings, Loader2, CheckCircle2, XCircle, AlertTriangle, Info, Usb, RefreshCw, AlertCircle, ArrowRight } from 'lucide-react';
+import { Settings, Loader2, CheckCircle2, XCircle, AlertTriangle, Info, ArrowRight } from 'lucide-react';
 import ConnectionSettings from '@/components/ConnectionSettings';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
-import type { SerialPortInfo } from '@/types/modbus';
 import { FUNCTION_CODE_OPTIONS } from '@/types/modbus';
 import { modbusAPI } from '@/lib/electron-api';
 
 export default function ChangeAddressPage() {
-  const { connection, setConnection, scannedDevices, isConnectionReady } = useModbus();
+  const { connection, scannedDevices, isConnectionReady } = useModbus();
   const { t } = useLanguage();
   
 

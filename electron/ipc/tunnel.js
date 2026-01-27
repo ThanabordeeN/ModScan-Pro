@@ -1,14 +1,9 @@
-// Tunnel Service Logic equivalent to src/lib/tunnel-service.ts adapted for Electron main process (Node.js)
+// Tunnel Service using Cloudflare Quick Tunnel (cloudflared)
+// This replaces the old localtunnel implementation for better performance and stability
 
-// Wait, the tunnel-service.ts is TypeScript. We cannot require it directly in Node.js (Electron main process) without compilation or using ts-node/register, 
-// which might be complicated in production builds if not handled by the builder.
-// However, since this is an Electron app built with Next.js, usually the main process code is in JS or compiled.
-// The user has `tsconfig.json` and `electron/main.js` is JS.
-// But `src/lib/tunnel-service.ts` is TS.
-// I should probably rewrite the tunnel service in JS for the Electron main process, or move the logic into this new file directly to avoid import issues.
-// Given the simplicity, I will copy the logic and adapt it to pure JS.
-
-const localtunnel = require('localtunnel');
+const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 
 let tunnelState = {
     instance: null,
@@ -24,84 +19,112 @@ const TunnelServiceManager = {
         }
 
         try {
-            console.log('TunnelService: Requesting tunnel for port', port);
+            console.log('TunnelService: Requesting Cloudflare Quick Tunnel for port', port);
 
-            const tunnelPromise = new Promise((resolve, reject) => {
-                try {
-                    const tunnel = localtunnel(port, { host: 'https://localtunnel.me' }, (err, tunnel) => {
-                        if (err) return reject(err);
-                        resolve(tunnel);
-                    });
-
-                    // Add error listener to the tunnel instance if possible (though it returns the instance synchronously usually)
-                    if (tunnel) {
-                        tunnel.on('error', (err) => {
-                            console.error('Localtunnel error:', err);
-                            // don't reject here if already resolved, but useful for logs
-                        });
-                    }
-                } catch (e) {
-                    reject(e);
-                }
-            });
-
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Tunnel connection timed out')), 10000)
-            );
-
-            let tunnel;
-            try {
-                tunnel = await Promise.race([tunnelPromise, timeoutPromise]);
-            } catch (err) {
-                console.error('Failed to establish tunnel:', err);
-                return { success: false, error: 'Connection failed: ' + err.message };
+            // Determine cloudflared binary name based on platform
+            let binaryName;
+            if (process.platform === 'win32') {
+                binaryName = 'cloudflared.exe';
+            } else if (process.platform === 'darwin') {
+                // macOS - check architecture
+                binaryName = process.arch === 'arm64' ? 'cloudflared-darwin-arm64' : 'cloudflared-darwin-amd64';
+            } else {
+                // Linux
+                binaryName = 'cloudflared-linux-amd64';
             }
 
-            // Check if tunnel and tunnel.url exist
-            if (!tunnel || !tunnel.url) {
-                console.error('Tunnel created but no URL returned:', tunnel);
-                // Don't throw, return error object
-                return { success: false, error: 'Failed to obtain tunnel URL' };
+            // Path to cloudflared executable
+            let cloudflaredPath;
+            if (process.env.NODE_ENV === 'development') {
+                cloudflaredPath = path.join(process.cwd(), 'bin', binaryName);
+            } else {
+                cloudflaredPath = path.join(process.resourcesPath, 'bin', binaryName);
             }
 
-            console.log('TunnelService: Tunnel created', tunnel.url);
+            if (!fs.existsSync(cloudflaredPath)) {
+                console.error('cloudflared not found at:', cloudflaredPath);
+                return { success: false, error: `Tunnel binary not found for ${process.platform}/${process.arch}` };
+            }
 
-            tunnelState.instance = tunnel;
-            tunnelState.url = tunnel.url;
+            // Spawn cloudflared process
+            const child = spawn(cloudflaredPath, ['tunnel', '--url', `http://127.0.0.1:${port}`]);
+
+            tunnelState.instance = child;
             tunnelState.password = password;
-            tunnelState.isActive = true;
+            // isActive is not set true until we get the URL
 
-            tunnel.on('close', () => {
-                console.log('TunnelService: Tunnel closed event');
-                TunnelServiceManager.stop();
+            return new Promise((resolve) => {
+                let urlFound = false;
+
+                const cleanup = () => {
+                    if (!urlFound) {
+                        try { child.kill(); } catch { }
+                        tunnelState.instance = null;
+                        tunnelState.isActive = false;
+                    }
+                };
+
+                // Parse stderr because cloudflared prints URL info to stderr
+                child.stderr.on('data', (data) => {
+                    const output = data.toString();
+                    console.log(`[cloudflared]: ${output}`);
+
+                    const match = output.match(/https:\/\/[a-zA-Z0-9-]+\.trycloudflare\.com/);
+                    if (match && !urlFound) {
+                        urlFound = true;
+                        tunnelState.url = match[0];
+                        tunnelState.isActive = true;
+                        console.log('TunnelService: Cloudflare Tunnel created', tunnelState.url);
+                        resolve({ success: true, url: tunnelState.url });
+                    }
+                });
+
+                child.on('error', (err) => {
+                    console.error('Failed to start cloudflared:', err);
+                    cleanup();
+                    resolve({ success: false, error: 'Failed to start tunnel process' });
+                });
+
+                child.on('close', (code) => {
+                    console.log(`cloudflared exited with code ${code}`);
+                    if (!urlFound) {
+                        cleanup();
+                        resolve({ success: false, error: 'Tunnel process exited unexpectedly' });
+                    } else {
+                        // Process closed after successful start (e.g. killed manually or crashed)
+                        TunnelServiceManager.stop();
+                    }
+                });
+
+                // Timeout if URL not found in 15 seconds
+                setTimeout(() => {
+                    if (!urlFound) {
+                        console.error('Timeout waiting for Cloudflare URL');
+                        cleanup();
+                        resolve({ success: false, error: 'Timeout connecting to Cloudflare Network' });
+                    }
+                }, 15000);
             });
 
-            tunnel.on('error', (err) => {
-                console.error('Tunnel instance error:', err);
-                TunnelServiceManager.stop();
-            });
-
-            return { success: true, url: tunnel.url };
         } catch (error) {
             console.error('Tunnel Error:', error);
-            // Catch-all for any other errors
             return { success: false, error: 'Failed to create tunnel: ' + (error.message || String(error)) };
         }
     },
 
     stop: () => {
-        const tunnel = tunnelState.instance;
-        if (tunnel) {
-            // Clear state first to prevent recursion if close() emits 'close' event
+        const child = tunnelState.instance;
+        if (child) {
+            // Clear state first
             tunnelState.instance = null;
             tunnelState.url = null;
             tunnelState.password = null;
             tunnelState.isActive = false;
 
             try {
-                tunnel.close();
+                child.kill();
             } catch (e) {
-                console.error('Error closing tunnel:', e);
+                console.error('Error closing tunnel process:', e);
             }
         }
         return { success: true };

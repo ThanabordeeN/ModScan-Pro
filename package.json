@@ -45,5 +45,41 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.9.3"
+  },
+  "build": {
+    "appId": "com.2edge.modscan-pro",
+    "productName": "ModScan Pro",
+    "directories": {
+      "output": "dist"
+    },
+    "extraResources": [
+      {
+        "from": "bin",
+        "to": "bin",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "public/icon.ico"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "public/icon.png",
+      "category": "Utility"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "public/icon.icns",
+      "category": "public.app-category.utilities"
+    }
   }
 }

@@ -28,6 +28,33 @@ jobs:
           node-version: 22
           cache: "npm"
 
+      - name: Download cloudflared (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p bin
+          curl -L -o bin/cloudflared-linux-amd64 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+          chmod +x bin/cloudflared-linux-amd64
+
+      - name: Download cloudflared (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          mkdir -p bin
+          curl -L -o bin/cloudflared.exe https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe
+
+      - name: Download cloudflared (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p bin
+          curl -L -o bin/cloudflared-darwin-amd64 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz
+          tar -xzf bin/cloudflared-darwin-amd64.tgz -C bin/
+          mv bin/cloudflared bin/cloudflared-darwin-amd64
+          chmod +x bin/cloudflared-darwin-amd64
+          curl -L -o bin/cloudflared-darwin-arm64 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-arm64.tgz
+          tar -xzf bin/cloudflared-darwin-arm64.tgz -C bin/
+          mv bin/cloudflared bin/cloudflared-darwin-arm64
+          chmod +x bin/cloudflared-darwin-arm64
+
       - name: Install dependencies
         run: npm install
 

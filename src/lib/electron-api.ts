@@ -91,6 +91,8 @@ interface ElectronWindow extends Window {
     };
     modbus: {
       scan: (config: ScanConfig) => Promise<{ success: boolean; devices?: ModbusDevice[]; scannedCount?: number; error?: string }>;
+      onScanProgress: (callback: (progress: number) => void) => void;
+      removeScanProgress: () => void;
       read: (config: ReadConfig) => Promise<{ success: boolean; data?: number[]; error?: string }>;
       write: (config: WriteConfig) => Promise<{ success: boolean; error?: string }>;
       readBatch: (config: BatchReadConfig) => Promise<{ results: Array<{ success: boolean; data?: number[]; error?: string }>; error?: string }>;
@@ -143,6 +145,20 @@ export const modbusAPI = {
       body: JSON.stringify(config),
     });
     return res.json();
+  },
+
+  onScanProgress(callback: (progress: number) => void) {
+    const api = getElectronAPI();
+    if (api) {
+      api.modbus.onScanProgress(callback);
+    }
+  },
+
+  removeScanProgress() {
+    const api = getElectronAPI();
+    if (api) {
+      api.modbus.removeScanProgress();
+    }
   },
 
   async read(config: ReadConfig): Promise<{ success: boolean; data?: number[]; error?: string }> {

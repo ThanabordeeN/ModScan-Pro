@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Modbus operations
   modbus: {
     scan: (config) => ipcRenderer.invoke('modbus:scan', config),
+    onScanProgress: (callback) => ipcRenderer.on('modbus:scan-progress', (_event, value) => callback(value)),
+    removeScanProgress: () => ipcRenderer.removeAllListeners('modbus:scan-progress'),
     read: (config) => ipcRenderer.invoke('modbus:read', config),
     write: (config) => ipcRenderer.invoke('modbus:write', config),
     readBatch: (config) => ipcRenderer.invoke('modbus:read-batch', config),

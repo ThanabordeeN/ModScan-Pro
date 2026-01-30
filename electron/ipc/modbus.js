@@ -8,7 +8,7 @@ async function connectClient(client, config) {
     if (!config.tcpIp || !config.tcpPort) {
       throw new Error('TCP IP and Port are required');
     }
-    await client.connectTCP(config.tcpIp, { port: config.tcpPort });
+    await client.connectTCP(config.tcpIp, { port: config.tcpPort, family: 4 });
   } else {
     if (!config.port) {
       throw new Error('Serial Port is required');
@@ -23,11 +23,34 @@ async function connectClient(client, config) {
 }
 
 /**
+ * Helper to get user-friendly error message
+ */
+function getErrorMessage(error) {
+  const msg = error.message || '';
+  if (msg.includes('Timed out')) {
+    return 'Connection Timed Out. Check if device is powered on and parameters (Baud Rate, ID) are correct.';
+  }
+  if (msg.includes('Port Not Open')) {
+    return 'Port Not Open. Please check if the Serial Port is available and not used by another program.';
+  }
+  if (msg.includes('ECONNREFUSED')) {
+    return 'Connection Refused. Check if the Modbus TCP Server ip/port is correct and reachable.';
+  }
+  if (msg.includes('EHOSTUNREACH')) {
+    return 'Host Unreachable. Check if the device IP address is correct and on the same network subnet.';
+  }
+  if (msg.includes('CRC error')) {
+    return 'CRC Error. Communication noise or incorrect Baud Rate/Parity settings.';
+  }
+  return msg || 'Unknown Error';
+}
+
+/**
  * Register Modbus IPC handlers
  */
 // Define ModbusService to share logic between IPC and API
 const ModbusService = {
-  scan: async (config) => {
+  scan: async (config, sender) => {
     const { startAddress, endAddress, timeout = 500 } = config;
     const client = new ModbusRTU();
     const devices = [];
@@ -35,8 +58,17 @@ const ModbusService = {
     try {
       await connectClient(client, config);
       client.setTimeout(timeout);
+      
+      const total = endAddress - startAddress + 1;
+      let count = 0;
 
       for (let address = startAddress; address <= endAddress; address++) {
+        // Emit progress
+        if (sender) {
+          const progress = Math.round((count / total) * 100);
+          sender.send('modbus:scan-progress', progress);
+        }
+        
         client.setID(address);
         try {
           const startTime = Date.now();
@@ -48,15 +80,21 @@ const ModbusService = {
             holdingRegisters: result.data,
           });
         } catch {
-          // Device not found at this address
+          // Device not found at this address - Expected during scan
         }
+        count++;
+      }
+      
+      // Send 100% at end
+      if (sender) {
+        sender.send('modbus:scan-progress', 100);
       }
 
       await client.close(() => { });
-      return { success: true, devices, scannedCount: endAddress - startAddress + 1 };
+      return { success: true, devices, scannedCount: total };
     } catch (error) {
       try { await client.close(() => { }); } catch { }
-      return { success: false, error: error.message || 'Scan failed' };
+      return { success: false, error: getErrorMessage(error) };
     }
   },
 
@@ -99,7 +137,7 @@ const ModbusService = {
       return { success: true, data, slaveAddress, functionCode, registerAddress, quantity };
     } catch (error) {
       try { await client.close(() => { }); } catch { }
-      return { success: false, error: error.message || 'Read failed' };
+      return { success: false, error: getErrorMessage(error) };
     }
   },
 
@@ -133,7 +171,7 @@ const ModbusService = {
       return { success: true, functionCode, address, message: `Successfully wrote to address ${address}` };
     } catch (error) {
       try { await client.close(() => { }); } catch { }
-      return { success: false, error: error.message || 'Write failed' };
+      return { success: false, error: getErrorMessage(error) };
     }
   },
 
@@ -174,7 +212,7 @@ const ModbusService = {
           }
           results.push({ success: true, data });
         } catch (error) {
-          results.push({ success: false, error: error.message });
+          results.push({ success: false, error: getErrorMessage(error) });
         }
       }
 
@@ -182,7 +220,7 @@ const ModbusService = {
       return { results };
     } catch (error) {
       try { await client.close(() => { }); } catch { }
-      return { results: [], error: error.message || 'Batch read failed' };
+      return { results: [], error: getErrorMessage(error) };
     }
   },
 
@@ -218,7 +256,7 @@ const ModbusService = {
       return { success: true };
     } catch (error) {
       try { await client.close(() => { }); } catch { }
-      return { success: false, error: error.message || 'Change address failed' };
+      return { success: false, error: getErrorMessage(error) };
     }
   }
 };
@@ -230,7 +268,7 @@ function registerModbusHandlers(ipcMain) {
 
   // Scan for devices
   ipcMain.handle('modbus:scan', async (event, config) => {
-    return ModbusService.scan(config);
+    return ModbusService.scan(config, event.sender);
   });
 
   // Read data

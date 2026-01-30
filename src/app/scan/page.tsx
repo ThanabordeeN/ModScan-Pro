@@ -19,8 +19,7 @@ export default function ScanPage() {
   const [scanError, setScanError] = useState<string | null>(null);
   const [scannedCount, setScannedCount] = useState(0);
   const [hasScanned, setHasScanned] = useState(false);
-
-
+  const [scanProgress, setScanProgress] = useState(0);
 
   const handleScan = async () => {
     if (!isConnectionReady) {
@@ -32,6 +31,12 @@ export default function ScanPage() {
     setScanError(null);
     setScannedDevices([]);
     setHasScanned(false);
+    setScanProgress(0);
+
+    // Setup progress listener
+    modbusAPI.onScanProgress((progress) => {
+      setScanProgress(progress);
+    });
 
     try {
       const data = await modbusAPI.scan({
@@ -58,6 +63,8 @@ export default function ScanPage() {
     } catch {
       setScanError(t('err_connect_failed'));
     } finally {
+      // Cleanup
+      modbusAPI.removeScanProgress();
       setScanning(false);
     }
   };
@@ -123,13 +130,13 @@ export default function ScanPage() {
 
         <button
           onClick={handleScan}
-          disabled={scanning || !connection.port}
+          disabled={scanning || !isConnectionReady}
           className="w-full py-3 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
         >
           {scanning ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              {t('scan_scanning')}
+              {t('scan_scanning')} {scanProgress}%
             </>
           ) : (
             <>
@@ -141,8 +148,15 @@ export default function ScanPage() {
 
         {scanning && (
           <div className="mt-4">
+            <div className="flex justify-between text-xs text-slate-500 mb-1">
+               <span>Progress</span>
+               <span>{scanProgress}%</span>
+            </div>
             <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-              <div className="h-full bg-slate-900 animate-pulse" style={{ width: '100%' }} />
+              <div 
+                className="h-full bg-slate-900 transition-all duration-300 ease-out" 
+                style={{ width: `${scanProgress}%` }} 
+              />
             </div>
           </div>
         )}

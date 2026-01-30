@@ -34,45 +34,91 @@ discreteInputs[0] = true;
 discreteInputs[1] = true;
 discreteInputs[2] = false;
 
+// Initial Unit ID
+let currentUnitID = 1;
+
+// Helper to simulate "no response" (timeout)
+const ignoreRequest = async (unitID) => {
+    // Wait 2 seconds (longer than typical scan timeout of 500ms)
+    // yielding a timeout on the client side.
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Then throw or return null to ensure no valid response is sent if the server implementation waits
+    throw new Error('Ignore'); 
+};
+
 // Vector for callback functions
 const vector = {
-  getInputRegister: (addr, unitID) => {
-    console.log(`  [FC04] Read Input Register: addr=${addr}, unitID=${unitID}`);
+  getInputRegister: async (addr, unitID) => {
+    if (unitID !== currentUnitID && unitID !== 0) { 
+       await ignoreRequest(unitID);
+       return 0;
+    }
+    console.log(`  [FC04] Read Input Register: addr=${addr}, unitID=${unitID} (MyID: ${currentUnitID})`);
     return inputRegisters[addr] || 0;
   },
   
-  getHoldingRegister: (addr, unitID) => {
-    console.log(`  [FC03] Read Holding Register: addr=${addr}, unitID=${unitID}`);
+  getHoldingRegister: async (addr, unitID) => {
+    if (unitID !== currentUnitID && unitID !== 0) {
+       await ignoreRequest(unitID);
+       return 0;
+    }
+    console.log(`  [FC03] Read Holding Register: addr=${addr}, unitID=${unitID} (MyID: ${currentUnitID})`);
     return holdingRegisters[addr] || 0;
   },
   
-  getCoil: (addr, unitID) => {
-    console.log(`  [FC01] Read Coil: addr=${addr}, unitID=${unitID}`);
+  getCoil: async (addr, unitID) => {
+    if (unitID !== currentUnitID && unitID !== 0) {
+       await ignoreRequest(unitID);
+       return false;
+    }
+    console.log(`  [FC01] Read Coil: addr=${addr}, unitID=${unitID} (MyID: ${currentUnitID})`);
     return coils[addr] || false;
   },
   
-  getDiscreteInput: (addr, unitID) => {
-    console.log(`  [FC02] Read Discrete Input: addr=${addr}, unitID=${unitID}`);
+  getDiscreteInput: async (addr, unitID) => {
+    if (unitID !== currentUnitID && unitID !== 0) {
+       await ignoreRequest(unitID);
+       return false;
+    }
+    console.log(`  [FC02] Read Discrete Input: addr=${addr}, unitID=${unitID} (MyID: ${currentUnitID})`);
     return discreteInputs[addr] || false;
   },
   
-  setRegister: (addr, value, unitID) => {
-    console.log(`  [FC06/16] Write Register: addr=${addr}, value=${value}, unitID=${unitID}`);
+  setRegister: async (addr, value, unitID) => {
+    if (unitID !== currentUnitID && unitID !== 0) {
+       await ignoreRequest(unitID);
+       return;
+    }
+    
+    console.log(`  [FC06/16] Write Register: addr=${addr}, value=${value}, unitID=${unitID} (MyID: ${currentUnitID})`);
+    
+    // Special Logic: Changing Device ID via Register 0
+    if (addr === 0) {
+        console.log(`  \x1b[33m[CONFIG CHANGE] Updating Unit ID from ${currentUnitID} to ${value}...\x1b[0m`);
+        currentUnitID = value;
+    }
+    
     holdingRegisters[addr] = value;
   },
   
-  setCoil: (addr, value, unitID) => {
-    console.log(`  [FC05/15] Write Coil: addr=${addr}, value=${value}, unitID=${unitID}`);
+  setCoil: async (addr, value, unitID) => {
+    if (unitID !== currentUnitID && unitID !== 0) {
+       await ignoreRequest(unitID);
+       return;
+    }
+    console.log(`  [FC05/15] Write Coil: addr=${addr}, value=${value}, unitID=${unitID} (MyID: ${currentUnitID})`);
     coils[addr] = value;
   },
 };
 
 // Create server
+// Note: We remove 'unitID' param here to let the vector handle all requests (Promiscuous Mode at TCP level)
+// This allows us to receive requests for ANY unitID and decide inside the vector whether to respond.
 const serverTCP = new ModbusRTU.ServerTCP(vector, {
   host: '0.0.0.0',
   port: port,
   debug: true,
-  unitID: 1,
+  // unitID: 1, // REMOVED to allow vector to see all UnitIDs
 });
 
 console.log(`\n╔════════════════════════════════════════════╗`);
@@ -80,7 +126,7 @@ console.log(`║     Modbus TCP Simulator Started           ║`);
 console.log(`╠════════════════════════════════════════════╣`);
 console.log(`║  IP: 0.0.0.0 (all interfaces)              ║`);
 console.log(`║  Port: ${port.toString().padEnd(36)}║`);
-console.log(`║  Unit ID: 1                                ║`);
+console.log(`║  Initial Unit ID: 1                        ║`);
 console.log(`╠════════════════════════════════════════════╣`);
 console.log(`║  Test with:                                ║`);
 console.log(`║  node scripts/test-tcp.js 127.0.0.1 ${port.toString().padEnd(5)} 1  ║`);

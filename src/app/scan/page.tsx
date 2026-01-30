@@ -1,74 +1,26 @@
 'use client';
 
-import { useState } from 'react';
 import { Search, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import ConnectionSettings from '@/components/ConnectionSettings';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { modbusAPI } from '@/lib/electron-api';
 
 export default function ScanPage() {
-  const { connection, scannedDevices, setScannedDevices, isConnectionReady } = useModbus();
+  const { 
+    connection, isConnectionReady,
+    scannedDevices, 
+    scanStartAddr, setScanStartAddr,
+    scanEndAddr, setScanEndAddr,
+    scanTimeout, setScanTimeout,
+    isScanning,
+    scanProgress,
+    scanError,
+    scannedCount,
+    hasScanned,
+    startScan
+  } = useModbus();
   const { t } = useLanguage();
   
-  // Scan settings
-  const [startAddress, setStartAddress] = useState(1);
-  const [endAddress, setEndAddress] = useState(10);
-  const [timeout, setTimeout] = useState(500);
-  const [scanning, setScanning] = useState(false);
-  const [scanError, setScanError] = useState<string | null>(null);
-  const [scannedCount, setScannedCount] = useState(0);
-  const [hasScanned, setHasScanned] = useState(false);
-  const [scanProgress, setScanProgress] = useState(0);
-
-  const handleScan = async () => {
-    if (!isConnectionReady) {
-      setScanError(t('scan_err_port'));
-      return;
-    }
-
-    setScanning(true);
-    setScanError(null);
-    setScannedDevices([]);
-    setHasScanned(false);
-    setScanProgress(0);
-
-    // Setup progress listener
-    modbusAPI.onScanProgress((progress) => {
-      setScanProgress(progress);
-    });
-
-    try {
-      const data = await modbusAPI.scan({
-        type: connection.type,
-        port: connection.port,
-        baudRate: connection.baudRate,
-        parity: connection.parity,
-        stopBits: connection.stopBits,
-        dataBits: connection.dataBits,
-        tcpIp: connection.tcpIp,
-        tcpPort: connection.tcpPort,
-        startAddress,
-        endAddress,
-        timeout,
-      });
-
-      if (data.success && data.devices) {
-        setScannedDevices(data.devices);
-        setScannedCount(data.scannedCount || 0);
-        setHasScanned(true);
-      } else {
-        setScanError(data.error || t('scan_err_failed'));
-      }
-    } catch {
-      setScanError(t('err_connect_failed'));
-    } finally {
-      // Cleanup
-      modbusAPI.removeScanProgress();
-      setScanning(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -83,7 +35,7 @@ export default function ScanPage() {
       </div>
 
       {/* Connection Settings */}
-      <ConnectionSettings disabled={scanning} />
+      <ConnectionSettings disabled={isScanning} />
 
       {/* Scan Settings */}
       <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
@@ -96,9 +48,10 @@ export default function ScanPage() {
               type="number"
               min={1}
               max={247}
-              value={startAddress}
-              onChange={(e) => setStartAddress(Math.min(247, Math.max(1, Number(e.target.value))))}
+              value={scanStartAddr}
+              onChange={(e) => setScanStartAddr(Math.min(247, Math.max(1, Number(e.target.value))))}
               className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+              disabled={isScanning}
             />
           </div>
 
@@ -108,9 +61,10 @@ export default function ScanPage() {
               type="number"
               min={1}
               max={247}
-              value={endAddress}
-              onChange={(e) => setEndAddress(Math.min(247, Math.max(startAddress, Number(e.target.value))))}
+              value={scanEndAddr}
+              onChange={(e) => setScanEndAddr(Math.min(247, Math.max(scanStartAddr, Number(e.target.value))))}
               className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+              disabled={isScanning}
             />
           </div>
 
@@ -121,19 +75,20 @@ export default function ScanPage() {
               min={100}
               max={5000}
               step={100}
-              value={timeout}
-              onChange={(e) => setTimeout(Number(e.target.value))}
+              value={scanTimeout}
+              onChange={(e) => setScanTimeout(Number(e.target.value))}
               className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+              disabled={isScanning}
             />
           </div>
         </div>
 
         <button
-          onClick={handleScan}
-          disabled={scanning || !isConnectionReady}
+          onClick={startScan}
+          disabled={isScanning || !isConnectionReady}
           className="w-full py-3 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
         >
-          {scanning ? (
+          {isScanning ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
               {t('scan_scanning')} {scanProgress}%
@@ -146,7 +101,7 @@ export default function ScanPage() {
           )}
         </button>
 
-        {scanning && (
+        {isScanning && (
           <div className="mt-4">
             <div className="flex justify-between text-xs text-slate-500 mb-1">
                <span>Progress</span>
@@ -170,7 +125,7 @@ export default function ScanPage() {
       </div>
 
       {/* Results */}
-      {hasScanned && !scanning && (
+      {hasScanned && !isScanning && (
         <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-slate-900">{t('scan_results')}</h2>

@@ -237,6 +237,7 @@ const ModbusService = {
       client.setID(currentAddress);
       client.setTimeout(timeout);
 
+      // Perform the write
       if (functionCode === 6) {
         await client.writeRegister(registerAddress, newAddress);
       } else {
@@ -245,15 +246,34 @@ const ModbusService = {
 
       await client.close(() => { });
 
-      // Verify change
-      await new Promise(resolve => setTimeout(resolve, 500));
-      await connectClient(client, config);
-      client.setID(newAddress);
-      client.setTimeout(timeout);
-      await client.readHoldingRegisters(0, 1);
-      await client.close(() => { });
+      // Wait for device to apply changes/reboot
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      return { success: true };
+      // Verify change
+      try {
+        await connectClient(client, config);
+        client.setID(newAddress);
+        client.setTimeout(timeout);
+        
+        // Read back the specific register we just wrote to
+        const verifyResult = await client.readHoldingRegisters(registerAddress, 1);
+        
+        await client.close(() => { });
+
+        if (verifyResult.data[0] === newAddress) {
+           return { success: true, message: `Successfully changed ID from ${currentAddress} to ${newAddress}` };
+        } else {
+           return { success: true, warning: `Write command sent, but readback value (${verifyResult.data[0]}) does not match new ID (${newAddress}). Device might need a restart.` };
+        }
+
+      } catch (verifyError) {
+        // If verification fails, it might just be a connection issue with the new ID, but the write likely succeeded.
+        return { 
+          success: true, 
+          warning: `Write command sent successfully, but verification failed: ${getErrorMessage(verifyError)}. The device might have changed ID or is restarting.` 
+        };
+      }
+
     } catch (error) {
       try { await client.close(() => { }); } catch { }
       return { success: false, error: getErrorMessage(error) };

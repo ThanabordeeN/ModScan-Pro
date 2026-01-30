@@ -23,9 +23,11 @@ export default function ChangeAddressPage() {
   
   // UI state
   const [changing, setChanging] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [result, setResult] = useState<{ success: boolean; message: string; warning?: string } | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [useScannedDevice, setUseScannedDevice] = useState(false);
+
+
 
 
 
@@ -63,7 +65,8 @@ export default function ChangeAddressPage() {
       if (data.success) {
         setResult({
           success: true,
-          message: t('change_id_success').replace('{old}', currentAddress.toString()).replace('{new}', newAddress.toString()),
+          message: data.message || t('change_id_success').replace('{old}', currentAddress.toString()).replace('{new}', newAddress.toString()),
+          warning: data.warning
         });
       } else {
         setResult({
@@ -297,19 +300,30 @@ export default function ChangeAddressPage() {
         )}
 
         {result && (
-          <div className={`mt-4 p-4 rounded-lg border flex items-center gap-3 ${
-            result.success 
-              ? 'bg-emerald-50 border-emerald-200' 
-              : 'bg-red-50 border-red-200'
-          }`}>
-            {result.success ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-            ) : (
-              <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+          <div className="space-y-4 mt-6">
+            <div className={`p-4 rounded-lg border flex items-center gap-3 ${
+              result.success 
+                ? 'bg-emerald-50 border-emerald-200' 
+                : 'bg-red-50 border-red-200'
+            }`}>
+              {result.success ? (
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+              ) : (
+                <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+              )}
+              <span className={result.success ? 'text-emerald-700' : 'text-red-700'}>
+                {result.message}
+              </span>
+            </div>
+
+            {result.warning && (
+              <div className="p-4 rounded-lg border bg-amber-50 border-amber-200 flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <span className="text-amber-800 text-sm">
+                  {result.warning}
+                </span>
+              </div>
             )}
-            <span className={result.success ? 'text-emerald-700' : 'text-red-700'}>
-              {result.message}
-            </span>
           </div>
         )}
       </div>

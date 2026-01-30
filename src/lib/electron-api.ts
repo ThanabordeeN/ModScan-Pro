@@ -75,6 +75,14 @@ export interface ChangeAddressConfig extends ConnectionConfig {
   timeout?: number;
 }
 
+export interface LogEntry {
+  timestamp: number;
+  slaveId: number;
+  address: number;
+  value: number;
+  fc: number;
+}
+
 // Check if running in Electron
 export function isElectron(): boolean {
   return typeof window !== 'undefined' &&
@@ -96,7 +104,7 @@ interface ElectronWindow extends Window {
       read: (config: ReadConfig) => Promise<{ success: boolean; data?: number[]; error?: string }>;
       write: (config: WriteConfig) => Promise<{ success: boolean; error?: string }>;
       readBatch: (config: BatchReadConfig) => Promise<{ results: Array<{ success: boolean; data?: number[]; error?: string }>; error?: string }>;
-      changeAddress: (config: ChangeAddressConfig) => Promise<{ success: boolean; error?: string }>;
+      changeAddress: (config: ChangeAddressConfig) => Promise<{ success: boolean; message?: string; warning?: string; error?: string }>;
     };
     license: {
       getMachineId: () => Promise<{ success: boolean; machineId?: string; error?: string }>;
@@ -107,6 +115,11 @@ interface ElectronWindow extends Window {
       control: (data: { action: 'start' | 'stop'; password?: string }) => Promise<{ success: boolean; url?: string; error?: string }>;
       status: () => Promise<{ isActive: boolean; url: string | null }>;
       login: (data: { password: string }) => Promise<{ success: boolean; error?: string }>;
+    };
+    logger: {
+      start: () => Promise<{ success: boolean; filePath?: string; cancelled?: boolean; error?: string }>;
+      log: (entries: LogEntry[]) => Promise<{ success: boolean; error?: string }>;
+      stop: () => Promise<{ success: boolean; filePath?: string; error?: string }>;
     };
   };
 }
@@ -200,7 +213,7 @@ export const modbusAPI = {
     return res.json();
   },
 
-  async changeAddress(config: ChangeAddressConfig): Promise<{ success: boolean; error?: string }> {
+  async changeAddress(config: ChangeAddressConfig): Promise<{ success: boolean; message?: string; warning?: string; error?: string }> {
     const api = getElectronAPI();
     if (api) {
       return api.modbus.changeAddress(config);
@@ -285,5 +298,33 @@ export const tunnelAPI = {
       body: JSON.stringify({ password }),
     });
     return res.json();
+  },
+
+};
+
+// Logger API
+export const loggerAPI = {
+  async start(): Promise<{ success: boolean; filePath?: string; cancelled?: boolean; error?: string }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.logger.start();
+    }
+    return { success: false, error: 'Logger not available in web mode' };
+  },
+
+  async log(entries: LogEntry[]): Promise<{ success: boolean; error?: string }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.logger.log(entries);
+    }
+    return { success: false, error: 'Logger not available in web mode' };
+  },
+
+  async stop(): Promise<{ success: boolean; filePath?: string; error?: string }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.logger.stop();
+    }
+    return { success: false, error: 'Logger not available in web mode' };
   },
 };

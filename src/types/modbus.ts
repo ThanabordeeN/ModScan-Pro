@@ -78,3 +78,19 @@ export const FUNCTION_CODE_OPTIONS = [
   { value: 6, label: 'FC 6 - Write Single Register' },
   { value: 16, label: 'FC 16 - Write Multiple Registers' },
 ] as const;
+
+export interface ReadRange {
+  id: string;
+  slaveAddress: number;
+  functionCode: 1 | 2 | 3 | 4;
+  registerAddress: number;
+  quantity: number;
+}
+
+export interface UILogEntry {
+  id: number;
+  timestamp: Date;
+  address: number;
+  values: number[];
+  functionCode: number;
+}

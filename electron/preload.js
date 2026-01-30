@@ -33,6 +33,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     login: (data) => ipcRenderer.invoke('tunnel:login', data),
   },
 
+  // Logger operations
+  logger: {
+    start: () => ipcRenderer.invoke('logger:start'),
+    log: (entries) => ipcRenderer.invoke('logger:log', entries),
+    stop: () => ipcRenderer.invoke('logger:stop'),
+  },
+
   // Utility
   isElectron: true,
 });

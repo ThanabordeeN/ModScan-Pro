@@ -1,32 +1,24 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { BookOpen, Loader2, XCircle, CheckCircle2, Play, Square, Timer, Trash2, History, Plus } from 'lucide-react';
+import { BookOpen, Loader2, XCircle, CheckCircle2, Play, Square, Timer, Trash2, History, Plus, LineChart as ChartIcon, FileSpreadsheet } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import ConnectionSettings from '@/components/ConnectionSettings';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { modbusAPI } from '@/lib/electron-api';
-
-interface LogEntry {
-  id: number;
-  timestamp: Date;
-  address: number;
-  values: number[];
-  functionCode: number;
-}
-
-interface ReadRange {
-  id: string;
-  slaveAddress: number;
-  functionCode: 1 | 2 | 3 | 4;
-  registerAddress: number;
-  quantity: number;
-}
-
-
+import type { ReadRange } from '@/types/modbus';
 
 export default function ReadPage() {
-  const { connection, scannedDevices, isConnectionReady } = useModbus();
+  const { 
+    connection, scannedDevices, isConnectionReady,
+    readRanges, setReadRanges,
+    readTimeout, setReadTimeout,
+    autoRefresh, toggleAutoRefresh, refreshInterval, setRefreshInterval, lastUpdated,
+    readData, readError, isReading, readOnce,
+    logs, setLogs, clearLogs,
+    graphData, setGraphData, clearGraph,
+    selectedRegisters, toggleRegisterSelection,
+    isLogging, toggleLogging
+  } = useModbus();
   const { t } = useLanguage();
 
   const READ_FUNCTION_CODES = [
@@ -36,172 +28,11 @@ export default function ReadPage() {
     { value: 4, label: 'FC04 - Read Input Registers', description: t('read_input_desc') || 'Read Input Register (3x)' },
   ];
 
-  // Read settings
-  const [ranges, setRanges] = useState<ReadRange[]>([
-    { id: 'default', slaveAddress: 1, functionCode: 3, registerAddress: 0, quantity: 10 }
-  ]);
-  const [timeout, setTimeout] = useState(1000);
-  
-  // Auto Read settings
-  const [isAutoRefresh, setIsAutoRefresh] = useState(false);
-  const [refreshInterval, setRefreshInterval] = useState(1000);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isReadingRef = useRef(false);
-  
-  // Logs
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-
-  // Results
-  const [reading, setReading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [readData, setReadData] = useState<{rangeId: string, data: number[]}[] | null>(null);
-
-
-
-  // Reset data and error when ranges change
-  useEffect(() => {
-    setReadData(null);
-    setError(null);
-    stopAutoRefresh();
-  }, [ranges]);
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => stopAutoRefresh();
-  }, []);
-
-  const handleRead = async () => {
-    if (!isConnectionReady) {
-      setError(t('err_select_port'));
-      return;
-    }
-
-    if (ranges.length === 0) {
-      setError('กรุณาเพิ่มช่วงการอ่านอย่างน้อย 1 ช่วง');
-      return;
-    }
-
-    if (isReadingRef.current) return;
-    
-    isReadingRef.current = true;
-    setReading(true);
-    
-    if (!isAutoRefresh) {
-      setError(null);
-      setReadData(null);
-    }
-
-    try {
-      const requests = ranges.map(range => ({
-        slaveAddress: range.slaveAddress,
-        functionCode: range.functionCode as 1 | 2 | 3 | 4,
-        registerAddress: range.registerAddress,
-        quantity: range.quantity
-      }));
-
-      const data = await modbusAPI.readBatch({
-        type: connection.type,
-        port: connection.port,
-        baudRate: connection.baudRate,
-        parity: connection.parity,
-        stopBits: connection.stopBits,
-        dataBits: connection.dataBits,
-        tcpIp: connection.tcpIp,
-        tcpPort: connection.tcpPort,
-        requests,
-        timeout,
-      });
-
-      if (!data.error) {
-        // Map results back to ranges
-        const mappedData = data.results.map((res: { success: boolean; data?: number[] }, idx: number) => ({
-          rangeId: ranges[idx].id,
-          data: res.success && res.data ? res.data : []
-        }));
-
-        setReadData(mappedData);
-        const now = new Date();
-        setLastUpdated(now);
-        setError(null); 
-
-        // Add to log (Flattened for now, or per range?)
-        // Let's create multiple log entries or one combined? 
-        // For simplicity, let's add one entry per range that got data
-        const newLogs: LogEntry[] = [];
-        data.results.forEach((res: { success: boolean; data?: number[] }, idx: number) => {
-          if (res.success && res.data && res.data.length > 0) {
-            newLogs.push({
-              id: Date.now() + idx, // offset id slightly
-              timestamp: now,
-              address: ranges[idx].registerAddress,
-              values: res.data,
-              functionCode: ranges[idx].functionCode
-            });
-          }
-        });
-        
-        setLogs(prevLogs => {
-          const combined = [...newLogs, ...prevLogs];
-          return combined.slice(0, 200); // Increased limit
-        });
-
-      } else {
-        setError(t('common_error')); // Simplified or can add specific translation
-      }
-    } catch {
-      setError(t('err_connect_failed'));
-    } finally {
-      setReading(false);
-      isReadingRef.current = false;
-    }
-  };
-
-  const toggleAutoRefresh = () => {
-    if (isAutoRefresh) {
-      stopAutoRefresh();
-    } else {
-      startAutoRefresh();
-    }
-  };
-
-  const startAutoRefresh = () => {
-    if (!isConnectionReady) {
-      setError('กรุณาเลือก Serial Port / Connection ก่อน');
-      return;
-    }
-    setIsAutoRefresh(true);
-    handleRead(); 
-  };
-
-  const stopAutoRefresh = () => {
-    setIsAutoRefresh(false);
-    if (autoRefreshTimerRef.current) {
-      clearInterval(autoRefreshTimerRef.current);
-      autoRefreshTimerRef.current = null;
-    }
-  };
-
-  useEffect(() => {
-    if (isAutoRefresh) {
-      autoRefreshTimerRef.current = setInterval(() => {
-        handleRead();
-      }, refreshInterval);
-    } else {
-      if (autoRefreshTimerRef.current) {
-        clearInterval(autoRefreshTimerRef.current);
-        autoRefreshTimerRef.current = null;
-      }
-    }
-    return () => {
-      if (autoRefreshTimerRef.current) {
-        clearInterval(autoRefreshTimerRef.current);
-      }
-    };
-  }, [isAutoRefresh, refreshInterval, connection, ranges, timeout]);
+  // Colors for graph lines
+  const LINE_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
   const addRange = () => {
-    setRanges([...ranges, { 
+    setReadRanges([...readRanges, { 
       id: Date.now().toString(), 
       slaveAddress: 1, 
       functionCode: 3, 
@@ -211,13 +42,13 @@ export default function ReadPage() {
   };
 
   const removeRange = (id: string) => {
-    if (ranges.length > 1) {
-      setRanges(ranges.filter(r => r.id !== id));
+    if (readRanges.length > 1) {
+      setReadRanges(readRanges.filter(r => r.id !== id));
     }
   };
 
   const updateRange = (id: string, field: keyof ReadRange, value: string | number | boolean) => {
-    setRanges(ranges.map(r => {
+    setReadRanges(readRanges.map(r => {
       if (r.id === id) {
         return { ...r, [field]: value };
       }
@@ -239,7 +70,7 @@ export default function ReadPage() {
       </div>
 
       {/* Connection Settings */}
-      <ConnectionSettings disabled={reading || isAutoRefresh} />
+      <ConnectionSettings disabled={isReading || autoRefresh} />
 
       {/* Scanned Devices Quick Select */}
       {scannedDevices.length > 0 && (
@@ -252,14 +83,14 @@ export default function ReadPage() {
             {scannedDevices.map((device) => (
               <button
                 key={device.address}
-                onClick={() => setRanges([...ranges, {
+                onClick={() => setReadRanges([...readRanges, {
                   id: Date.now().toString(),
                   slaveAddress: device.address,
                   functionCode: 3,
                   registerAddress: 0,
                   quantity: 10
                 }])}
-                disabled={isAutoRefresh}
+                disabled={autoRefresh}
                 className="px-3 py-1.5 rounded-lg font-mono text-sm bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 border border-transparent transition-all flex items-center gap-2"
               >
                 <Plus className="w-3 h-3" />
@@ -276,7 +107,7 @@ export default function ReadPage() {
            <h2 className="text-lg font-semibold text-slate-900">{t('read_ranges')}</h2>
            <button
              onClick={addRange}
-             disabled={isAutoRefresh}
+             disabled={autoRefresh}
              className="text-sm bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 font-medium flex items-center gap-1 transition-colors disabled:opacity-50"
            >
              <Plus className="w-4 h-4" />
@@ -285,7 +116,7 @@ export default function ReadPage() {
         </div>
         
         <div className="space-y-4">
-          {ranges.map((range, index) => (
+          {readRanges.map((range, index) => (
             <div key={range.id} className="p-4 rounded-lg bg-slate-50 border border-slate-200 relative group">
                <div className="absolute -left-2 top-4 w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-xs font-bold text-slate-600 border border-white shadow-sm">
                  {index + 1}
@@ -297,7 +128,7 @@ export default function ReadPage() {
                     <select
                       value={range.functionCode}
                       onChange={(e) => updateRange(range.id, 'functionCode', Number(e.target.value))}
-                      disabled={isAutoRefresh}
+                      disabled={autoRefresh}
                       className="w-full px-2 py-1.5 rounded bg-white border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     >
                       {READ_FUNCTION_CODES.map((fc) => (
@@ -314,7 +145,7 @@ export default function ReadPage() {
                       max={247}
                       value={range.slaveAddress}
                       onChange={(e) => updateRange(range.id, 'slaveAddress', Number(e.target.value))}
-                      disabled={isAutoRefresh}
+                      disabled={autoRefresh}
                       className="w-full px-2 py-1.5 rounded bg-white border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     />
                   </div>
@@ -327,7 +158,7 @@ export default function ReadPage() {
                       max={65535}
                       value={range.registerAddress}
                       onChange={(e) => updateRange(range.id, 'registerAddress', Number(e.target.value))}
-                      disabled={isAutoRefresh}
+                      disabled={autoRefresh}
                       className="w-full px-2 py-1.5 rounded bg-white border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     />
                   </div>
@@ -340,7 +171,7 @@ export default function ReadPage() {
                       max={125}
                       value={range.quantity}
                       onChange={(e) => updateRange(range.id, 'quantity', Number(e.target.value))}
-                      disabled={isAutoRefresh}
+                      disabled={autoRefresh}
                       className="w-full px-2 py-1.5 rounded bg-white border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     />
                   </div>
@@ -348,7 +179,7 @@ export default function ReadPage() {
                   <div className="md:col-span-1 flex justify-end">
                     <button
                       onClick={() => removeRange(range.id)}
-                      disabled={ranges.length === 1 || isAutoRefresh}
+                      disabled={readRanges.length === 1 || autoRefresh}
                       className="p-2 text-slate-400 hover:text-red-600 disabled:opacity-30 transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -369,9 +200,9 @@ export default function ReadPage() {
                   min={100}
                   max={10000}
                   step={100}
-                  value={timeout}
-                  onChange={(e) => setTimeout(Number(e.target.value))}
-                  disabled={isAutoRefresh}
+                  value={readTimeout}
+                  onChange={(e) => setReadTimeout(Number(e.target.value))}
+                  disabled={autoRefresh}
                   className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 disabled:text-slate-500"
                 />
               </div>
@@ -388,18 +219,18 @@ export default function ReadPage() {
                   step={100}
                   value={refreshInterval}
                   onChange={(e) => setRefreshInterval(Number(e.target.value))}
-                  disabled={isAutoRefresh}
+                  disabled={autoRefresh}
                   className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 disabled:text-slate-500"
                 />
               </div>
 
                <div className="flex gap-2 w-full md:w-auto">
                  <button
-                  onClick={handleRead}
-                  disabled={reading || !isConnectionReady || isAutoRefresh}
+                  onClick={readOnce}
+                  disabled={isReading || !isConnectionReady || autoRefresh}
                   className="flex-1 md:flex-none py-2 px-4 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:bg-slate-50 disabled:text-slate-400 text-slate-700 font-medium transition-all duration-200 flex items-center justify-center gap-2"
                 >
-                  {reading && !isAutoRefresh ? (
+                  {isReading && !autoRefresh ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <BookOpen className="w-4 h-4" />
@@ -409,14 +240,14 @@ export default function ReadPage() {
 
                 <button
                   onClick={toggleAutoRefresh}
-                  disabled={!isConnectionReady && !isAutoRefresh}
+                  disabled={!isConnectionReady && !autoRefresh}
                   className={`flex-1 md:flex-none py-2 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm ${
-                    isAutoRefresh 
+                    autoRefresh 
                       ? 'bg-red-500 hover:bg-red-600 text-white' 
                       : 'bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-slate-300 disabled:cursor-not-allowed'
                   }`}
                 >
-                  {isAutoRefresh ? (
+                  {autoRefresh ? (
                     <>
                       <Square className="w-4 h-4 fill-current" />
                       {t('read_stop_loop')}
@@ -432,12 +263,80 @@ export default function ReadPage() {
            </div>
         </div>
         
-         {error && (
+         {readError && (
           <div className="mt-4 p-4 rounded-lg bg-red-50 border border-red-200 flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
             <XCircle className="w-5 h-5 text-red-600" />
-            <span className="text-red-600">{error}</span>
+            <span className="text-red-600">{readError}</span>
           </div>
         )}
+      </div>
+
+      {/* Analyzer Graph Section */}
+      {selectedRegisters.size > 0 && (
+        <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm animate-in fade-in slide-in-from-bottom-4">
+           <div className="flex items-center justify-between mb-4">
+             <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+               <ChartIcon className="w-5 h-5 text-indigo-600" />
+               Real-time Analysis
+             </h2>
+             <button
+               onClick={clearGraph}
+               className="text-xs text-slate-500 hover:text-slate-700 underline"
+             >
+               Clear Graph
+             </button>
+           </div>
+           
+           <div className="h-[300px] w-full">
+             <ResponsiveContainer width="100%" height="100%">
+               <LineChart data={graphData}>
+                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                 <XAxis 
+                   dataKey="timeStr" 
+                   tick={{fontSize: 10}} 
+                   interval="preserveStartEnd"
+                 />
+                 <YAxis domain={['auto', 'auto']} />
+                 <Tooltip 
+                   contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                 />
+                 <Legend />
+                 {Array.from(selectedRegisters).map((id, index) => {
+                    const [slaveId, addr] = id.split('-');
+                    return (
+                      <Line 
+                        key={id} 
+                        type="monotone" 
+                        dataKey={id} 
+                        name={`ID:${slaveId} Addr:${addr}`}
+                        stroke={LINE_COLORS[index % LINE_COLORS.length]} 
+                        dot={false}
+                        strokeWidth={2}
+                        activeDot={{ r: 6 }}
+                        isAnimationActive={false} // Better performance
+                      />
+                    );
+                 })}
+               </LineChart>
+             </ResponsiveContainer>
+           </div>
+        </div>
+      )}
+
+      {/* Logging Control */}
+      <div className="flex justify-end mb-2">
+         <button
+            onClick={toggleLogging}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all shadow-sm ${
+               isLogging 
+                 ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100' 
+                 : 'bg-white text-slate-700 border border-slate-200 hover:border-slate-400'
+            }`}
+         >
+            <FileSpreadsheet className="w-4 h-4" />
+            {isLogging ? 'Stop Logging & Save CSV' : 'Start Logging to CSV'}
+            {isLogging && <span className="animate-pulse w-2 h-2 rounded-full bg-red-500 ml-1"></span>}
+         </button>
       </div>
 
       {/* Results */}
@@ -450,7 +349,7 @@ export default function ReadPage() {
                  {readData.reduce((acc, curr) => acc + curr.data.length, 0)} {t('read_total_values')}
               </span>
             </div>
-            {lastUpdated && isAutoRefresh && (
+            {lastUpdated && autoRefresh && (
                <div className="flex items-center gap-2 text-xs text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -465,6 +364,7 @@ export default function ReadPage() {
              <table className="w-full">
               <thead className="bg-slate-50 sticky top-0 z-10">
                 <tr>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-slate-500 w-10">Graph</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Address</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">ค่า (Dec)</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Hex</th>
@@ -473,12 +373,24 @@ export default function ReadPage() {
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {readData.map((rangeResult) => {
-                    const rangeConfig = ranges.find(r => r.id === rangeResult.rangeId);
+                    const rangeConfig = readRanges.find(r => r.id === rangeResult.rangeId);
                     if (!rangeConfig || rangeResult.data.length === 0) return null;
                     const isCoil = rangeConfig.functionCode === 1 || rangeConfig.functionCode === 2;
                     
-                    return rangeResult.data.map((value, valIdx) => (
-                      <tr key={`${rangeResult.rangeId}-${valIdx}`} className="bg-white hover:bg-slate-50 transition-colors">
+                    return rangeResult.data.map((value, valIdx) => {
+                      const uniqueId = `${rangeConfig.slaveAddress}-${rangeConfig.registerAddress + valIdx}`;
+                      const isSelected = selectedRegisters.has(uniqueId);
+                      
+                      return (
+                      <tr key={`${rangeResult.rangeId}-${valIdx}`} className={`transition-colors ${isSelected ? 'bg-indigo-50/50' : 'bg-white hover:bg-slate-50'}`}>
+                        <td className="px-4 py-2">
+                          <input 
+                            type="checkbox" 
+                            checked={isSelected}
+                            onChange={() => toggleRegisterSelection(uniqueId)}
+                            className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                          />
+                        </td>
                         <td className="px-4 py-2">
                           <span className="font-mono text-sm text-slate-600">{rangeConfig.registerAddress + valIdx}</span>
                           <span className="ml-2 text-xs text-slate-400 bg-slate-100 px-1 rounded">ID:{rangeConfig.slaveAddress}</span>
@@ -500,7 +412,8 @@ export default function ReadPage() {
                             {!isCoil && <span className="font-mono text-xs text-slate-400">{value.toString(2).padStart(16, '0')}</span>}
                         </td>
                       </tr>
-                    ));
+                      );
+                    });
                 })}
               </tbody>
             </table>
@@ -509,7 +422,7 @@ export default function ReadPage() {
       )}
 
 
-      {/* Log Table (Same as before) */}
+      {/* Log Table */}
       {logs.length > 0 && (
         <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm animate-in fade-in slide-in-from-bottom-4">
           <div className="flex items-center justify-between mb-4">
@@ -518,7 +431,7 @@ export default function ReadPage() {
                {t('read_logs')}
             </h2>
              <button
-                onClick={() => setLogs([])}
+                onClick={clearLogs}
                 className="text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
              >
                 <Trash2 className="w-4 h-4" />

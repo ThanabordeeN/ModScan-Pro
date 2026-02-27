@@ -209,8 +209,18 @@ function createStaticServer() {
     // Remove query strings
     filePath = filePath.split('?')[0];
 
+    // Prevent directory traversal
+    const safeSuffix = path.normalize(filePath).replace(/^(\.\.[\/\\])+/, '');
+
     // Build full path
-    let fullPath = path.join(staticPath, filePath);
+    let fullPath = path.join(staticPath, safeSuffix);
+
+    // Verify path is still within staticPath (double check)
+    if (!fullPath.startsWith(staticPath)) {
+      res.writeHead(403);
+      res.end('Forbidden');
+      return;
+    }
 
     // For Next.js routes without extension, try .html
     if (!path.extname(fullPath)) {

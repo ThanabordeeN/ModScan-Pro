@@ -9,6 +9,7 @@ const { registerModbusHandlers } = require('./ipc/modbus');
 const { registerLicenseHandlers } = require('./ipc/license');
 const { registerTunnelHandlers } = require('./ipc/tunnel');
 const { registerLoggerHandlers } = require('./ipc/logger');
+const logger = require('./logger');
 
 let mainWindow;
 let server;
@@ -45,7 +46,7 @@ function createStaticServer() {
   const staticPath = getStaticPath();
   const proxy = httpProxy.createProxyServer({});
 
-  console.log('Static path:', staticPath);
+  logger.info('Static path:', staticPath);
 
   server = http.createServer(async (req, res) => {
     let filePath = req.url;
@@ -171,7 +172,7 @@ function createStaticServer() {
         try {
           if (buffers.length) body = JSON.parse(Buffer.concat(buffers).toString());
         } catch (e) {
-          console.error('Failed to parse body', e);
+          logger.error('Failed to parse body', e);
         }
 
         let result = { success: false, error: 'Unknown endpoint' };
@@ -193,7 +194,7 @@ function createStaticServer() {
     // PROXY TO NEXT.JS IN DEV
     if (process.env.NODE_ENV === 'development') {
       proxy.web(req, res, { target: 'http://localhost:3000', changeOrigin: true }, (e) => {
-        console.error('Proxy error:', e);
+        logger.error('Proxy error:', e);
         res.writeHead(502);
         res.end('Bad Gateway');
       });
@@ -261,7 +262,7 @@ function createStaticServer() {
 
   return new Promise((resolve) => {
     server.listen(PORT, '127.0.0.1', () => {
-      console.log(`Unified Server running at http://127.0.0.1:${PORT}`);
+      logger.info(`Unified Server running at http://127.0.0.1:${PORT}`);
       resolve();
     });
   });

@@ -100,7 +100,9 @@ function saveLicense(key) {
     fs.writeFileSync(licenseFilePath, key.trim());
     return true;
   } catch (error) {
-    console.error('Error saving license:', error);
+    if (!app.isPackaged) {
+      console.error('Error saving license:', error);
+    }
     return false;
   }
 }

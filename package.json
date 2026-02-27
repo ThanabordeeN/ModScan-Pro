@@ -12,6 +12,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "jest",
     "lint": "next lint",
     "electron:dev": "concurrently \"cross-env NODE_ENV=development npm run dev\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
     "electron:build": "npm run build && electron-builder",
@@ -34,6 +35,7 @@
     "wait-on": "^9.0.3"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/js-cookie": "^3.0.6",
     "@types/localtunnel": "^2.0.4",
     "@types/node": "^25.0.10",
@@ -43,8 +45,11 @@
     "electron-builder": "^26.4.0",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.1.5",
+    "jest": "^30.2.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
+    "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
   "build": {

@@ -9,7 +9,6 @@ interface TunnelState {
 
 // Global declaration to persist state across hot reloads
 declare global {
-  // eslint-disable-next-line no-var
   var tunnelState: TunnelState | undefined;
 }
 

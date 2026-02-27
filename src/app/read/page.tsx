@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
-  BookOpen, Loader2, XCircle, CheckCircle2, Play, Square, 
+  BookOpen, Loader2, XCircle, Play, Square,
   Timer, Trash2, History, Plus, LineChart as ChartIcon, 
   FileSpreadsheet, PenLine, Settings2, Hash, Type, Info,
-  ChevronDown, ChevronUp, Save
+  Save
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import ConnectionSettings from '@/components/ConnectionSettings';
@@ -16,14 +16,14 @@ import { registersToValue, formatValue, getRegisterCount, valueToRegisters } fro
 
 export default function UnifiedPage() {
   const { 
-    connection, scannedDevices, isConnectionReady,
+    isConnectionReady,
     readRanges, setReadRanges,
     readTimeout, setReadTimeout,
     autoRefresh, toggleAutoRefresh, refreshInterval, setRefreshInterval, lastUpdated,
     readData, readError, isReading, readOnce,
     handleWrite,
-    logs, setLogs, clearLogs,
-    graphData, setGraphData, clearGraph,
+    logs, clearLogs,
+    graphData, clearGraph,
     selectedRegisters, toggleRegisterSelection,
     isLogging, toggleLogging
   } = useModbus();
@@ -87,7 +87,7 @@ export default function UnifiedPage() {
     setWriteError(null);
     try {
       const regCount = getRegisterCount(type);
-      let config: any = {
+      const config: any = {
         slaveAddress: slaveId,
         address: address,
       };

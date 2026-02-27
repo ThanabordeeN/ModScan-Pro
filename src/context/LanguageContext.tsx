@@ -18,6 +18,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     // Load persisted language on mount
     const savedLang = localStorage.getItem('modscan_language') as Language;
     if (savedLang && (savedLang === 'th' || savedLang === 'en')) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLanguageState(savedLang);
     }
   }, []);

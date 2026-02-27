@@ -6,6 +6,12 @@ const path = require('path');
 // In Electron, we use app.getPath('userData') for license storage
 const { app } = require('electron');
 
+function logError(message, error) {
+  if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
+    console.error(`[License] ${message}`, error || '');
+  }
+}
+
 function getLicenseFilePath() {
   // In production, store in app data directory
   // In development, store in project root
@@ -39,7 +45,7 @@ function getMachineId() {
   try {
     return machineIdSync();
   } catch (error) {
-    console.error('Error getting machine ID:', error);
+    logError('Error getting machine ID:', error);
     return 'UNKNOWN_MACHINE_ID';
   }
 }
@@ -57,7 +63,7 @@ function verifyLicense(inputKey) {
         licenseKey = fs.readFileSync(licenseFilePath, 'utf8').trim();
       }
     } catch (e) {
-      console.error('Error reading license file:', e);
+      logError('Error reading license file:', e);
     }
   }
 
@@ -67,7 +73,7 @@ function verifyLicense(inputKey) {
 
   try {
     if (!fs.existsSync(publicKeyPath)) {
-      console.error('Public key not found at:', publicKeyPath);
+      logError('Public key not found at:', publicKeyPath);
       return { valid: false, machineId: currentMachineId, error: 'System configuration error: Public key missing' };
     }
 
@@ -84,7 +90,7 @@ function verifyLicense(inputKey) {
       error: isValid ? undefined : 'Invalid license key for this machine'
     };
   } catch (error) {
-    console.error('License verification error:', error);
+    logError('License verification error:', error);
     return { valid: false, machineId: currentMachineId, error: 'Verification failed' };
   }
 }
@@ -100,7 +106,7 @@ function saveLicense(key) {
     fs.writeFileSync(licenseFilePath, key.trim());
     return true;
   } catch (error) {
-    console.error('Error saving license:', error);
+    logError('Error saving license:', error);
     return false;
   }
 }

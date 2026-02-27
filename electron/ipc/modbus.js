@@ -52,6 +52,18 @@ function getErrorMessage(error) {
 const ModbusService = {
   scan: async (config, sender) => {
     const { startAddress, endAddress, timeout = 500 } = config;
+
+    // Validate input
+    if (typeof startAddress !== 'number' || typeof endAddress !== 'number') {
+      return { success: false, error: 'Start and End addresses must be numbers' };
+    }
+    if (startAddress < 1 || endAddress > 247) {
+      return { success: false, error: 'Address range must be between 1 and 247' };
+    }
+    if (startAddress > endAddress) {
+      return { success: false, error: 'Start address cannot be greater than end address' };
+    }
+
     const client = new ModbusRTU();
     const devices = [];
 

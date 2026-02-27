@@ -57,7 +57,9 @@ function verifyLicense(inputKey) {
         licenseKey = fs.readFileSync(licenseFilePath, 'utf8').trim();
       }
     } catch (e) {
-      console.error('Error reading license file:', e);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error reading license file:', e);
+      }
     }
   }
 

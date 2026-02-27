@@ -1,35 +1,27 @@
 'use client';
 
 import Link from 'next/link';
-import { Search, BookOpen, PenLine, Settings, ArrowRight, Zap } from 'lucide-react';
+import { Search, Globe, Settings, ArrowRight, Zap, PenLine, BookOpen } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function Home() {
   const { t } = useLanguage();
   const features = [
     {
+      href: '/read',
+      icon: Globe,
+      title: 'Unified Dashboard',
+      description: 'Combine Read and Write operations in a single persistent view with multi-monitoring support.',
+      color: 'emerald',
+      tags: ['FC01-04', 'FC05-06', 'Real-time'],
+    },
+    {
       href: '/scan',
       icon: Search,
       title: t('nav_scan'),
       description: t('home_scan_desc'),
       color: 'cyan',
-      tags: ['FC03'],
-    },
-    {
-      href: '/read',
-      icon: BookOpen,
-      title: t('nav_read'),
-      description: t('home_read_desc'),
-      color: 'emerald',
-      tags: ['FC01', 'FC02', 'FC03', 'FC04'],
-    },
-    {
-      href: '/write',
-      icon: PenLine,
-      title: t('nav_write'),
-      description: t('home_write_desc'),
-      color: 'purple',
-      tags: ['FC05', 'FC06', 'FC15', 'FC16'],
+      tags: ['Discovery'],
     },
     {
       href: '/change-address',
@@ -38,6 +30,14 @@ export default function Home() {
       description: t('home_change_id_desc'),
       color: 'amber',
       tags: ['Config'],
+    },
+    {
+      href: '/remote',
+      icon: PenLine,
+      title: t('nav_remote'),
+      description: 'Access and control your Modbus devices remotely via secure tunnel.',
+      color: 'purple',
+      tags: ['Remote'],
     },
   ];
 
@@ -62,7 +62,7 @@ export default function Home() {
           {t('home_title')}
         </h1>
         <p className="text-lg text-slate-600 max-w-xl mx-auto">
-          {t('home_subtitle')}
+          Experience the most advanced Modbus management suite with real-time monitoring and control.
         </p>
         <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-xs font-medium text-slate-600">
           <span>By 2EDGE Technology Co.,Ltd</span>
@@ -112,9 +112,9 @@ export default function Home() {
         <div className="flex items-start gap-3">
           <Zap className="w-5 h-5 text-slate-900 mt-0.5" />
           <div>
-            <h3 className="text-sm font-medium text-slate-900 mb-1">{t('home_start_title')}</h3>
+            <h3 className="text-sm font-medium text-slate-900 mb-1">Persistent Workspace</h3>
             <p className="text-sm text-slate-600">
-              {t('home_start_desc')}
+              Your settings, read ranges, and dashboard layout are automatically saved. Switching between pages no longer loses your configurations.
             </p>
           </div>
         </div>

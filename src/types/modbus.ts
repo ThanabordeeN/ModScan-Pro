@@ -79,12 +79,16 @@ export const FUNCTION_CODE_OPTIONS = [
   { value: 16, label: 'FC 16 - Write Multiple Registers' },
 ] as const;
 
+export type DataType = 'int16' | 'uint16' | 'int32' | 'uint32' | 'float32' | 'double64' | 'coil';
+
 export interface ReadRange {
   id: string;
   slaveAddress: number;
   functionCode: 1 | 2 | 3 | 4;
   registerAddress: number;
   quantity: number;
+  dataType?: DataType;
+  remark?: string;
 }
 
 export interface UILogEntry {
@@ -93,4 +97,5 @@ export interface UILogEntry {
   address: number;
   values: number[];
   functionCode: number;
+  remark?: string;
 }

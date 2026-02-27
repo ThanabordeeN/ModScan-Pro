@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useRef, useCallback } from 'react';
 import type { ModbusDevice, ReadRange, UILogEntry } from '@/types/modbus';
 import { modbusAPI, loggerAPI, LogEntry } from '@/lib/electron-api';
+import { registersToValue } from '@/lib/modbus-utils';
 
 interface ConnectionSettings {
   type: 'serial' | 'tcp';
@@ -58,6 +59,9 @@ interface ModbusContextType {
   isReading: boolean;
   readOnce: () => Promise<void>;
 
+  // Write Action
+  handleWrite: (config: any) => Promise<any>;
+
   // Analyzer / Logs
   logs: UILogEntry[];
   setLogs: React.Dispatch<React.SetStateAction<UILogEntry[]>>;
@@ -107,7 +111,7 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
 
   // --- Read Configuration ---
   const [readRanges, setReadRanges] = useState<ReadRange[]>([
-    { id: 'default', slaveAddress: 1, functionCode: 3, registerAddress: 0, quantity: 10 }
+    { id: 'default', slaveAddress: 1, functionCode: 3, registerAddress: 0, quantity: 10, dataType: 'uint16', remark: '' }
   ]);
   const [readTimeout, setReadTimeout] = useState(1000);
 
@@ -129,6 +133,51 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
   const [selectedRegisters, setSelectedRegisters] = useState<Set<string>>(new Set());
   const [isLogging, setIsLogging] = useState(false);
   const MAX_GRAPH_POINTS = 500;
+
+  // --- Persistence ---
+  const hasLoaded = useRef(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !hasLoaded.current) {
+      const savedConnection = localStorage.getItem('modbus_connection');
+      if (savedConnection) setConnection(JSON.parse(savedConnection));
+
+      const savedRanges = localStorage.getItem('modbus_read_ranges');
+      if (savedRanges) setReadRanges(JSON.parse(savedRanges));
+
+      const savedInterval = localStorage.getItem('modbus_refresh_interval');
+      if (savedInterval) setRefreshInterval(Number(savedInterval));
+
+      const savedTimeout = localStorage.getItem('modbus_read_timeout');
+      if (savedTimeout) setReadTimeout(Number(savedTimeout));
+
+      hasLoaded.current = true;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (hasLoaded.current) {
+      localStorage.setItem('modbus_connection', JSON.stringify(connection));
+    }
+  }, [connection]);
+
+  useEffect(() => {
+    if (hasLoaded.current) {
+      localStorage.setItem('modbus_read_ranges', JSON.stringify(readRanges));
+    }
+  }, [readRanges]);
+
+  useEffect(() => {
+    if (hasLoaded.current) {
+      localStorage.setItem('modbus_refresh_interval', refreshInterval.toString());
+    }
+  }, [refreshInterval]);
+
+  useEffect(() => {
+    if (hasLoaded.current) {
+      localStorage.setItem('modbus_read_timeout', readTimeout.toString());
+    }
+  }, [readTimeout]);
 
   // --- Actions ---
 
@@ -252,13 +301,18 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
                timestamp: now,
                address: range.registerAddress,
                values: res.data,
-               functionCode: range.functionCode
+               functionCode: range.functionCode,
+               remark: range.remark
              });
 
             res.data.forEach((val, valIdx) => {
               const uniqueId = `${range.slaveAddress}-${range.registerAddress + valIdx}`;
               
               if (selectedRegisters.has(uniqueId)) {
+                // For graph, we might want converted values if data type is set
+                // But current graph logic is per-register. 
+                // If it's a 32-bit value, it spans multiple registers.
+                // For simplicity, we graph individual registers for now.
                 graphPoint[uniqueId] = val;
               }
 
@@ -300,6 +354,25 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
       isReadingRef.current = false;
     }
   }, [connection, isConnectionReady, readRanges, readTimeout, autoRefresh, isLogging, selectedRegisters, MAX_GRAPH_POINTS]);
+
+  // Write Action
+  const handleWrite = useCallback(async (config: any) => {
+    if (!isConnectionReady) {
+      throw new Error('Connection not ready');
+    }
+    const fullConfig = {
+      type: connection.type,
+      port: connection.port,
+      baudRate: connection.baudRate,
+      parity: connection.parity,
+      stopBits: connection.stopBits,
+      dataBits: connection.dataBits,
+      tcpIp: connection.tcpIp,
+      tcpPort: connection.tcpPort,
+      ...config
+    };
+    return await modbusAPI.write(fullConfig);
+  }, [connection, isConnectionReady]);
 
   // --- Auto Refresh Effect ---
   useEffect(() => {
@@ -396,6 +469,8 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
       readError,
       isReading,
       readOnce,
+
+      handleWrite,
       
       logs,
       setLogs,

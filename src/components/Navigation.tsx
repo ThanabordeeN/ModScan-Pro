@@ -14,8 +14,7 @@ export default function Navigation() {
 
   const navItems = [
     { href: '/scan', label: t('nav_scan'), icon: Search },
-    { href: '/read', label: t('nav_read'), icon: BookOpen },
-    { href: '/write', label: t('nav_write'), icon: PenLine },
+    { href: '/read', label: 'Dashboard', icon: Globe },
     { href: '/change-address', label: t('nav_change_id'), icon: Settings },
     { href: '/remote', label: t('nav_remote'), icon: Globe },
   ];

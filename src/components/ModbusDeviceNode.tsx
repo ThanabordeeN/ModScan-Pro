@@ -56,7 +56,7 @@ function ModbusDeviceNode({ data }: NodeProps<ModbusDeviceNodeData>) {
       {!isMaster && (
         <div className="flex items-center gap-2 mt-1">
           <span className={`inline-block w-2 h-2 rounded-full ${colors.dot}`} />
-          <span className={`text-xs ${colors.text}`}>
+          <span className={`text-xs ${colors.text}`} aria-label={`Response time: ${responseTime} milliseconds`}>
             {responseTime}ms
           </span>
         </div>

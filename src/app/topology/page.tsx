@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -96,7 +96,7 @@ export default function TopologyPage() {
   );
 
   // Reset nodes/edges when devices change
-  useMemo(() => {
+  useEffect(() => {
     setNodes(initialNodes);
     setEdges(initialEdges);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -153,7 +153,7 @@ export default function TopologyPage() {
             nodeTypes={nodeTypes}
             fitView
             fitViewOptions={{ padding: 0.3 }}
-            proOptions={{ hideAttribution: true }}
+            proOptions={{ hideAttribution: false }}
           >
             <Background gap={20} size={1} color="#e2e8f0" />
             <Controls showInteractive={false} />

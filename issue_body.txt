@@ -1,0 +1,14 @@
+## Description
+พัฒนาระบบแสดงผลโครงสร้างการเชื่อมต่อ (Topology) เพื่อใช้วิเคราะห์คุณภาพสัญญาณ (Signal Quality) โดยอาศัยการลากวาง Node ตามหน้างานจริง
+
+## Engineering Guidelines
+- **Physical vs Logical:** เนื่องจาก RS485 เป็น Bus Topology ที่โปรแกรมไม่รู้ลำดับจริง ให้ใช้ **React Flow** ย้ายฝั่งความรับผิดชอบให้ผู้ใช้ "ลากวางเรียงลำดับ Node" เอง
+- **Heatmap Logic:** นำค่า Response Time (ms) จากการสแกนมา Map กับสีของ Node:
+    - **สีเขียว:** สัญญาณดีเยี่ยม
+    - **สีส้ม/แดง:** สัญญาณดรอป หรือค่าเริ่มสูงผิดปกติ
+- **Diagnostic Tool:** ใช้ข้อมูลนี้เพื่อระบุปัญหาทางกายภาพ เช่น สายยาวเกินไป (Attenuation) หรือการลืมใส่ Terminating Resistor ที่ปลายสาย
+
+## Tasks
+- [ ] ติดตั้งและ Config `react-flow` ในโปรเจกต์
+- [ ] พัฒนา Component สำหรับ Node อุปกรณ์ Modbus
+- [ ] เชื่อมต่อสถานะ Response Time จาก `ModbusContext` เข้าสู่หน้า Topology

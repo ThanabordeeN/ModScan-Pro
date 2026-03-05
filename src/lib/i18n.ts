@@ -151,6 +151,22 @@ export const i18n = {
     change_id_err_port: 'กรุณาเลือก Serial Port ก่อน',
     change_id_err_same: 'Address ใหม่ต้องแตกต่างจาก Address ปัจจุบัน',
     
+    // Topology Page
+    nav_topology: 'Topology',
+    topo_title: 'Topology Map',
+    topo_subtitle: 'แสดงผลโครงสร้างการเชื่อมต่อและคุณภาพสัญญาณ',
+    topo_no_devices: 'ยังไม่มีอุปกรณ์จากการสแกน',
+    topo_scan_hint: 'สแกนหาอุปกรณ์ก่อนเพื่อแสดง Topology Map',
+    topo_scan_link: 'ไปที่หน้าสแกน',
+    topo_legend: 'คุณภาพสัญญาณ',
+    topo_legend_good: 'ดีเยี่ยม',
+    topo_legend_medium: 'ปานกลาง',
+    topo_legend_poor: 'ต่ำ',
+    topo_master: 'Master',
+    topo_response_time: 'Response: {time}ms',
+    topo_address: 'Address: {addr}',
+    topo_drag_hint: 'ลาก Node เพื่อจัดเรียงตามตำแหน่งจริง',
+
     // Errors
     err_select_port: 'กรุณาเลือก Serial Port ก่อน',
     err_connect_failed: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์',
@@ -305,6 +321,22 @@ export const i18n = {
     change_id_err_port: 'Please select Serial Port first',
     change_id_err_same: 'New Address must be different from Current Address',
     
+    // Topology Page
+    nav_topology: 'Topology',
+    topo_title: 'Topology Map',
+    topo_subtitle: 'Visualize connection topology and signal quality',
+    topo_no_devices: 'No devices found from scan',
+    topo_scan_hint: 'Scan for devices first to display Topology Map',
+    topo_scan_link: 'Go to Scan page',
+    topo_legend: 'Signal Quality',
+    topo_legend_good: 'Excellent',
+    topo_legend_medium: 'Medium',
+    topo_legend_poor: 'Poor',
+    topo_master: 'Master',
+    topo_response_time: 'Response: {time}ms',
+    topo_address: 'Address: {addr}',
+    topo_drag_hint: 'Drag nodes to arrange by physical position',
+
     // Errors
     err_select_port: 'Please select a Serial Port first',
     err_connect_failed: 'Failed to connect to server',

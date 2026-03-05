@@ -263,7 +263,6 @@ const ModbusService = {
       });
 
       // Step 2: Wait for device to apply changes (EEPROM write/Reboot often takes time)
-      // Increased wait time to 2 seconds for better compatibility
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Step 3: Verify change with Retries
@@ -275,7 +274,7 @@ const ModbusService = {
         try {
           await connectClient(client, config);
           client.setID(newAddress);
-          client.setTimeout(timeout + 500); // Slightly longer timeout for verification
+          client.setTimeout(timeout + 500);
           
           const verifyResult = await client.readHoldingRegisters(registerAddress, 1);
           
@@ -300,13 +299,11 @@ const ModbusService = {
           } catch (e) { /* ignore */ }
           
           if (i < maxRetries - 1) {
-            // Wait a bit longer before next retry
             await new Promise(resolve => setTimeout(resolve, 1500));
           }
         }
       }
 
-      // If we reach here, verification failed after all retries
       return { 
         success: true, 
         warning: `ID change command was sent successfully to ID ${currentAddress}, but the device is not responding on new ID ${newAddress} yet. Please try scanning or wait a moment. (${getErrorMessage(lastError)})` 

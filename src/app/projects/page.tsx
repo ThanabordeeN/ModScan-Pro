@@ -328,7 +328,7 @@ export default function ProjectsPage() {
         </div>
 
         {deviceAliases.length === 0 && (
-          <p className="text-sm text-slate-400 mt-4 text-center py-4">{t('project_no_project')}</p>
+          <p className="text-sm text-slate-400 mt-4 text-center py-4">{t('project_no_devices')}</p>
         )}
       </div>
 

@@ -177,6 +177,7 @@ export const i18n = {
     project_load_success: 'โหลดโปรเจกต์สำเร็จ',
     project_save_error: 'บันทึกโปรเจกต์ล้มเหลว',
     project_load_error: 'โหลดโปรเจกต์ล้มเหลว',
+    project_no_devices: 'ยังไม่มีอุปกรณ์ — เพิ่ม Slave ID และชื่อเล่นด้านบน',
   },
   en: {
     // Navigation
@@ -354,6 +355,7 @@ export const i18n = {
     project_load_success: 'Project loaded successfully',
     project_save_error: 'Failed to save project',
     project_load_error: 'Failed to load project',
+    project_no_devices: 'No devices yet — add a Slave ID and alias above',
   }
 };
 

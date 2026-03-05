@@ -35,8 +35,8 @@ export default function DashboardPage() {
   const { t } = useLanguage();
 
   const [cards, setCards] = useState<DashboardCard[]>([]);
-  const [interval, setInterval_] = useState(1000);
-  const [timeout, setTimeout_] = useState(1000);
+  const [pollInterval, setPollInterval] = useState(1000);
+  const [pollTimeout, setPollTimeout] = useState(1000);
   const [polling, setPolling] = useState(false);
   const [results, setResults] = useState<Record<string, DashboardCardResult>>({});
   const [error, setError] = useState<string | null>(null);
@@ -50,9 +50,9 @@ export default function DashboardPage() {
         try { setCards(JSON.parse(saved)); } catch { /* ignore */ }
       }
       const savedInterval = localStorage.getItem('dashboard_interval');
-      if (savedInterval) setInterval_(Number(savedInterval));
+      if (savedInterval) setPollInterval(Number(savedInterval));
       const savedTimeout = localStorage.getItem('dashboard_timeout');
-      if (savedTimeout) setTimeout_(Number(savedTimeout));
+      if (savedTimeout) setPollTimeout(Number(savedTimeout));
     }
   }, []);
 
@@ -64,15 +64,15 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('dashboard_interval', interval.toString());
+      localStorage.setItem('dashboard_interval', pollInterval.toString());
     }
-  }, [interval]);
+  }, [pollInterval]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('dashboard_timeout', timeout.toString());
+      localStorage.setItem('dashboard_timeout', pollTimeout.toString());
     }
-  }, [timeout]);
+  }, [pollTimeout]);
 
   // Poll status from backend
   const fetchStatus = useCallback(async () => {
@@ -89,7 +89,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (polling) {
       // Poll status faster than the device interval so UI stays fresh
-      const pollMs = Math.min(interval, 1000);
+      const pollMs = Math.min(pollInterval, 1000);
       statusTimerRef.current = setInterval(fetchStatus, pollMs);
       fetchStatus();
     } else {
@@ -103,7 +103,7 @@ export default function DashboardPage() {
         clearInterval(statusTimerRef.current);
       }
     };
-  }, [polling, interval, fetchStatus]);
+  }, [polling, pollInterval, fetchStatus]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -166,8 +166,8 @@ export default function DashboardPage() {
         tcpIp: connection.tcpIp,
         tcpPort: connection.tcpPort,
       },
-      interval,
-      timeout,
+      interval: pollInterval,
+      timeout: pollTimeout,
     });
 
     if (res.success) {
@@ -182,7 +182,7 @@ export default function DashboardPage() {
     setPolling(false);
   };
 
-  const updatePollingConfig = async () => {
+  const updatePollingConfig = useCallback(async () => {
     if (!polling) return;
 
     const cardConfigs: DashboardCardConfig[] = cards.map(c => ({
@@ -195,8 +195,8 @@ export default function DashboardPage() {
 
     await dashboardAPI.update({
       cards: cardConfigs,
-      interval,
-      timeout,
+      interval: pollInterval,
+      timeout: pollTimeout,
       connectionConfig: {
         type: connection.type,
         port: connection.port,
@@ -208,15 +208,14 @@ export default function DashboardPage() {
         tcpPort: connection.tcpPort,
       },
     });
-  };
+  }, [polling, cards, pollInterval, pollTimeout, connection]);
 
   // When interval changes during active polling, update backend
   useEffect(() => {
     if (polling) {
       updatePollingConfig();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [interval, timeout]);
+  }, [pollInterval, pollTimeout, updatePollingConfig]);
 
   const formatTime = (isoStr: string | null) => {
     if (!isoStr) return '—';
@@ -247,8 +246,8 @@ export default function DashboardPage() {
             <Timer className="w-4 h-4 text-slate-500" />
             <label className="text-sm font-medium text-slate-700">{t('dashboard_interval')}:</label>
             <select
-              value={interval}
-              onChange={(e) => setInterval_(Number(e.target.value))}
+              value={pollInterval}
+              onChange={(e) => setPollInterval(Number(e.target.value))}
               className="px-3 py-1.5 rounded-lg border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-slate-400"
             >
               {INTERVAL_OPTIONS.map(opt => (
@@ -263,8 +262,8 @@ export default function DashboardPage() {
             <label className="text-sm font-medium text-slate-700">Timeout:</label>
             <input
               type="number"
-              value={timeout}
-              onChange={(e) => setTimeout_(Math.max(100, Number(e.target.value)))}
+              value={pollTimeout}
+              onChange={(e) => setPollTimeout(Math.max(100, Number(e.target.value)))}
               className="w-24 px-3 py-1.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-slate-400"
               min={100}
               step={100}

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Search, Globe, Settings, ArrowRight, Zap, PenLine, BookOpen } from 'lucide-react';
+import { Search, Globe, Settings, ArrowRight, Zap, PenLine } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function Home() {

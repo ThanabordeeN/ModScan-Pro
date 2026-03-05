@@ -455,7 +455,8 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
     if (dataBuffer.length === 0) return;
     const csv = bufferToCSV(dataBuffer);
     const now = new Date();
-    const filename = `modbus_log_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.csv`;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const filename = `modbus_log_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.csv`;
     downloadCSV(csv, filename);
   }, [dataBuffer]);
 

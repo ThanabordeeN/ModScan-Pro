@@ -514,7 +514,7 @@ export default function UnifiedPage() {
                    onClick={clearDataBuffer}
                    className="text-xs text-slate-400 hover:text-slate-600 underline"
                  >
-                   Clear Buffer
+                   Clear Data
                  </button>
                )}
                <button

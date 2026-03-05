@@ -4,6 +4,7 @@
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 let tunnelState = {
     instance: null,
@@ -147,8 +148,22 @@ const TunnelServiceManager = {
 
     verifyPassword: (inputPassword) => {
         if (!tunnelState.isActive) return false;
-        // Simple string comparison
-        return tunnelState.password === inputPassword;
+
+        // Use constant-time comparison to prevent timing attacks.
+        // We hash both passwords first to ensure equal length buffers for timingSafeEqual.
+        // Using SHA-256 ensures we always compare 32-byte buffers.
+        try {
+            const safeStoredPassword = tunnelState.password || '';
+            const safeInputPassword = inputPassword || '';
+
+            const storedHash = crypto.createHash('sha256').update(safeStoredPassword).digest();
+            const inputHash = crypto.createHash('sha256').update(safeInputPassword).digest();
+
+            return crypto.timingSafeEqual(storedHash, inputHash);
+        } catch (error) {
+            console.error('Password verification error:', error);
+            return false;
+        }
     }
 };
 

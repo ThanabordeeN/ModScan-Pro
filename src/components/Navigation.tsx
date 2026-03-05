@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, Settings, BookOpen, PenLine, Globe, Menu, X } from 'lucide-react';
+import { Search, Settings, Globe, Menu, X } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageToggle from './LanguageToggle';
 

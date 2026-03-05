@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, Settings, Globe, Menu, X } from 'lucide-react';
+import { Search, Settings, Globe, Menu, X, FolderOpen } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageToggle from './LanguageToggle';
 
@@ -16,6 +16,7 @@ export default function Navigation() {
     { href: '/scan', label: t('nav_scan'), icon: Search },
     { href: '/read', label: 'Dashboard', icon: Globe },
     { href: '/change-address', label: t('nav_change_id'), icon: Settings },
+    { href: '/projects', label: t('nav_projects'), icon: FolderOpen },
     { href: '/remote', label: t('nav_remote'), icon: Globe },
   ];
 

@@ -40,6 +40,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     stop: () => ipcRenderer.invoke('logger:stop'),
   },
 
+  // Project operations
+  project: {
+    save: (data) => ipcRenderer.invoke('project:save', data),
+    load: () => ipcRenderer.invoke('project:load'),
+    loadPath: (filePath) => ipcRenderer.invoke('project:load-path', filePath),
+    recent: () => ipcRenderer.invoke('project:recent'),
+  },
+
   // Utility
   isElectron: true,
 });

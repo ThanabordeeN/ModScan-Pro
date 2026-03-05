@@ -4,6 +4,7 @@ import { Search, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import ConnectionSettings from '@/components/ConnectionSettings';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useProject } from '@/context/ProjectContext';
 
 export default function ScanPage() {
   const { 
@@ -20,6 +21,7 @@ export default function ScanPage() {
     startScan
   } = useModbus();
   const { t } = useLanguage();
+  const { getDeviceAlias } = useProject();
   
   return (
     <div className="space-y-6">
@@ -157,6 +159,11 @@ export default function ScanPage() {
                         <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-mono font-bold">
                           {device.address}
                         </span>
+                        {getDeviceAlias(device.address) && (
+                          <span className="ml-2 text-sm text-amber-700 font-medium">
+                            {getDeviceAlias(device.address)}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-slate-700">{device.responseTime}ms</td>
                       <td className="px-4 py-3">

@@ -11,6 +11,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import ConnectionSettings from '@/components/ConnectionSettings';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useProject } from '@/context/ProjectContext';
 import type { ReadRange, DataType } from '@/types/modbus';
 import { registersToValue, formatValue, getRegisterCount, valueToRegisters } from '@/lib/modbus-utils';
 
@@ -28,6 +29,7 @@ export default function UnifiedPage() {
     isLogging, toggleLogging
   } = useModbus();
   const { t } = useLanguage();
+  const { getDeviceDisplayName } = useProject();
 
   // Local state for inline writing
   const [writingId, setWritingId] = useState<string | null>(null);
@@ -392,7 +394,7 @@ export default function UnifiedPage() {
                    rows.push(
                      <tr key={`header-${rangeResult.rangeId}`} className="bg-slate-100/50">
                        <td colSpan={7} className="px-4 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-y border-slate-200">
-                          {rangeConfig.remark || 'Untitled Range'} (ID:{rangeConfig.slaveAddress} | Start:{rangeConfig.registerAddress} | FC:{rangeConfig.functionCode})
+                          {rangeConfig.remark || 'Untitled Range'} {getDeviceDisplayName(rangeConfig.slaveAddress)} | Start:{rangeConfig.registerAddress} | FC:{rangeConfig.functionCode})
                        </td>
                      </tr>
                    );
@@ -417,7 +419,7 @@ export default function UnifiedPage() {
                          </td>
                          <td className="px-4 py-2 font-mono text-xs text-slate-500">
                            {addr}{regCount > 1 && `-${addr + regCount - 1}`}
-                           <span className="ml-2 opacity-50">ID:{rangeConfig.slaveAddress}</span>
+                           <span className="ml-2 opacity-50">{getDeviceDisplayName(rangeConfig.slaveAddress)}</span>
                          </td>
                          <td className="px-4 py-2 italic text-slate-400">
                            {rangeConfig.remark || '-'}
@@ -519,7 +521,7 @@ export default function UnifiedPage() {
                         key={id} 
                         type="monotone" 
                         dataKey={id} 
-                        name={`Addr:${addr} (ID:${slaveId})`}
+                        name={`Addr:${addr} (${getDeviceDisplayName(Number(slaveId))})`}
                         stroke={LINE_COLORS[index % LINE_COLORS.length]} 
                         dot={false}
                         strokeWidth={2}

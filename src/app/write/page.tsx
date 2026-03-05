@@ -5,6 +5,7 @@ import { PenLine, Loader2, XCircle, CheckCircle2, Plus, Trash2, AlertTriangle } 
 import ConnectionSettings from '@/components/ConnectionSettings';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useProject } from '@/context/ProjectContext';
 import { modbusAPI } from '@/lib/electron-api';
 
 
@@ -12,6 +13,7 @@ import { modbusAPI } from '@/lib/electron-api';
 export default function WritePage() {
   const { connection, scannedDevices, isConnectionReady } = useModbus();
   const { t } = useLanguage();
+  const { getDeviceDisplayName } = useProject();
 
   const WRITE_FUNCTION_CODES = [
     { value: 5, label: 'FC05 - Write Single Coil', description: t('write_fc5_desc'), type: 'single_coil' },
@@ -188,6 +190,9 @@ export default function WritePage() {
                 }`}
               >
                 ID: {device.address}
+                {getDeviceDisplayName(device.address) !== `ID:${device.address}` && (
+                  <> — {getDeviceDisplayName(device.address)}</>
+                )}
               </button>
             ))}
           </div>

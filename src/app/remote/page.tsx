@@ -30,7 +30,7 @@ export default function RemotePage() {
       const data = await res.json();
       setPublicIP(data.ip);
     } catch {
-      console.error('Failed to fetch public IP');
+      // Silently fail if public IP cannot be fetched
     }
   };
 

@@ -238,13 +238,14 @@ const ModbusService = {
 
   changeAddress: async (config) => {
     const { currentAddress, newAddress, registerAddress = 0, functionCode = 6, timeout = 1000 } = config;
-    const client = new ModbusRTU();
+    let client = new ModbusRTU();
 
     try {
       if (newAddress < 1 || newAddress > 247) {
         return { success: false, error: 'New address must be between 1 and 247' };
       }
 
+      // Step 1: Connect and Write new ID
       await connectClient(client, config);
       client.setID(currentAddress);
       client.setTimeout(timeout);
@@ -256,38 +257,67 @@ const ModbusService = {
         await client.writeRegisters(registerAddress, [newAddress]);
       }
 
-      await client.close(() => { });
+      // Explicitly close the connection after writing to allow device to process/reboot
+      await new Promise(resolve => {
+        client.close(() => resolve(null));
+      });
 
-      // Wait for device to apply changes/reboot
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Step 2: Wait for device to apply changes (EEPROM write/Reboot often takes time)
+      // Increased wait time to 2 seconds for better compatibility
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Verify change
-      try {
-        await connectClient(client, config);
-        client.setID(newAddress);
-        client.setTimeout(timeout);
-        
-        // Read back the specific register we just wrote to
-        const verifyResult = await client.readHoldingRegisters(registerAddress, 1);
-        
-        await client.close(() => { });
+      // Step 3: Verify change with Retries
+      const maxRetries = 3;
+      let lastError = null;
 
-        if (verifyResult.data[0] === newAddress) {
-           return { success: true, message: `Successfully changed ID from ${currentAddress} to ${newAddress}` };
-        } else {
-           return { success: true, warning: `Write command sent, but readback value (${verifyResult.data[0]}) does not match new ID (${newAddress}). Device might need a restart.` };
+      for (let i = 0; i < maxRetries; i++) {
+        client = new ModbusRTU();
+        try {
+          await connectClient(client, config);
+          client.setID(newAddress);
+          client.setTimeout(timeout + 500); // Slightly longer timeout for verification
+          
+          const verifyResult = await client.readHoldingRegisters(registerAddress, 1);
+          
+          await new Promise(resolve => {
+            client.close(() => resolve(null));
+          });
+
+          if (verifyResult.data[0] === newAddress) {
+            return { success: true, message: `Successfully changed ID from ${currentAddress} to ${newAddress}` };
+          } else {
+            return { 
+              success: true, 
+              warning: `Write command sent, but readback value (${verifyResult.data[0]}) does not match new ID (${newAddress}). Device might need a manual restart.` 
+            };
+          }
+        } catch (err) {
+          lastError = err;
+          try {
+            await new Promise(resolve => {
+              client.close(() => resolve(null));
+            });
+          } catch (e) { /* ignore */ }
+          
+          if (i < maxRetries - 1) {
+            // Wait a bit longer before next retry
+            await new Promise(resolve => setTimeout(resolve, 1500));
+          }
         }
-
-      } catch (verifyError) {
-        // If verification fails, it might just be a connection issue with the new ID, but the write likely succeeded.
-        return { 
-          success: true, 
-          warning: `Write command sent successfully, but verification failed: ${getErrorMessage(verifyError)}. The device might have changed ID or is restarting.` 
-        };
       }
 
+      // If we reach here, verification failed after all retries
+      return { 
+        success: true, 
+        warning: `ID change command was sent successfully to ID ${currentAddress}, but the device is not responding on new ID ${newAddress} yet. Please try scanning or wait a moment. (${getErrorMessage(lastError)})` 
+      };
+
     } catch (error) {
-      try { await client.close(() => { }); } catch { }
+      try {
+        await new Promise(resolve => {
+          client.close(() => resolve(null));
+        });
+      } catch (e) { /* ignore */ }
       return { success: false, error: getErrorMessage(error) };
     }
   }

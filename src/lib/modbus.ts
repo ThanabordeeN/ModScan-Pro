@@ -90,6 +90,17 @@ export async function scanAddressRange(
   onProgress?: (address: number, found: boolean) => void
 ): Promise<ModbusDevice[]> {
   const devices: ModbusDevice[] = [];
+
+  // Validate input
+  if (startAddress < 1 || endAddress > 247) {
+    console.error('Address range must be between 1 and 247');
+    return [];
+  }
+  if (startAddress > endAddress) {
+    console.error('Start address cannot be greater than end address');
+    return [];
+  }
+
   const client = new ModbusRTU();
   
   try {

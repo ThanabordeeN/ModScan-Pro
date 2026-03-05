@@ -57,7 +57,9 @@ function verifyLicense(inputKey) {
         licenseKey = fs.readFileSync(licenseFilePath, 'utf8').trim();
       }
     } catch (e) {
-      console.error('Error reading license file:', e);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error reading license file:', e);
+      }
     }
   }
 
@@ -100,7 +102,9 @@ function saveLicense(key) {
     fs.writeFileSync(licenseFilePath, key.trim());
     return true;
   } catch (error) {
-    console.error('Error saving license:', error);
+    if (!app.isPackaged) {
+      console.error('Error saving license:', error);
+    }
     return false;
   }
 }

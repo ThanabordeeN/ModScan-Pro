@@ -8,6 +8,7 @@ export const i18n = {
     nav_write: 'เขียน',
     nav_change_id: 'เปลี่ยน ID',
     nav_remote: 'รีโมท',
+    nav_dashboard: 'Dashboard',
     
     // Common
     common_port: 'Port',
@@ -154,6 +155,22 @@ export const i18n = {
     // Errors
     err_select_port: 'กรุณาเลือก Serial Port ก่อน',
     err_connect_failed: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์',
+    
+    // Dashboard
+    dashboard_title: 'Multi-Device Dashboard',
+    dashboard_subtitle: 'แสดงผลหลายอุปกรณ์พร้อมกัน (Sequential Polling)',
+    dashboard_add_card: 'เพิ่ม Card',
+    dashboard_remove_card: 'ลบ Card',
+    dashboard_start_polling: 'เริ่ม Polling',
+    dashboard_stop_polling: 'หยุด Polling',
+    dashboard_interval: 'Update Interval',
+    dashboard_last_updated: 'อัปเดตล่าสุด',
+    dashboard_no_cards: 'ยังไม่มี Card — กดปุ่ม "เพิ่ม Card" เพื่อเริ่มต้น',
+    dashboard_card_name: 'ชื่อ Card',
+    dashboard_polling_active: 'กำลัง Polling...',
+    dashboard_polling_stopped: 'หยุดแล้ว',
+    dashboard_error: 'ข้อผิดพลาด',
+    dashboard_no_data: 'ยังไม่มีข้อมูล',
   },
   en: {
     // Navigation
@@ -162,6 +179,7 @@ export const i18n = {
     nav_write: 'Write',
     nav_change_id: 'Change ID',
     nav_remote: 'Remote',
+    nav_dashboard: 'Dashboard',
     
     // Common
     common_port: 'Port',
@@ -308,6 +326,22 @@ export const i18n = {
     // Errors
     err_select_port: 'Please select a Serial Port first',
     err_connect_failed: 'Failed to connect to server',
+    
+    // Dashboard
+    dashboard_title: 'Multi-Device Dashboard',
+    dashboard_subtitle: 'Monitor multiple devices simultaneously (Sequential Polling)',
+    dashboard_add_card: 'Add Card',
+    dashboard_remove_card: 'Remove Card',
+    dashboard_start_polling: 'Start Polling',
+    dashboard_stop_polling: 'Stop Polling',
+    dashboard_interval: 'Update Interval',
+    dashboard_last_updated: 'Last Updated',
+    dashboard_no_cards: 'No cards yet — click "Add Card" to get started',
+    dashboard_card_name: 'Card Name',
+    dashboard_polling_active: 'Polling...',
+    dashboard_polling_stopped: 'Stopped',
+    dashboard_error: 'Error',
+    dashboard_no_data: 'No data yet',
   }
 };
 

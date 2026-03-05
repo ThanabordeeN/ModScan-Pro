@@ -182,6 +182,25 @@ function createStaticServer() {
         else if (filePath === '/api/modbus/write') result = await ModbusService.write(body);
         else if (filePath === '/api/modbus/read-batch') result = await ModbusService.readBatch(body);
         else if (filePath === '/api/modbus/change-address') result = await ModbusService.changeAddress(body);
+        else if (filePath === '/api/modbus/dashboard-start') {
+          const { dashboardQueue } = require('./ipc/modbus');
+          try { dashboardQueue.start(body); result = { success: true }; }
+          catch (e) { result = { success: false, error: e.message }; }
+        }
+        else if (filePath === '/api/modbus/dashboard-stop') {
+          const { dashboardQueue } = require('./ipc/modbus');
+          dashboardQueue.stop();
+          result = { success: true };
+        }
+        else if (filePath === '/api/modbus/dashboard-update') {
+          const { dashboardQueue } = require('./ipc/modbus');
+          dashboardQueue.update(body);
+          result = { success: true };
+        }
+        else if (filePath === '/api/modbus/dashboard-status') {
+          const { dashboardQueue } = require('./ipc/modbus');
+          result = dashboardQueue.getStatus();
+        }
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(result));

@@ -47,12 +47,12 @@ interface ModbusContextType {
     unchanged: ModbusDevice[];
   } | null;
   
-  scanStartAddr: number;
-  setScanStartAddr: (n: number) => void;
-  scanEndAddr: number;
-  setScanEndAddr: (n: number) => void;
-  scanTimeout: number;
-  setScanTimeout: (n: number) => void;
+  scanStartAddr: number | '';
+  setScanStartAddr: (n: number | '') => void;
+  scanEndAddr: number | '';
+  setScanEndAddr: (n: number | '') => void;
+  scanTimeout: number | '';
+  setScanTimeout: (n: number | '') => void;
   
   isScanning: boolean;
   scanProgress: number;
@@ -117,16 +117,16 @@ interface ModbusContextType {
 
   // Change Address State
   changeAddrState: {
-    currentAddress: number;
-    newAddress: number;
-    registerAddress: number;
+    currentAddress: number | '';
+    newAddress: number | '';
+    registerAddress: number | '';
     functionCode: 6 | 16;
     useScannedDevice: boolean;
   };
   setChangeAddrState: React.Dispatch<React.SetStateAction<{
-    currentAddress: number;
-    newAddress: number;
-    registerAddress: number;
+    currentAddress: number | '';
+    newAddress: number | '';
+    registerAddress: number | '';
     functionCode: 6 | 16;
     useScannedDevice: boolean;
   }>>;
@@ -160,9 +160,9 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
   // --- Scan State ---
   const [scannedDevices, setScannedDevices] = useState<ModbusDevice[]>([]);
   const [previousScannedDevices, setPreviousScannedDevices] = useState<ModbusDevice[]>([]);
-  const [scanStartAddr, setScanStartAddr] = useState(1);
-  const [scanEndAddr, setScanEndAddr] = useState(10);
-  const [scanTimeout, setScanTimeout] = useState(500);
+  const [scanStartAddr, setScanStartAddr] = useState<number | ''>(1);
+  const [scanEndAddr, setScanEndAddr] = useState<number | ''>(10);
+  const [scanTimeout, setScanTimeout] = useState<number | ''>(500);
   
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
@@ -204,7 +204,13 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
   const [isLiveMonitoring, setIsLiveMonitoring] = useState(false);
 
   // --- Change Address Global State ---
-  const [changeAddrState, setChangeAddrState] = useState({
+  const [changeAddrState, setChangeAddrState] = useState<{
+    currentAddress: number | '';
+    newAddress: number | '';
+    registerAddress: number | '';
+    functionCode: 6 | 16;
+    useScannedDevice: boolean;
+  }>({
     currentAddress: 1,
     newAddress: 2,
     registerAddress: 0,
@@ -331,9 +337,9 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
         dataBits: connection.dataBits,
         tcpIp: connection.tcpIp,
         tcpPort: connection.tcpPort,
-        startAddress: scanStartAddr,
-        endAddress: scanEndAddr,
-        timeout: scanTimeout,
+        startAddress: scanStartAddr === '' ? 1 : scanStartAddr,
+        endAddress: scanEndAddr === '' ? 10 : scanEndAddr,
+        timeout: scanTimeout === '' ? 500 : scanTimeout,
       });
 
       if (data.success && data.devices) {
@@ -344,8 +350,8 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
         setScanHistory(prev => [{
           id: Date.now(),
           timestamp: new Date(),
-          startAddr: scanStartAddr,
-          endAddr: scanEndAddr,
+          startAddr: scanStartAddr === '' ? 1 : scanStartAddr,
+          endAddr: scanEndAddr === '' ? 10 : scanEndAddr,
           devices: data.devices || [],
           scannedCount: data.scannedCount || 0,
         }, ...prev]);

@@ -57,7 +57,7 @@ export default function ScanPage() {
               min={1}
               max={247}
               value={scanStartAddr}
-              onChange={(e) => setScanStartAddr(Math.min(247, Math.max(1, Number(e.target.value))))}
+              onChange={(e) => setScanStartAddr(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
               disabled={isScanning}
             />
@@ -70,7 +70,7 @@ export default function ScanPage() {
               min={1}
               max={247}
               value={scanEndAddr}
-              onChange={(e) => setScanEndAddr(Math.min(247, Math.max(scanStartAddr, Number(e.target.value))))}
+              onChange={(e) => setScanEndAddr(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
               disabled={isScanning}
             />
@@ -84,7 +84,7 @@ export default function ScanPage() {
               max={5000}
               step={100}
               value={scanTimeout}
-              onChange={(e) => setScanTimeout(Number(e.target.value))}
+              onChange={(e) => setScanTimeout(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
               disabled={isScanning}
             />

@@ -49,9 +49,9 @@ export default function ChangeAddressPage() {
         dataBits: connection.dataBits,
         tcpIp: connection.tcpIp,
         tcpPort: connection.tcpPort,
-        currentAddress,
-        newAddress,
-        registerAddress,
+        currentAddress: Number(currentAddress) || 1,
+        newAddress: Number(newAddress) || 2,
+        registerAddress: Number(registerAddress) || 0,
         functionCode,
       });
 
@@ -181,7 +181,7 @@ export default function ChangeAddressPage() {
               onChange={(e) => {
                 setChangeAddrState(prev => ({ 
                   ...prev, 
-                  currentAddress: Math.min(247, Math.max(1, Number(e.target.value))), 
+                  currentAddress: e.target.value === '' ? '' : Number(e.target.value), 
                   useScannedDevice: false 
                 }));
               }}
@@ -198,7 +198,7 @@ export default function ChangeAddressPage() {
               min={1}
               max={247}
               value={newAddress}
-              onChange={(e) => setChangeAddrState(prev => ({ ...prev, newAddress: Math.min(247, Math.max(1, Number(e.target.value))) }))}
+              onChange={(e) => setChangeAddrState(prev => ({ ...prev, newAddress: e.target.value === '' ? '' : Number(e.target.value) }))}
               className="w-full px-4 py-2.5 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
             />
           </div>
@@ -212,7 +212,7 @@ export default function ChangeAddressPage() {
               min={0}
               max={65535}
               value={registerAddress}
-              onChange={(e) => setChangeAddrState(prev => ({ ...prev, registerAddress: Number(e.target.value) }))}
+              onChange={(e) => setChangeAddrState(prev => ({ ...prev, registerAddress: e.target.value === '' ? '' : Number(e.target.value) }))}
               className="w-full px-4 py-2.5 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
             />
             <p className="text-xs text-slate-500 mt-1">{t('change_id_register_hint')}</p>

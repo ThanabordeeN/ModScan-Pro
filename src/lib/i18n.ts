@@ -171,7 +171,35 @@ export const i18n = {
     // Errors
     err_select_port: 'กรุณาเลือก Serial Port ก่อน',
     err_connect_failed: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์',
-    
+
+    // Project Management
+    nav_projects: 'โปรเจกต์',
+    project_title: 'จัดการโปรเจกต์',
+    project_subtitle: 'บันทึก โหลด และส่งออกโปรเจกต์สำหรับแชร์การตั้งค่า',
+    project_current: 'โปรเจกต์ปัจจุบัน',
+    project_no_project: 'ยังไม่ได้เปิดโปรเจกต์',
+    project_name: 'ชื่อโปรเจกต์',
+    project_description: 'คำอธิบาย',
+    project_save: 'บันทึกโปรเจกต์',
+    project_load: 'โหลดโปรเจกต์',
+    project_new: 'โปรเจกต์ใหม่',
+    project_clear: 'ปิดโปรเจกต์',
+    project_recent: 'โปรเจกต์ล่าสุด',
+    project_no_recent: 'ยังไม่มีโปรเจกต์ล่าสุด',
+    project_devices: 'อุปกรณ์และชื่อเล่น',
+    project_alias: 'ชื่อเล่น',
+    project_slave_id: 'Slave ID',
+    project_add_device: 'เพิ่มอุปกรณ์',
+    project_save_success: 'บันทึกโปรเจกต์สำเร็จ',
+    project_load_success: 'โหลดโปรเจกต์สำเร็จ',
+    project_save_error: 'บันทึกโปรเจกต์ล้มเหลว',
+    project_load_error: 'โหลดโปรเจกต์ล้มเหลว',
+    project_no_devices: 'ยังไม่มีอุปกรณ์ — เพิ่ม Slave ID และชื่อเล่นด้านบน',
+    project_scanned_devices: 'อุปกรณ์ที่สแกนพบ',
+    project_topology_notes: 'โน้ต Topology / โครงสร้างเครือข่าย',
+    project_topology_placeholder: 'บันทึกโครงสร้างเครือข่าย เช่น ตำแหน่งอุปกรณ์ สายไฟ ระยะทาง...',
+    project_device_remark_placeholder: 'Remark — เช่น ตำแหน่งติดตั้ง, รุ่นอุปกรณ์, หมายเหตุ...',
+
     // Dashboard
     dashboard_title: 'Multi-Device Dashboard',
     dashboard_subtitle: 'แสดงผลหลายอุปกรณ์พร้อมกัน (Sequential Polling)',
@@ -365,7 +393,35 @@ export const i18n = {
     // Errors
     err_select_port: 'Please select a Serial Port first',
     err_connect_failed: 'Failed to connect to server',
-    
+
+    // Project Management
+    nav_projects: 'Projects',
+    project_title: 'Project Management',
+    project_subtitle: 'Save, load and export projects for sharing configurations',
+    project_current: 'Current Project',
+    project_no_project: 'No project loaded',
+    project_name: 'Project Name',
+    project_description: 'Description',
+    project_save: 'Save Project',
+    project_load: 'Load Project',
+    project_new: 'New Project',
+    project_clear: 'Close Project',
+    project_recent: 'Recent Projects',
+    project_no_recent: 'No recent projects',
+    project_devices: 'Devices & Aliases',
+    project_alias: 'Alias',
+    project_slave_id: 'Slave ID',
+    project_add_device: 'Add Device',
+    project_save_success: 'Project saved successfully',
+    project_load_success: 'Project loaded successfully',
+    project_save_error: 'Failed to save project',
+    project_load_error: 'Failed to load project',
+    project_no_devices: 'No devices yet — add a Slave ID and alias above',
+    project_scanned_devices: 'Scanned devices',
+    project_topology_notes: 'Topology / Network Notes',
+    project_topology_placeholder: 'Document network layout, device locations, wiring, distances...',
+    project_device_remark_placeholder: 'Remark — e.g. install location, device model, notes...',
+
     // Dashboard
     dashboard_title: 'Multi-Device Dashboard',
     dashboard_subtitle: 'Monitor multiple devices simultaneously (Sequential Polling)',

@@ -9,6 +9,7 @@ const { registerModbusHandlers } = require('./ipc/modbus');
 const { registerLicenseHandlers } = require('./ipc/license');
 const { registerTunnelHandlers } = require('./ipc/tunnel');
 const { registerLoggerHandlers } = require('./ipc/logger');
+const { registerProjectHandlers } = require('./ipc/project');
 const logger = require('./logger');
 
 let mainWindow;
@@ -328,6 +329,7 @@ function registerIpcHandlers() {
   registerLicenseHandlers(ipcMain);
   registerTunnelHandlers(ipcMain);
   registerLoggerHandlers(ipcMain);
+  registerProjectHandlers(ipcMain);
 }
 
 app.whenReady().then(async () => {

@@ -1,3 +1,5 @@
+import type { ProjectData, RecentProject } from '@/types/project';
+
 /**
  * Electron API wrapper for frontend components
  * Provides type-safe access to IPC methods exposed via preload script
@@ -160,6 +162,12 @@ interface ElectronWindow extends Window {
       start: () => Promise<{ success: boolean; filePath?: string; cancelled?: boolean; error?: string }>;
       log: (entries: LogEntry[]) => Promise<{ success: boolean; error?: string }>;
       stop: () => Promise<{ success: boolean; filePath?: string; error?: string }>;
+    };
+    project: {
+      save: (data: Omit<ProjectData, 'version'>) => Promise<{ success: boolean; filePath?: string; cancelled?: boolean; error?: string }>;
+      load: () => Promise<{ success: boolean; data?: ProjectData; filePath?: string; cancelled?: boolean; error?: string }>;
+      loadPath: (filePath: string) => Promise<{ success: boolean; data?: ProjectData; filePath?: string; error?: string }>;
+      recent: () => Promise<{ success: boolean; projects?: RecentProject[]; error?: string }>;
     };
   };
 }
@@ -416,5 +424,125 @@ export const loggerAPI = {
       return api.logger.stop();
     }
     return { success: false, error: 'Logger not available in web mode' };
+  },
+};
+
+// Project API
+export const projectAPI = {
+  async save(data: Omit<ProjectData, 'version'>): Promise<{ success: boolean; filePath?: string; cancelled?: boolean; error?: string }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.project.save(data);
+    }
+    // Web fallback: trigger browser file download + save to localStorage
+    try {
+      const projectData: ProjectData = { version: 1, ...data };
+      // Save to localStorage for recent projects tracking
+      const projects: ProjectData[] = JSON.parse(localStorage.getItem('modscan_projects') || '[]');
+      const existing = projects.findIndex((p) => p.name === data.name);
+      if (existing >= 0) {
+        projects[existing] = projectData;
+      } else {
+        projects.push(projectData);
+      }
+      localStorage.setItem('modscan_projects', JSON.stringify(projects));
+
+      // Trigger browser file download
+      const json = JSON.stringify(projectData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${data.name.replace(/[^a-zA-Z0-9_\-\s]/g, '')}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      return { success: true, filePath: a.download };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to save project' };
+    }
+  },
+
+  async load(): Promise<{ success: boolean; data?: ProjectData; filePath?: string; cancelled?: boolean; error?: string }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.project.load();
+    }
+    // Web fallback: use a hidden file input to let user pick a .json file
+    return new Promise((resolve) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) {
+          resolve({ success: false, cancelled: true });
+          return;
+        }
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text) as ProjectData;
+          if (!data.version || !data.name || !data.connection || !Array.isArray(data.devices) || !Array.isArray(data.readRanges) || !data.settings) {
+            resolve({ success: false, error: 'Invalid project file format' });
+            return;
+          }
+          // Save to localStorage recent list
+          const projects: ProjectData[] = JSON.parse(localStorage.getItem('modscan_projects') || '[]');
+          const existing = projects.findIndex((p) => p.name === data.name);
+          if (existing >= 0) {
+            projects[existing] = data;
+          } else {
+            projects.push(data);
+          }
+          localStorage.setItem('modscan_projects', JSON.stringify(projects));
+          resolve({ success: true, data, filePath: file.name });
+        } catch {
+          resolve({ success: false, error: 'Failed to read project file' });
+        }
+      };
+      input.oncancel = () => {
+        resolve({ success: false, cancelled: true });
+      };
+      input.click();
+    });
+  },
+
+  async loadPath(filePath: string): Promise<{ success: boolean; data?: ProjectData; filePath?: string; error?: string }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.project.loadPath(filePath);
+    }
+    // Web fallback: load from localStorage by name (filePath is used as name)
+    try {
+      const projects: ProjectData[] = JSON.parse(localStorage.getItem('modscan_projects') || '[]');
+      const project = projects.find((p) => p.name === filePath);
+      if (project) {
+        return { success: true, data: project, filePath };
+      }
+      return { success: false, error: 'Project not found' };
+    } catch {
+      return { success: false, error: 'Failed to load project' };
+    }
+  },
+
+  async recent(): Promise<{ success: boolean; projects?: RecentProject[]; error?: string }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.project.recent();
+    }
+    // Fallback: list from localStorage
+    try {
+      const projects: ProjectData[] = JSON.parse(localStorage.getItem('modscan_projects') || '[]');
+      const recentList: RecentProject[] = projects.map((p) => ({
+        name: p.name,
+        filePath: p.name, // In web mode, name acts as the key
+        lastOpened: new Date().toISOString(),
+      }));
+      return { success: true, projects: recentList };
+    } catch {
+      return { success: true, projects: [] };
+    }
   },
 };

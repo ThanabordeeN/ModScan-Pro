@@ -83,6 +83,42 @@ export interface LogEntry {
   fc: number;
 }
 
+export interface DashboardCardConfig {
+  cardId: string;
+  slaveAddress: number;
+  functionCode: 1 | 2 | 3 | 4;
+  registerAddress: number;
+  quantity: number;
+}
+
+export interface DashboardStartConfig {
+  cards: DashboardCardConfig[];
+  connectionConfig: ConnectionConfig;
+  interval?: number;
+  timeout?: number;
+}
+
+export interface DashboardUpdateConfig {
+  cards?: DashboardCardConfig[];
+  connectionConfig?: ConnectionConfig;
+  interval?: number;
+  timeout?: number;
+}
+
+export interface DashboardCardResult {
+  success: boolean;
+  data: number[] | null;
+  error: string | null;
+  lastUpdated: string | null;
+}
+
+export interface DashboardStatus {
+  running: boolean;
+  interval: number;
+  cards: DashboardCardConfig[];
+  results: Record<string, DashboardCardResult>;
+}
+
 // Check if running in Electron
 export function isElectron(): boolean {
   return typeof window !== 'undefined' &&
@@ -105,6 +141,10 @@ interface ElectronWindow extends Window {
       write: (config: WriteConfig) => Promise<{ success: boolean; error?: string }>;
       readBatch: (config: BatchReadConfig) => Promise<{ results: Array<{ success: boolean; data?: number[]; error?: string }>; error?: string }>;
       changeAddress: (config: ChangeAddressConfig) => Promise<{ success: boolean; message?: string; warning?: string; error?: string }>;
+      dashboardStart: (config: DashboardStartConfig) => Promise<{ success: boolean; error?: string }>;
+      dashboardStop: () => Promise<{ success: boolean }>;
+      dashboardUpdate: (config: DashboardUpdateConfig) => Promise<{ success: boolean }>;
+      dashboardStatus: () => Promise<DashboardStatus>;
     };
     license: {
       getMachineId: () => Promise<{ success: boolean; machineId?: string; error?: string }>;
@@ -300,6 +340,56 @@ export const tunnelAPI = {
     return res.json();
   },
 
+};
+
+// Dashboard Polling API
+export const dashboardAPI = {
+  async start(config: DashboardStartConfig): Promise<{ success: boolean; error?: string }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.modbus.dashboardStart(config);
+    }
+    const res = await fetch('/api/modbus/dashboard-start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config),
+    });
+    return res.json();
+  },
+
+  async stop(): Promise<{ success: boolean }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.modbus.dashboardStop();
+    }
+    const res = await fetch('/api/modbus/dashboard-stop', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return res.json();
+  },
+
+  async update(config: DashboardUpdateConfig): Promise<{ success: boolean }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.modbus.dashboardUpdate(config);
+    }
+    const res = await fetch('/api/modbus/dashboard-update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config),
+    });
+    return res.json();
+  },
+
+  async status(): Promise<DashboardStatus> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.modbus.dashboardStatus();
+    }
+    const res = await fetch('/api/modbus/dashboard-status');
+    return res.json();
+  },
 };
 
 // Logger API

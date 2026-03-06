@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Search, Globe, Settings, ArrowRight, Zap, PenLine } from 'lucide-react';
+import { Search, Globe, Settings, ArrowRight, Zap, PenLine, LayoutGrid } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function Home() {
@@ -14,6 +14,14 @@ export default function Home() {
       description: 'Combine Read and Write operations in a single persistent view with multi-monitoring support.',
       color: 'emerald',
       tags: ['FC01-04', 'FC05-06', 'Real-time'],
+    },
+    {
+      href: '/dashboard',
+      icon: LayoutGrid,
+      title: t('nav_dashboard'),
+      description: t('dashboard_subtitle'),
+      color: 'violet',
+      tags: ['Multi-Device', 'Card View', 'Sequential Polling'],
     },
     {
       href: '/scan',
@@ -47,6 +55,7 @@ export default function Home() {
       emerald: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/50', shadow: 'shadow-emerald-500/10', text: 'text-emerald-400' },
       purple: { bg: 'bg-purple-500/10', border: 'border-purple-500/50', shadow: 'shadow-purple-500/10', text: 'text-purple-400' },
       amber: { bg: 'bg-amber-500/10', border: 'border-amber-500/50', shadow: 'shadow-amber-500/10', text: 'text-amber-400' },
+      violet: { bg: 'bg-violet-500/10', border: 'border-violet-500/50', shadow: 'shadow-violet-500/10', text: 'text-violet-400' },
     };
     return colors[color] || colors.cyan;
   };

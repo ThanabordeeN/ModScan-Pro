@@ -17,6 +17,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     write: (config) => ipcRenderer.invoke('modbus:write', config),
     readBatch: (config) => ipcRenderer.invoke('modbus:read-batch', config),
     changeAddress: (config) => ipcRenderer.invoke('modbus:change-address', config),
+    dashboardStart: (config) => ipcRenderer.invoke('modbus:dashboard-start', config),
+    dashboardStop: () => ipcRenderer.invoke('modbus:dashboard-stop'),
+    dashboardUpdate: (config) => ipcRenderer.invoke('modbus:dashboard-update', config),
+    dashboardStatus: () => ipcRenderer.invoke('modbus:dashboard-status'),
   },
 
   // License operations

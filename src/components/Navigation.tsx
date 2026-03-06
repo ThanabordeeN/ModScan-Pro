@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Search, Settings, Globe, Menu, X, FolderOpen, LayoutGrid, Network } from 'lucide-react';
+import { Search, Settings, Globe, Menu, X, LayoutGrid, Network } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageToggle from './LanguageToggle';
 

@@ -281,7 +281,7 @@ function TopologyCanvas() {
 
       const requests = deviceNodes.map(node => ({
         slaveAddress: node.data.address as number,
-        functionCode: 3,
+        functionCode: 3 as const,
         registerAddress: 0,
         quantity: 1,
       }));

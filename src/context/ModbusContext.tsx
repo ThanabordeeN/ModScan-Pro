@@ -4,6 +4,7 @@ import { createContext, useContext, useState, ReactNode, useEffect, useRef, useC
 import type { ModbusDevice, ReadRange, UILogEntry } from '@/types/modbus';
 import { modbusAPI, loggerAPI, LogEntry } from '@/lib/electron-api';
 import { registersToValue } from '@/lib/modbus-utils';
+import { DataBufferEntry, bufferToCSV, downloadCSV } from '@/lib/data-buffer';
 
 interface ConnectionSettings {
   type: 'serial' | 'tcp';
@@ -77,6 +78,11 @@ interface ModbusContextType {
   
   isLogging: boolean;
   toggleLogging: () => Promise<void>;
+
+  // Data Buffer for CSV Export
+  dataBuffer: DataBufferEntry[];
+  clearDataBuffer: () => void;
+  exportDataCSV: () => void;
 }
 
 const defaultConnection: ConnectionSettings = {
@@ -134,6 +140,7 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
   const [selectedRegisters, setSelectedRegisters] = useState<Set<string>>(new Set());
   const [isLogging, setIsLogging] = useState(false);
   const MAX_GRAPH_POINTS = 500;
+  const [dataBuffer, setDataBuffer] = useState<DataBufferEntry[]>([]);
 
   // --- Persistence ---
   const hasLoaded = useRef(false);
@@ -289,9 +296,11 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
 
         // --- Analyzer Update ---
         const timestamp = now.getTime();
-        const graphPoint: any = { timestamp, timeStr: now.toLocaleTimeString() };
+        const timeStr = now.toLocaleTimeString();
+        const graphPoint: any = { timestamp, timeStr };
         const logEntries: LogEntry[] = [];
         const uiLogs: UILogEntry[] = [];
+        const bufferEntries: DataBufferEntry[] = [];
 
         data.results.forEach((res: { success: boolean; data?: number[] }, idx: number) => {
           if (res.success && res.data && res.data.length > 0) {
@@ -310,12 +319,19 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
               const uniqueId = `${range.slaveAddress}-${range.registerAddress + valIdx}`;
               
               if (selectedRegisters.has(uniqueId)) {
-                // For graph, we might want converted values if data type is set
-                // But current graph logic is per-register. 
-                // If it's a 32-bit value, it spans multiple registers.
-                // For simplicity, we graph individual registers for now.
                 graphPoint[uniqueId] = val;
               }
+
+              // Always buffer data for CSV export
+              bufferEntries.push({
+                timestamp,
+                timeStr,
+                slaveId: range.slaveAddress,
+                address: range.registerAddress + valIdx,
+                value: val,
+                functionCode: range.functionCode,
+                remark: range.remark
+              });
 
               if (isLogging) {
                 logEntries.push({
@@ -336,6 +352,9 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
            if (newData.length > MAX_GRAPH_POINTS) return newData.slice(newData.length - MAX_GRAPH_POINTS);
            return newData;
         });
+
+        // Update Data Buffer
+        setDataBuffer(prev => [...prev, ...bufferEntries]);
 
         // Update Logs List
         setLogs(prev => [...uiLogs, ...prev].slice(0, 200));
@@ -431,6 +450,16 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
 
   const clearLogs = () => setLogs([]);
   const clearGraph = () => setGraphData([]);
+  const clearDataBuffer = () => setDataBuffer([]);
+
+  const exportDataCSV = useCallback(() => {
+    if (dataBuffer.length === 0) return;
+    const csv = bufferToCSV(dataBuffer);
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const filename = `modbus_log_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.csv`;
+    downloadCSV(csv, filename);
+  }, [dataBuffer]);
 
   return (
     <ModbusContext.Provider value={{
@@ -486,7 +515,11 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
       toggleRegisterSelection,
       
       isLogging,
-      toggleLogging
+      toggleLogging,
+
+      dataBuffer,
+      clearDataBuffer,
+      exportDataCSV
     }}>
       {children}
     </ModbusContext.Provider>

@@ -8,6 +8,7 @@ export const i18n = {
     nav_write: 'เขียน',
     nav_change_id: 'เปลี่ยน ID',
     nav_remote: 'รีโมท',
+    nav_dashboard: 'Dashboard',
     
     // Common
     common_port: 'Port',
@@ -151,6 +152,22 @@ export const i18n = {
     change_id_err_port: 'กรุณาเลือก Serial Port ก่อน',
     change_id_err_same: 'Address ใหม่ต้องแตกต่างจาก Address ปัจจุบัน',
     
+    // Topology Page
+    nav_topology: 'Topology',
+    topo_title: 'Topology Map',
+    topo_subtitle: 'แสดงผลโครงสร้างการเชื่อมต่อและคุณภาพสัญญาณ',
+    topo_no_devices: 'ยังไม่มีอุปกรณ์จากการสแกน',
+    topo_scan_hint: 'สแกนหาอุปกรณ์ก่อนเพื่อแสดง Topology Map',
+    topo_scan_link: 'ไปที่หน้าสแกน',
+    topo_legend: 'คุณภาพสัญญาณ',
+    topo_legend_good: 'ดีเยี่ยม',
+    topo_legend_medium: 'ปานกลาง',
+    topo_legend_poor: 'ต่ำ',
+    topo_master: 'Master',
+    topo_response_time: 'Response: {time}ms',
+    topo_address: 'Address: {addr}',
+    topo_drag_hint: 'ลาก Node เพื่อจัดเรียงตามตำแหน่งจริง',
+
     // Errors
     err_select_port: 'กรุณาเลือก Serial Port ก่อน',
     err_connect_failed: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์',
@@ -182,6 +199,29 @@ export const i18n = {
     project_topology_notes: 'โน้ต Topology / โครงสร้างเครือข่าย',
     project_topology_placeholder: 'บันทึกโครงสร้างเครือข่าย เช่น ตำแหน่งอุปกรณ์ สายไฟ ระยะทาง...',
     project_device_remark_placeholder: 'Remark — เช่น ตำแหน่งติดตั้ง, รุ่นอุปกรณ์, หมายเหตุ...',
+
+    // Dashboard
+    dashboard_title: 'Multi-Device Dashboard',
+    dashboard_subtitle: 'แสดงผลหลายอุปกรณ์พร้อมกัน (Sequential Polling)',
+    dashboard_add_card: 'เพิ่ม Card',
+    dashboard_remove_card: 'ลบ Card',
+    dashboard_start_polling: 'เริ่ม Polling',
+    dashboard_stop_polling: 'หยุด Polling',
+    dashboard_interval: 'Update Interval',
+    dashboard_last_updated: 'อัปเดตล่าสุด',
+    dashboard_no_cards: 'ยังไม่มี Card — กดปุ่ม "เพิ่ม Card" เพื่อเริ่มต้น',
+    dashboard_card_name: 'ชื่อ Card',
+    dashboard_polling_active: 'กำลัง Polling...',
+    dashboard_polling_stopped: 'หยุดแล้ว',
+    dashboard_error: 'ข้อผิดพลาด',
+    dashboard_no_data: 'ยังไม่มีข้อมูล',
+    dashboard_timeout: 'Timeout',
+    dashboard_err_no_cards: 'กรุณาเพิ่มอย่างน้อย 1 Card ก่อนเริ่ม Polling',
+    dashboard_failed_start_polling: 'ไม่สามารถเริ่ม Polling ได้',
+    dashboard_slave_id: 'Slave ID',
+    dashboard_function_code: 'Function Code',
+    dashboard_start_address: 'Start Address',
+    dashboard_quantity: 'Quantity',
   },
   en: {
     // Navigation
@@ -190,6 +230,7 @@ export const i18n = {
     nav_write: 'Write',
     nav_change_id: 'Change ID',
     nav_remote: 'Remote',
+    nav_dashboard: 'Dashboard',
     
     // Common
     common_port: 'Port',
@@ -333,6 +374,22 @@ export const i18n = {
     change_id_err_port: 'Please select Serial Port first',
     change_id_err_same: 'New Address must be different from Current Address',
     
+    // Topology Page
+    nav_topology: 'Topology',
+    topo_title: 'Topology Map',
+    topo_subtitle: 'Visualize connection topology and signal quality',
+    topo_no_devices: 'No devices found from scan',
+    topo_scan_hint: 'Scan for devices first to display Topology Map',
+    topo_scan_link: 'Go to Scan page',
+    topo_legend: 'Signal Quality',
+    topo_legend_good: 'Excellent',
+    topo_legend_medium: 'Medium',
+    topo_legend_poor: 'Poor',
+    topo_master: 'Master',
+    topo_response_time: 'Response: {time}ms',
+    topo_address: 'Address: {addr}',
+    topo_drag_hint: 'Drag nodes to arrange by physical position',
+
     // Errors
     err_select_port: 'Please select a Serial Port first',
     err_connect_failed: 'Failed to connect to server',
@@ -364,6 +421,29 @@ export const i18n = {
     project_topology_notes: 'Topology / Network Notes',
     project_topology_placeholder: 'Document network layout, device locations, wiring, distances...',
     project_device_remark_placeholder: 'Remark — e.g. install location, device model, notes...',
+
+    // Dashboard
+    dashboard_title: 'Multi-Device Dashboard',
+    dashboard_subtitle: 'Monitor multiple devices simultaneously (Sequential Polling)',
+    dashboard_add_card: 'Add Card',
+    dashboard_remove_card: 'Remove Card',
+    dashboard_start_polling: 'Start Polling',
+    dashboard_stop_polling: 'Stop Polling',
+    dashboard_interval: 'Update Interval',
+    dashboard_last_updated: 'Last Updated',
+    dashboard_no_cards: 'No cards yet — click "Add Card" to get started',
+    dashboard_card_name: 'Card Name',
+    dashboard_polling_active: 'Polling...',
+    dashboard_polling_stopped: 'Stopped',
+    dashboard_error: 'Error',
+    dashboard_no_data: 'No data yet',
+    dashboard_timeout: 'Timeout',
+    dashboard_err_no_cards: 'Please add at least one card before starting polling',
+    dashboard_failed_start_polling: 'Failed to start polling',
+    dashboard_slave_id: 'Slave ID',
+    dashboard_function_code: 'Function Code',
+    dashboard_start_address: 'Start Address',
+    dashboard_quantity: 'Quantity',
   }
 };
 

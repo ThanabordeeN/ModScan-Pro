@@ -5,7 +5,7 @@ import {
   BookOpen, Loader2, XCircle, Play, Square,
   Timer, Trash2, History, Plus, LineChart as ChartIcon, 
   FileSpreadsheet, PenLine, Settings2, Hash, Type, Info,
-  Save
+  Save, Download
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import ConnectionSettings from '@/components/ConnectionSettings';
@@ -26,7 +26,8 @@ export default function UnifiedPage() {
     logs, clearLogs,
     graphData, clearGraph,
     selectedRegisters, toggleRegisterSelection,
-    isLogging, toggleLogging
+    isLogging, toggleLogging,
+    dataBuffer, clearDataBuffer, exportDataCSV
   } = useModbus();
   const { t } = useLanguage();
   const { getDeviceDisplayName } = useProject();
@@ -36,6 +37,9 @@ export default function UnifiedPage() {
   const [writeValue, setWriteValue] = useState<string>('0');
   const [isWriting, setIsWriting] = useState(false);
   const [writeError, setWriteError] = useState<string | null>(null);
+
+  // Local state for toggleable graph series
+  const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
 
   const READ_FUNCTION_CODES = [
     { value: 1, label: 'FC01 - Read Coils', description: t('read_coils_desc') || 'Read Coil Status (0x)' },
@@ -498,13 +502,33 @@ export default function UnifiedPage() {
                <ChartIcon className="w-5 h-5 text-indigo-600" />
                Analyzer
              </h2>
-             <button
-               onClick={clearGraph}
-               className="text-xs text-slate-400 hover:text-slate-600 underline"
-             >
-               Clear
-             </button>
+             <div className="flex items-center gap-3">
+               <button
+                 onClick={exportDataCSV}
+                 disabled={dataBuffer.length === 0}
+                 className="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed"
+               >
+                 <Download className="w-3.5 h-3.5" />
+                 Export CSV{dataBuffer.length > 0 && ` (${dataBuffer.length})`}
+               </button>
+               {dataBuffer.length > 0 && (
+                 <button
+                   onClick={clearDataBuffer}
+                   className="text-xs text-slate-400 hover:text-slate-600 underline"
+                 >
+                   Clear Data
+                 </button>
+               )}
+               <button
+                 onClick={clearGraph}
+                 className="text-xs text-slate-400 hover:text-slate-600 underline"
+               >
+                 Clear Graph
+               </button>
+             </div>
            </div>
+
+           <p className="text-[10px] text-slate-400 mb-2">Click legend items to toggle series visibility</p>
            
            <div className="h-[300px] w-full">
              <ResponsiveContainer width="100%" height="100%">
@@ -513,7 +537,24 @@ export default function UnifiedPage() {
                  <XAxis dataKey="timeStr" tick={{fontSize: 10}} />
                  <YAxis domain={['auto', 'auto']} tick={{fontSize: 10}} />
                  <Tooltip />
-                 <Legend />
+                 <Legend
+                   onClick={(e) => {
+                     const { dataKey } = e;
+                     if (typeof dataKey === 'string') {
+                       setHiddenSeries(prev => {
+                         const next = new Set(prev);
+                         if (next.has(dataKey)) next.delete(dataKey);
+                         else next.add(dataKey);
+                         return next;
+                       });
+                     }
+                   }}
+                   formatter={(value, entry) => {
+                     const { dataKey } = entry;
+                     const isHidden = typeof dataKey === 'string' && hiddenSeries.has(dataKey);
+                     return <span style={{ color: isHidden ? '#cbd5e1' : '#334155', cursor: 'pointer' }}>{value}</span>;
+                   }}
+                 />
                  {Array.from(selectedRegisters).map((id, index) => {
                     const [slaveId, addr] = id.split('-');
                     return (
@@ -526,6 +567,7 @@ export default function UnifiedPage() {
                         dot={false}
                         strokeWidth={2}
                         isAnimationActive={false}
+                        hide={hiddenSeries.has(id)}
                       />
                     );
                  })}

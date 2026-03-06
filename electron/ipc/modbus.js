@@ -238,13 +238,14 @@ const ModbusService = {
 
   changeAddress: async (config) => {
     const { currentAddress, newAddress, registerAddress = 0, functionCode = 6, timeout = 1000 } = config;
-    const client = new ModbusRTU();
+    let client = new ModbusRTU();
 
     try {
       if (newAddress < 1 || newAddress > 247) {
         return { success: false, error: 'New address must be between 1 and 247' };
       }
 
+      // Step 1: Connect and Write new ID
       await connectClient(client, config);
       client.setID(currentAddress);
       client.setTimeout(timeout);
@@ -256,38 +257,64 @@ const ModbusService = {
         await client.writeRegisters(registerAddress, [newAddress]);
       }
 
-      await client.close(() => { });
+      // Explicitly close the connection after writing to allow device to process/reboot
+      await new Promise(resolve => {
+        client.close(() => resolve(null));
+      });
 
-      // Wait for device to apply changes/reboot
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Step 2: Wait for device to apply changes (EEPROM write/Reboot often takes time)
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Verify change
-      try {
-        await connectClient(client, config);
-        client.setID(newAddress);
-        client.setTimeout(timeout);
-        
-        // Read back the specific register we just wrote to
-        const verifyResult = await client.readHoldingRegisters(registerAddress, 1);
-        
-        await client.close(() => { });
+      // Step 3: Verify change with Retries
+      const maxRetries = 3;
+      let lastError = null;
 
-        if (verifyResult.data[0] === newAddress) {
-           return { success: true, message: `Successfully changed ID from ${currentAddress} to ${newAddress}` };
-        } else {
-           return { success: true, warning: `Write command sent, but readback value (${verifyResult.data[0]}) does not match new ID (${newAddress}). Device might need a restart.` };
+      for (let i = 0; i < maxRetries; i++) {
+        client = new ModbusRTU();
+        try {
+          await connectClient(client, config);
+          client.setID(newAddress);
+          client.setTimeout(timeout + 500);
+          
+          const verifyResult = await client.readHoldingRegisters(registerAddress, 1);
+          
+          await new Promise(resolve => {
+            client.close(() => resolve(null));
+          });
+
+          if (verifyResult.data[0] === newAddress) {
+            return { success: true, message: `Successfully changed ID from ${currentAddress} to ${newAddress}` };
+          } else {
+            return { 
+              success: true, 
+              warning: `Write command sent, but readback value (${verifyResult.data[0]}) does not match new ID (${newAddress}). Device might need a manual restart.` 
+            };
+          }
+        } catch (err) {
+          lastError = err;
+          try {
+            await new Promise(resolve => {
+              client.close(() => resolve(null));
+            });
+          } catch (e) { /* ignore */ }
+          
+          if (i < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1500));
+          }
         }
-
-      } catch (verifyError) {
-        // If verification fails, it might just be a connection issue with the new ID, but the write likely succeeded.
-        return { 
-          success: true, 
-          warning: `Write command sent successfully, but verification failed: ${getErrorMessage(verifyError)}. The device might have changed ID or is restarting.` 
-        };
       }
 
+      return { 
+        success: true, 
+        warning: `ID change command was sent successfully to ID ${currentAddress}, but the device is not responding on new ID ${newAddress} yet. Please try scanning or wait a moment. (${getErrorMessage(lastError)})` 
+      };
+
     } catch (error) {
-      try { await client.close(() => { }); } catch { }
+      try {
+        await new Promise(resolve => {
+          client.close(() => resolve(null));
+        });
+      } catch (e) { /* ignore */ }
       return { success: false, error: getErrorMessage(error) };
     }
   }
@@ -322,6 +349,216 @@ function registerModbusHandlers(ipcMain) {
   ipcMain.handle('modbus:change-address', async (event, config) => {
     return ModbusService.changeAddress(config);
   });
+
+  // Dashboard polling queue
+  ipcMain.handle('modbus:dashboard-start', async (event, config) => {
+    try {
+      dashboardQueue.start(config);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: getErrorMessage(error) };
+    }
+  });
+
+  ipcMain.handle('modbus:dashboard-stop', async () => {
+    dashboardQueue.stop();
+    return { success: true };
+  });
+
+  ipcMain.handle('modbus:dashboard-update', async (event, config) => {
+    dashboardQueue.update(config);
+    return { success: true };
+  });
+
+  ipcMain.handle('modbus:dashboard-status', async () => {
+    return dashboardQueue.getStatus();
+  });
 }
 
-module.exports = { registerModbusHandlers, ModbusService };
+/**
+ * ModbusQueue - Sequential polling queue for multi-device dashboard.
+ * Prevents RS485 data collisions by reading devices one at a time.
+ */
+class ModbusQueue {
+  constructor() {
+    this.cards = [];          // Array of card configs { cardId, slaveAddress, functionCode, registerAddress, quantity }
+    this.connectionConfig = null;
+    this.interval = 1000;     // ms between polling cycles
+    this.timeout = 1000;      // per-device read timeout
+    this.running = false;
+    this.loopTimer = null;
+    this.cardResults = {};    // { [cardId]: { success, data, error, lastUpdated } }
+  }
+
+  /**
+   * Start the polling loop.
+   * @param {object} config - { cards, connectionConfig, interval, timeout }
+   */
+  start(config) {
+    this.stop();
+
+    this.cards = config.cards || [];
+    this.connectionConfig = config.connectionConfig;
+    this.interval = config.interval || 1000;
+    this.timeout = config.timeout || 1000;
+    this.running = true;
+    this.cardResults = {};
+
+    // Initialize card results
+    for (const card of this.cards) {
+      this.cardResults[card.cardId] = { success: false, data: null, error: null, lastUpdated: null };
+    }
+
+    this._scheduleLoop();
+  }
+
+  /**
+   * Stop the polling loop.
+   */
+  stop() {
+    this.running = false;
+    if (this.loopTimer) {
+      clearTimeout(this.loopTimer);
+      this.loopTimer = null;
+    }
+  }
+
+  /**
+   * Update cards and/or interval without full restart.
+   * @param {object} config - { cards?, interval?, timeout? }
+   */
+  update(config) {
+    if (config.cards) {
+      this.cards = config.cards;
+      // Initialize results for new cards
+      for (const card of this.cards) {
+        if (!this.cardResults[card.cardId]) {
+          this.cardResults[card.cardId] = { success: false, data: null, error: null, lastUpdated: null };
+        }
+      }
+      // Remove results for cards no longer present
+      const cardIds = new Set(this.cards.map(c => c.cardId));
+      for (const id of Object.keys(this.cardResults)) {
+        if (!cardIds.has(id)) {
+          delete this.cardResults[id];
+        }
+      }
+    }
+    if (config.interval !== undefined) {
+      this.interval = config.interval;
+    }
+    if (config.timeout !== undefined) {
+      this.timeout = config.timeout;
+    }
+    if (config.connectionConfig) {
+      this.connectionConfig = config.connectionConfig;
+    }
+  }
+
+  /**
+   * Get the current status and all card results.
+   */
+  getStatus() {
+    return {
+      running: this.running,
+      interval: this.interval,
+      cards: this.cards,
+      results: { ...this.cardResults },
+    };
+  }
+
+  /**
+   * Internal: schedule the next polling cycle.
+   */
+  _scheduleLoop() {
+    if (!this.running) return;
+    this._pollAll()
+      .then(() => {
+        if (this.running) {
+          this.loopTimer = setTimeout(() => this._scheduleLoop(), this.interval);
+        }
+      })
+      .catch((err) => {
+        console.error('ModbusQueue polling loop terminated due to an unexpected error:', err);
+        this.running = false;
+      });
+  }
+
+  /**
+   * Internal: poll all cards sequentially using a single connection.
+   */
+  async _pollAll() {
+    if (!this.connectionConfig || this.cards.length === 0) return;
+
+    const client = new ModbusRTU();
+    try {
+      await connectClient(client, this.connectionConfig);
+      client.setTimeout(this.timeout);
+
+      for (const card of this.cards) {
+        if (!this.running) break;
+        try {
+          client.setID(card.slaveAddress);
+          let data;
+          switch (card.functionCode) {
+            case 1: {
+              const result = await client.readCoils(card.registerAddress, card.quantity);
+              data = result.data.map(v => v ? 1 : 0);
+              break;
+            }
+            case 2: {
+              const result = await client.readDiscreteInputs(card.registerAddress, card.quantity);
+              data = result.data.map(v => v ? 1 : 0);
+              break;
+            }
+            case 3: {
+              const result = await client.readHoldingRegisters(card.registerAddress, card.quantity);
+              data = result.data;
+              break;
+            }
+            case 4: {
+              const result = await client.readInputRegisters(card.registerAddress, card.quantity);
+              data = result.data;
+              break;
+            }
+            default:
+              throw new Error(`Unsupported function code: ${card.functionCode}`);
+          }
+          this.cardResults[card.cardId] = {
+            success: true,
+            data,
+            error: null,
+            lastUpdated: new Date().toISOString(),
+          };
+        } catch (error) {
+          this.cardResults[card.cardId] = {
+            success: false,
+            data: null,
+            error: getErrorMessage(error),
+            lastUpdated: new Date().toISOString(),
+          };
+        }
+      }
+
+      try { await client.close(() => {}); } catch { }
+    } catch (error) {
+      // Connection-level failure: mark all cards as errored
+      const errorMsg = getErrorMessage(error);
+      const now = new Date().toISOString();
+      for (const card of this.cards) {
+        this.cardResults[card.cardId] = {
+          success: false,
+          data: null,
+          error: errorMsg,
+          lastUpdated: now,
+        };
+      }
+      try { await client.close(() => {}); } catch { }
+    }
+  }
+}
+
+// Singleton instance for the dashboard polling queue
+const dashboardQueue = new ModbusQueue();
+
+module.exports = { registerModbusHandlers, ModbusService, ModbusQueue, dashboardQueue };

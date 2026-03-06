@@ -1,14 +1,16 @@
-import type { ReadRange } from './modbus';
+import type { ReadRange, ModbusDevice } from './modbus';
 
 export interface DeviceAlias {
   slaveId: number;
   alias: string;
   description?: string;
+  remark?: string;
 }
 
 export interface ProjectSettings {
   refreshInterval: number;
   readTimeout: number;
+  selectedRegisters?: string[];
 }
 
 export interface ProjectConnection {
@@ -22,14 +24,23 @@ export interface ProjectConnection {
   tcpPort?: number;
 }
 
+export interface ScanSettings {
+  startAddress: number;
+  endAddress: number;
+  timeout: number;
+}
+
 export interface ProjectData {
   version: number;
   name: string;
   description?: string;
+  notes?: string;
   connection: ProjectConnection;
   devices: DeviceAlias[];
   readRanges: ReadRange[];
   settings: ProjectSettings;
+  scanSettings?: ScanSettings;
+  scannedDevices?: ModbusDevice[];
 }
 
 export interface RecentProject {

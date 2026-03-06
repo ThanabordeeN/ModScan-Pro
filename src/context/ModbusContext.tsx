@@ -72,6 +72,7 @@ interface ModbusContextType {
   clearGraph: () => void;
   
   selectedRegisters: Set<string>;
+  setSelectedRegisters: (regs: Set<string>) => void;
   toggleRegisterSelection: (id: string) => void;
   
   isLogging: boolean;
@@ -481,6 +482,7 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
       clearGraph,
       
       selectedRegisters,
+      setSelectedRegisters,
       toggleRegisterSelection,
       
       isLogging,

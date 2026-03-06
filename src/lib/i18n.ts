@@ -178,6 +178,10 @@ export const i18n = {
     project_save_error: 'บันทึกโปรเจกต์ล้มเหลว',
     project_load_error: 'โหลดโปรเจกต์ล้มเหลว',
     project_no_devices: 'ยังไม่มีอุปกรณ์ — เพิ่ม Slave ID และชื่อเล่นด้านบน',
+    project_scanned_devices: 'อุปกรณ์ที่สแกนพบ',
+    project_topology_notes: 'โน้ต Topology / โครงสร้างเครือข่าย',
+    project_topology_placeholder: 'บันทึกโครงสร้างเครือข่าย เช่น ตำแหน่งอุปกรณ์ สายไฟ ระยะทาง...',
+    project_device_remark_placeholder: 'Remark — เช่น ตำแหน่งติดตั้ง, รุ่นอุปกรณ์, หมายเหตุ...',
   },
   en: {
     // Navigation
@@ -356,6 +360,10 @@ export const i18n = {
     project_save_error: 'Failed to save project',
     project_load_error: 'Failed to load project',
     project_no_devices: 'No devices yet — add a Slave ID and alias above',
+    project_scanned_devices: 'Scanned devices',
+    project_topology_notes: 'Topology / Network Notes',
+    project_topology_placeholder: 'Document network layout, device locations, wiring, distances...',
+    project_device_remark_placeholder: 'Remark — e.g. install location, device model, notes...',
   }
 };
 

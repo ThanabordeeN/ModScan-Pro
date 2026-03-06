@@ -34,10 +34,20 @@ export default function ProjectsPage() {
     readTimeout,
     setReadTimeout,
     scannedDevices,
+    setScannedDevices,
+    scanStartAddr,
+    setScanStartAddr,
+    scanEndAddr,
+    setScanEndAddr,
+    scanTimeout,
+    setScanTimeout,
+    selectedRegisters,
+    setSelectedRegisters,
   } = useModbus();
 
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
+  const [projectNotes, setProjectNotes] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [newAliasId, setNewAliasId] = useState(1);
   const [newAliasName, setNewAliasName] = useState('');
@@ -49,6 +59,7 @@ export default function ProjectsPage() {
     if (currentProject) {
       setProjectName(currentProject.name);
       setProjectDescription(currentProject.description || '');
+      setProjectNotes(currentProject.notes || '');
     }
   }, [currentProject]);
 
@@ -74,13 +85,21 @@ export default function ProjectsPage() {
       const result = await saveProject({
         name: projectName.trim(),
         description: projectDescription.trim(),
+        notes: projectNotes.trim() || undefined,
         connection,
         devices: deviceAliases,
         readRanges,
         settings: {
           refreshInterval,
           readTimeout,
+          selectedRegisters: Array.from(selectedRegisters),
         },
+        scanSettings: {
+          startAddress: scanStartAddr,
+          endAddress: scanEndAddr,
+          timeout: scanTimeout,
+        },
+        scannedDevices,
       });
 
       if (result.success) {
@@ -134,6 +153,17 @@ export default function ProjectsPage() {
       if (currentProject.settings) {
         if (currentProject.settings.refreshInterval) setRefreshInterval(currentProject.settings.refreshInterval);
         if (currentProject.settings.readTimeout) setReadTimeout(currentProject.settings.readTimeout);
+        if (currentProject.settings.selectedRegisters) {
+          setSelectedRegisters(new Set(currentProject.settings.selectedRegisters));
+        }
+      }
+      if (currentProject.scanSettings) {
+        setScanStartAddr(currentProject.scanSettings.startAddress);
+        setScanEndAddr(currentProject.scanSettings.endAddress);
+        setScanTimeout(currentProject.scanSettings.timeout);
+      }
+      if (currentProject.scannedDevices) {
+        setScannedDevices(currentProject.scannedDevices);
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -199,7 +229,7 @@ export default function ProjectsPage() {
               <p><span className="font-medium text-slate-700">{t('project_description')}:</span> {currentProject.description}</p>
             )}
             <p className="text-xs text-slate-500">
-              {currentProject.devices?.length || 0} {t('project_devices').toLowerCase()} · {currentProject.readRanges?.length || 0} read ranges
+              {currentProject.devices?.length || 0} {t('project_devices').toLowerCase()} · {currentProject.readRanges?.length || 0} read ranges · {currentProject.scannedDevices?.length || 0} {t('project_scanned_devices').toLowerCase()}
             </p>
             {projectFilePath && (
               <p className="text-xs text-slate-400 font-mono truncate">{projectFilePath}</p>
@@ -233,6 +263,18 @@ export default function ProjectsPage() {
               className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
             />
           </div>
+        </div>
+
+        {/* Topology Notes */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-600 mb-2">{t('project_topology_notes')}</label>
+          <textarea
+            value={projectNotes}
+            onChange={(e) => setProjectNotes(e.target.value)}
+            placeholder={t('project_topology_placeholder')}
+            rows={3}
+            className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-y"
+          />
         </div>
 
         <div className="flex flex-wrap gap-3">
@@ -294,23 +336,32 @@ export default function ProjectsPage() {
         {deviceAliases.length > 0 && (
           <div className="space-y-2 mb-4">
             {deviceAliases.map((device) => (
-              <div key={device.slaveId} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
-                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-200 text-slate-700 font-mono font-bold text-sm min-w-[60px] justify-center">
-                  ID: {device.slaveId}
-                </span>
+              <div key={device.slaveId} className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-200 text-slate-700 font-mono font-bold text-sm min-w-[60px] justify-center">
+                    ID: {device.slaveId}
+                  </span>
+                  <input
+                    type="text"
+                    value={device.alias}
+                    onChange={(e) => setAlias(device.slaveId, e.target.value, device.description, device.remark)}
+                    placeholder={t('project_alias') + '...'}
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                  />
+                  <button
+                    onClick={() => removeAlias(device.slaveId)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
                 <input
                   type="text"
-                  value={device.alias}
-                  onChange={(e) => setAlias(device.slaveId, e.target.value, device.description)}
-                  placeholder="Enter alias name..."
-                  className="flex-1 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                  value={device.remark || ''}
+                  onChange={(e) => setAlias(device.slaveId, device.alias, device.description, e.target.value)}
+                  placeholder={t('project_device_remark_placeholder')}
+                  className="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 text-xs focus:outline-none focus:ring-2 focus:ring-slate-400/50"
                 />
-                <button
-                  onClick={() => removeAlias(device.slaveId)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
               </div>
             ))}
           </div>

@@ -120,4 +120,45 @@ describe('project validation', () => {
       settings: { refreshInterval: 1000, readTimeout: 1000 },
     })).toBe(true);
   });
+
+  test('accepts project with scanSettings and scannedDevices', () => {
+    expect(validateProjectData({
+      version: 1,
+      name: 'Full State Project',
+      connection: { type: 'serial', port: 'COM3', baudRate: 9600, dataBits: 8, stopBits: 1, parity: 'none' },
+      devices: [{ slaveId: 1, alias: 'Sensor 1' }],
+      readRanges: [{ id: 'r1', slaveAddress: 1, functionCode: 3, registerAddress: 0, quantity: 10 }],
+      settings: { refreshInterval: 1000, readTimeout: 1000 },
+      scanSettings: { startAddress: 1, endAddress: 50, timeout: 500 },
+      scannedDevices: [
+        { address: 1, responseTime: 25 },
+        { address: 15, responseTime: 42 },
+      ],
+    })).toBe(true);
+  });
+
+  test('accepts project without optional scanSettings and scannedDevices', () => {
+    expect(validateProjectData({
+      version: 1,
+      name: 'No Scan Data',
+      connection: { type: 'tcp' },
+      devices: [],
+      readRanges: [],
+      settings: { refreshInterval: 2000, readTimeout: 500 },
+    })).toBe(true);
+  });
+
+  test('accepts project with topology notes, device remarks and selectedRegisters', () => {
+    expect(validateProjectData({
+      version: 1,
+      name: 'Full Topology Project',
+      connection: { type: 'serial', port: 'COM3', baudRate: 9600, dataBits: 8, stopBits: 1, parity: 'none' },
+      devices: [{ slaveId: 1, alias: 'Sensor 1', remark: 'Installed at control room' }],
+      readRanges: [{ id: 'r1', slaveAddress: 1, functionCode: 3, registerAddress: 0, quantity: 10, remark: 'Temperature' }],
+      settings: { refreshInterval: 1000, readTimeout: 1000, selectedRegisters: ['1-0', '1-1'] },
+      notes: 'RS485 Bus: PLC → ID:1 → ID:15, Cable 200m',
+      scanSettings: { startAddress: 1, endAddress: 50, timeout: 500 },
+      scannedDevices: [{ address: 1, responseTime: 25 }],
+    })).toBe(true);
+  });
 });

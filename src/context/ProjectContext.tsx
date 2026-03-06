@@ -15,7 +15,7 @@ interface ProjectContextType {
   setDeviceAliases: (aliases: DeviceAlias[]) => void;
   getDeviceAlias: (slaveId: number) => string | null;
   getDeviceDisplayName: (slaveId: number) => string;
-  setAlias: (slaveId: number, alias: string, description?: string) => void;
+  setAlias: (slaveId: number, alias: string, description?: string, remark?: string) => void;
   removeAlias: (slaveId: number) => void;
 
   // Project actions
@@ -83,15 +83,15 @@ export function ProjectProvider({ children, onProjectLoad }: { children: ReactNo
     return alias ? `${alias} (ID:${slaveId})` : `ID:${slaveId}`;
   }, [getDeviceAlias]);
 
-  const setAlias = useCallback((slaveId: number, alias: string, description?: string) => {
+  const setAlias = useCallback((slaveId: number, alias: string, description?: string, remark?: string) => {
     setDeviceAliasesState(prev => {
       const existing = prev.findIndex(d => d.slaveId === slaveId);
       if (existing >= 0) {
         const updated = [...prev];
-        updated[existing] = { slaveId, alias, description };
+        updated[existing] = { ...updated[existing], slaveId, alias, description, remark };
         return updated;
       }
-      return [...prev, { slaveId, alias, description }];
+      return [...prev, { slaveId, alias, description, remark }];
     });
     setIsProjectDirty(true);
   }, []);

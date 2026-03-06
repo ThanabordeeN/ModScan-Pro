@@ -10,22 +10,15 @@ import { FUNCTION_CODE_OPTIONS } from '@/types/modbus';
 import { modbusAPI } from '@/lib/electron-api';
 
 export default function ChangeAddressPage() {
-  const { connection, scannedDevices, isConnectionReady } = useModbus();
+  const { connection, scannedDevices, isConnectionReady, changeAddrState, setChangeAddrState } = useModbus();
   const { t } = useLanguage();
   
-
-  
-  // Address change settings
-  const [currentAddress, setCurrentAddress] = useState(1);
-  const [newAddress, setNewAddress] = useState(2);
-  const [registerAddress, setRegisterAddress] = useState(0);
-  const [functionCode, setFunctionCode] = useState<6 | 16>(6);
+  const { currentAddress, newAddress, registerAddress, functionCode, useScannedDevice } = changeAddrState;
   
   // UI state
   const [changing, setChanging] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string; warning?: string } | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [useScannedDevice, setUseScannedDevice] = useState(false);
 
 
 
@@ -114,8 +107,7 @@ export default function ChangeAddressPage() {
               <button
                 key={device.address}
                 onClick={() => {
-                  setCurrentAddress(device.address);
-                  setUseScannedDevice(true);
+                  setChangeAddrState(prev => ({ ...prev, currentAddress: device.address, useScannedDevice: true }));
                 }}
                 className={`px-4 py-2 rounded-lg font-mono font-bold transition-all ${
                   currentAddress === device.address && useScannedDevice
@@ -187,8 +179,11 @@ export default function ChangeAddressPage() {
               max={247}
               value={currentAddress}
               onChange={(e) => {
-                setCurrentAddress(Math.min(247, Math.max(1, Number(e.target.value))));
-                setUseScannedDevice(false);
+                setChangeAddrState(prev => ({ 
+                  ...prev, 
+                  currentAddress: Math.min(247, Math.max(1, Number(e.target.value))), 
+                  useScannedDevice: false 
+                }));
               }}
               className="w-full px-4 py-2.5 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
             />
@@ -203,7 +198,7 @@ export default function ChangeAddressPage() {
               min={1}
               max={247}
               value={newAddress}
-              onChange={(e) => setNewAddress(Math.min(247, Math.max(1, Number(e.target.value))))}
+              onChange={(e) => setChangeAddrState(prev => ({ ...prev, newAddress: Math.min(247, Math.max(1, Number(e.target.value))) }))}
               className="w-full px-4 py-2.5 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
             />
           </div>
@@ -217,7 +212,7 @@ export default function ChangeAddressPage() {
               min={0}
               max={65535}
               value={registerAddress}
-              onChange={(e) => setRegisterAddress(Number(e.target.value))}
+              onChange={(e) => setChangeAddrState(prev => ({ ...prev, registerAddress: Number(e.target.value) }))}
               className="w-full px-4 py-2.5 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
             />
             <p className="text-xs text-slate-500 mt-1">{t('change_id_register_hint')}</p>
@@ -229,7 +224,7 @@ export default function ChangeAddressPage() {
             </label>
             <select
               value={functionCode}
-              onChange={(e) => setFunctionCode(Number(e.target.value) as 6 | 16)}
+              onChange={(e) => setChangeAddrState(prev => ({ ...prev, functionCode: Number(e.target.value) as 6 | 16 }))}
               className="w-full px-4 py-2.5 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
             >
               {FUNCTION_CODE_OPTIONS.map((fc) => (

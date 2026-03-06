@@ -1,8 +1,21 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+// Extract windowId from command line arguments
+const windowIdArg = process.argv.find(arg => arg.startsWith('--window-id='));
+const windowId = windowIdArg ? windowIdArg.split('=')[1] : 'default';
+
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
+  // Window ID for this renderer
+  windowId,
+
+  // Window management
+  window: {
+    openNew: (projectFilePath) => ipcRenderer.invoke('window:new', projectFilePath),
+    setTitle: (title) => ipcRenderer.invoke('window:set-title', title),
+  },
+
   // Serial port operations
   serial: {
     listPorts: () => ipcRenderer.invoke('serial:list-ports'),
@@ -10,17 +23,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Modbus operations
   modbus: {
-    scan: (config) => ipcRenderer.invoke('modbus:scan', config),
-    onScanProgress: (callback) => ipcRenderer.on('modbus:scan-progress', (_event, value) => callback(value)),
-    removeScanProgress: () => ipcRenderer.removeAllListeners('modbus:scan-progress'),
+    scan: (config) => ipcRenderer.invoke('modbus:scan', { ...config, _windowId: windowId }),
+    scanCancel: () => ipcRenderer.invoke('modbus:scan-cancel', windowId),
+    onScanProgress: (callback) => ipcRenderer.on(`modbus:scan-progress:${windowId}`, (_event, value) => callback(value)),
+    removeScanProgress: () => ipcRenderer.removeAllListeners(`modbus:scan-progress:${windowId}`),
+    onScanFound: (callback) => ipcRenderer.on(`modbus:scan-found:${windowId}`, (_event, device) => callback(device)),
+    removeScanFound: () => ipcRenderer.removeAllListeners(`modbus:scan-found:${windowId}`),
     read: (config) => ipcRenderer.invoke('modbus:read', config),
     write: (config) => ipcRenderer.invoke('modbus:write', config),
     readBatch: (config) => ipcRenderer.invoke('modbus:read-batch', config),
     changeAddress: (config) => ipcRenderer.invoke('modbus:change-address', config),
-    dashboardStart: (config) => ipcRenderer.invoke('modbus:dashboard-start', config),
-    dashboardStop: () => ipcRenderer.invoke('modbus:dashboard-stop'),
-    dashboardUpdate: (config) => ipcRenderer.invoke('modbus:dashboard-update', config),
-    dashboardStatus: () => ipcRenderer.invoke('modbus:dashboard-status'),
+    dashboardStart: (config) => ipcRenderer.invoke('modbus:dashboard-start', windowId, config),
+    dashboardStop: () => ipcRenderer.invoke('modbus:dashboard-stop', windowId),
+    dashboardUpdate: (config) => ipcRenderer.invoke('modbus:dashboard-update', windowId, config),
+    dashboardStatus: () => ipcRenderer.invoke('modbus:dashboard-status', windowId),
   },
 
   // License operations

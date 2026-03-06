@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, Settings, Globe, Menu, X, FolderOpen, LayoutGrid, Network } from 'lucide-react';
-import { Search, Settings, Globe, Menu, X, LayoutGrid, Network } from 'lucide-react';
+import { Search, Settings, Globe, Menu, X, FolderOpen, LayoutGrid, Network, AppWindow } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { windowAPI, isElectron } from '@/lib/electron-api';
 import LanguageToggle from './LanguageToggle';
 
 export default function Navigation() {
@@ -15,8 +15,7 @@ export default function Navigation() {
 
   const navItems = [
     { href: '/scan', label: t('nav_scan'), icon: Search },
-    { href: '/read', label: t('nav_read'), icon: Globe },
-    { href: '/dashboard', label: t('nav_dashboard'), icon: LayoutGrid },
+    { href: '/read', label: t('nav_read'), icon: LayoutGrid },
     { href: '/topology', label: t('nav_topology'), icon: Network },
     { href: '/change-address', label: t('nav_change_id'), icon: Settings },
     { href: '/projects', label: t('nav_projects'), icon: FolderOpen },
@@ -60,6 +59,15 @@ export default function Navigation() {
               })}
             </nav>
             <div className="w-px h-6 bg-slate-200" />
+            {isElectron() && (
+              <button
+                onClick={() => windowAPI.openNew()}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all"
+                title={t('nav_new_window')}
+              >
+                <AppWindow className="w-4 h-4" />
+              </button>
+            )}
             <LanguageToggle />
           </div>
 

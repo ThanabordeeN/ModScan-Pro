@@ -161,4 +161,20 @@ describe('project validation', () => {
       scannedDevices: [{ address: 1, responseTime: 25 }],
     })).toBe(true);
   });
+
+  test('accepts project with readData and topologyLayout', () => {
+    expect(validateProjectData({
+      version: 1,
+      name: 'Full State Project',
+      connection: { type: 'serial', port: 'COM3', baudRate: 9600, dataBits: 8, stopBits: 1, parity: 'none' },
+      devices: [{ slaveId: 1, alias: 'Sensor 1' }],
+      readRanges: [{ id: 'r1', slaveAddress: 1, functionCode: 3, registerAddress: 0, quantity: 10 }],
+      settings: { refreshInterval: 1000, readTimeout: 1000 },
+      readData: [{ rangeId: 'r1', data: [100, 200, 300] }],
+      topologyLayout: {
+        nodes: [{ id: 'master', position: { x: 50, y: 200 } }],
+        edges: [{ id: 'edge-1', source: 'master', target: 'device-1' }],
+      },
+    })).toBe(true);
+  });
 });

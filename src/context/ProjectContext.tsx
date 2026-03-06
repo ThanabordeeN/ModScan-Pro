@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react';
 import type { ProjectData, DeviceAlias, RecentProject } from '@/types/project';
 import { projectAPI } from '@/lib/electron-api';
+import { getWindowItem, setWindowItem } from '@/lib/window-storage';
 
 interface ProjectContextType {
   // Current project
@@ -40,10 +41,10 @@ export function ProjectProvider({ children, onProjectLoad }: { children: ReactNo
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
   const hasLoaded = useRef(false);
 
-  // Load aliases from localStorage on mount
+  // Load aliases from storage on mount (window-scoped)
   useEffect(() => {
     if (typeof window !== 'undefined' && !hasLoaded.current) {
-      const savedAliases = localStorage.getItem('modscan_device_aliases');
+      const savedAliases = getWindowItem('modscan_device_aliases');
       if (savedAliases) {
         try {
           setDeviceAliasesState(JSON.parse(savedAliases));
@@ -55,10 +56,10 @@ export function ProjectProvider({ children, onProjectLoad }: { children: ReactNo
     }
   }, []);
 
-  // Persist aliases to localStorage
+  // Persist aliases to storage (window-scoped)
   useEffect(() => {
     if (hasLoaded.current) {
-      localStorage.setItem('modscan_device_aliases', JSON.stringify(deviceAliases));
+      setWindowItem('modscan_device_aliases', JSON.stringify(deviceAliases));
     }
   }, [deviceAliases]);
 

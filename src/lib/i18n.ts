@@ -9,6 +9,7 @@ export const i18n = {
     nav_change_id: 'เปลี่ยน ID',
     nav_remote: 'รีโมท',
     nav_dashboard: 'Dashboard',
+    nav_new_window: 'เปิดหน้าต่างใหม่',
     
     // Common
     common_port: 'Port',
@@ -51,6 +52,12 @@ export const i18n = {
     scan_end_address: 'End Address',
     scan_timeout: 'Timeout (ms)',
     scan_start_btn: 'เริ่มสแกน',
+    scan_cancel_btn: 'ยกเลิกสแกน',
+    scan_history_title: 'ประวัติการสแกน',
+    scan_history_export_csv: 'ส่งออก CSV',
+    scan_history_clear: 'ล้างประวัติ',
+    scan_history_entry: 'ครั้งที่ {n} — {time} — พบ {found} อุปกรณ์ (ID {start}-{end})',
+    scan_history_empty: 'ยังไม่มีประวัติการสแกน',
     scan_scanning: 'กำลังสแกน...',
     scan_results: 'ผลการสแกน',
     scan_found_count: 'พบ {found} อุปกรณ์ จาก {scanned} Address',
@@ -62,6 +69,14 @@ export const i18n = {
     scan_status_online: 'ออนไลน์',
     scan_err_port: 'กรุณาเลือก Serial Port ก่อน',
     scan_err_failed: 'การสแกนล้มเหลว',
+
+    // Scan Diff
+    scan_diff_title: 'เปรียบเทียบผลสแกน',
+    scan_diff_added: 'เพิ่มขึ้น',
+    scan_diff_removed: 'หายไป',
+    scan_diff_unchanged: 'ไม่เปลี่ยนแปลง',
+    scan_diff_no_previous: 'ไม่มีข้อมูลสแกนครั้งก่อน',
+    scan_diff_summary: '+{added} / -{removed}',
 
     // Read Page
     read_title: 'อ่านข้อมูล (Multi-Range)',
@@ -199,6 +214,7 @@ export const i18n = {
     project_topology_notes: 'โน้ต Topology / โครงสร้างเครือข่าย',
     project_topology_placeholder: 'บันทึกโครงสร้างเครือข่าย เช่น ตำแหน่งอุปกรณ์ สายไฟ ระยะทาง...',
     project_device_remark_placeholder: 'Remark — เช่น ตำแหน่งติดตั้ง, รุ่นอุปกรณ์, หมายเหตุ...',
+    project_open_new_window: 'เปิดในหน้าต่างใหม่',
 
     // Dashboard
     dashboard_title: 'Multi-Device Dashboard',
@@ -231,6 +247,7 @@ export const i18n = {
     nav_change_id: 'Change ID',
     nav_remote: 'Remote',
     nav_dashboard: 'Dashboard',
+    nav_new_window: 'Open New Window',
     
     // Common
     common_port: 'Port',
@@ -273,6 +290,12 @@ export const i18n = {
     scan_end_address: 'End Address',
     scan_timeout: 'Timeout (ms)',
     scan_start_btn: 'Start Scan',
+    scan_cancel_btn: 'Cancel Scan',
+    scan_history_title: 'Scan History',
+    scan_history_export_csv: 'Export CSV',
+    scan_history_clear: 'Clear History',
+    scan_history_entry: 'Scan #{n} — {time} — Found {found} devices (ID {start}-{end})',
+    scan_history_empty: 'No scan history yet',
     scan_scanning: 'Scanning...',
     scan_results: 'Scan Results',
     scan_found_count: 'Found {found} devices scanned {scanned} addresses',
@@ -284,6 +307,14 @@ export const i18n = {
     scan_status_online: 'Online',
     scan_err_port: 'Please select Serial Port first',
     scan_err_failed: 'Scan failed',
+
+    // Scan Diff
+    scan_diff_title: 'Scan Diff',
+    scan_diff_added: 'Added',
+    scan_diff_removed: 'Removed',
+    scan_diff_unchanged: 'Unchanged',
+    scan_diff_no_previous: 'No previous scan data',
+    scan_diff_summary: '+{added} / -{removed}',
     
     // Read Page
     read_title: 'Read Data (Multi-Range)',
@@ -421,6 +452,7 @@ export const i18n = {
     project_topology_notes: 'Topology / Network Notes',
     project_topology_placeholder: 'Document network layout, device locations, wiring, distances...',
     project_device_remark_placeholder: 'Remark — e.g. install location, device model, notes...',
+    project_open_new_window: 'Open in New Window',
 
     // Dashboard
     dashboard_title: 'Multi-Device Dashboard',

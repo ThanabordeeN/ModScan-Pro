@@ -41,6 +41,8 @@ export interface ProjectData {
   settings: ProjectSettings;
   scanSettings?: ScanSettings;
   scannedDevices?: ModbusDevice[];
+  readData?: { rangeId: string; data: number[] }[];
+  topologyLayout?: { nodes: any[]; edges: any[] };
 }
 
 export interface RecentProject {

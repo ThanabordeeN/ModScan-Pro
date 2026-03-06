@@ -48,9 +48,12 @@ function getErrorMessage(error) {
 /**
  * Register Modbus IPC handlers
  */
+// Per-window scan abort flags: windowId -> boolean
+const scanAbortFlags = new Map();
+
 // Define ModbusService to share logic between IPC and API
 const ModbusService = {
-  scan: async (config, sender) => {
+  scan: async (config, sender, windowId) => {
     const { startAddress, endAddress, timeout = 500 } = config;
 
     // Validate input
@@ -75,6 +78,11 @@ const ModbusService = {
       let count = 0;
 
       for (let address = startAddress; address <= endAddress; address++) {
+        // Check abort flag
+        if (windowId && scanAbortFlags.get(windowId)) {
+          break;
+        }
+
         // Emit progress
         if (sender) {
           const progress = Math.round((count / total) * 100);
@@ -86,11 +94,16 @@ const ModbusService = {
           const startTime = Date.now();
           const result = await client.readHoldingRegisters(0, 1);
           const responseTime = Date.now() - startTime;
-          devices.push({
+          const device = {
             address,
             responseTime,
             holdingRegisters: result.data,
-          });
+          };
+          devices.push(device);
+          // Emit found device immediately
+          if (sender) {
+            sender.send('modbus:scan-found', device);
+          }
         } catch {
           // Device not found at this address - Expected during scan
         }
@@ -103,9 +116,13 @@ const ModbusService = {
       }
 
       await client.close(() => { });
-      return { success: true, devices, scannedCount: total };
+      // Clear abort flag
+      if (windowId) scanAbortFlags.delete(windowId);
+      const cancelled = windowId ? false : false; // not cancelled here
+      return { success: true, devices, scannedCount: total, cancelled: !!(windowId && scanAbortFlags.get(windowId)) };
     } catch (error) {
       try { await client.close(() => { }); } catch { }
+      if (windowId) scanAbortFlags.delete(windowId);
       return { success: false, error: getErrorMessage(error) };
     }
   },
@@ -325,9 +342,27 @@ const ModbusService = {
  */
 function registerModbusHandlers(ipcMain) {
 
-  // Scan for devices
+  // Scan for devices — scope progress to windowId
   ipcMain.handle('modbus:scan', async (event, config) => {
-    return ModbusService.scan(config, event.sender);
+    const windowId = config._windowId;
+    const sender = event.sender;
+    // Reset abort flag for this window
+    if (windowId) scanAbortFlags.set(windowId, false);
+    // Create a scoped sender that sends to windowId-specific channel
+    const scopedSender = windowId ? {
+      send: (channel, value) => {
+        sender.send(`${channel}:${windowId}`, value);
+      }
+    } : sender;
+    return ModbusService.scan(config, scopedSender, windowId);
+  });
+
+  // Cancel an in-progress scan
+  ipcMain.handle('modbus:scan-cancel', async (event, windowId) => {
+    if (windowId) {
+      scanAbortFlags.set(windowId, true);
+    }
+    return { success: true };
   });
 
   // Read data
@@ -350,28 +385,44 @@ function registerModbusHandlers(ipcMain) {
     return ModbusService.changeAddress(config);
   });
 
-  // Dashboard polling queue
-  ipcMain.handle('modbus:dashboard-start', async (event, config) => {
+  // Dashboard polling queue — per-window
+  ipcMain.handle('modbus:dashboard-start', async (event, windowId, config) => {
     try {
-      dashboardQueue.start(config);
+      if (!windowId) return { success: false, error: 'windowId required' };
+      let queue = dashboardQueues.get(windowId);
+      if (!queue) {
+        queue = new ModbusQueue();
+        dashboardQueues.set(windowId, queue);
+      }
+      queue.start(config);
       return { success: true };
     } catch (error) {
       return { success: false, error: getErrorMessage(error) };
     }
   });
 
-  ipcMain.handle('modbus:dashboard-stop', async () => {
-    dashboardQueue.stop();
+  ipcMain.handle('modbus:dashboard-stop', async (event, windowId) => {
+    const queue = dashboardQueues.get(windowId);
+    if (queue) {
+      queue.stop();
+    }
     return { success: true };
   });
 
-  ipcMain.handle('modbus:dashboard-update', async (event, config) => {
-    dashboardQueue.update(config);
+  ipcMain.handle('modbus:dashboard-update', async (event, windowId, config) => {
+    const queue = dashboardQueues.get(windowId);
+    if (queue) {
+      queue.update(config);
+    }
     return { success: true };
   });
 
-  ipcMain.handle('modbus:dashboard-status', async () => {
-    return dashboardQueue.getStatus();
+  ipcMain.handle('modbus:dashboard-status', async (event, windowId) => {
+    const queue = dashboardQueues.get(windowId);
+    if (queue) {
+      return queue.getStatus();
+    }
+    return { running: false, interval: 1000, cards: [], results: {} };
   });
 }
 
@@ -558,7 +609,18 @@ class ModbusQueue {
   }
 }
 
-// Singleton instance for the dashboard polling queue
-const dashboardQueue = new ModbusQueue();
+// Per-window dashboard queues: windowId -> ModbusQueue
+const dashboardQueues = new Map();
 
-module.exports = { registerModbusHandlers, ModbusService, ModbusQueue, dashboardQueue };
+/**
+ * Cleanup resources for a closed window.
+ */
+function cleanupWindow(windowId) {
+  const queue = dashboardQueues.get(windowId);
+  if (queue) {
+    queue.stop();
+    dashboardQueues.delete(windowId);
+  }
+}
+
+module.exports = { registerModbusHandlers, ModbusService, ModbusQueue, dashboardQueues, cleanupWindow };

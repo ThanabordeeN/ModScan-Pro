@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FolderOpen, Save, Upload, Trash2, Plus, XCircle, CheckCircle2, Clock, Tag, Download } from 'lucide-react';
+import { FolderOpen, Save, Upload, Trash2, Plus, XCircle, CheckCircle2, Clock, Tag, Download, AppWindow } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { windowAPI, isElectron } from '@/lib/electron-api';
+import { getWindowItem, setWindowItem } from '@/lib/window-storage';
 import type { DeviceAlias } from '@/types/project';
 
 export default function ProjectsPage() {
@@ -35,6 +37,8 @@ export default function ProjectsPage() {
     setReadTimeout,
     scannedDevices,
     setScannedDevices,
+    readData,
+    setReadData,
     scanStartAddr,
     setScanStartAddr,
     scanEndAddr,
@@ -69,6 +73,13 @@ export default function ProjectsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Update window title when project changes
+  useEffect(() => {
+    if (currentProject?.name) {
+      windowAPI.setTitle(currentProject.name);
+    }
+  }, [currentProject?.name]);
+
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
     globalThis.setTimeout(() => setMessage(null), 4000);
@@ -100,6 +111,13 @@ export default function ProjectsPage() {
           timeout: scanTimeout,
         },
         scannedDevices,
+        readData: readData || undefined,
+        topologyLayout: (() => {
+          try {
+            const saved = getWindowItem('topo_save_default');
+            return saved ? JSON.parse(saved) : undefined;
+          } catch { return undefined; }
+        })(),
       });
 
       if (result.success) {
@@ -164,6 +182,12 @@ export default function ProjectsPage() {
       }
       if (currentProject.scannedDevices) {
         setScannedDevices(currentProject.scannedDevices);
+      }
+      if (currentProject.readData) {
+        setReadData(currentProject.readData);
+      }
+      if (currentProject.topologyLayout) {
+        setWindowItem('topo_save_default', JSON.stringify(currentProject.topologyLayout));
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -415,20 +439,37 @@ export default function ProjectsPage() {
           </h2>
           <div className="space-y-2">
             {recentProjects.map((project, index) => (
-              <button
+              <div
                 key={index}
-                onClick={() => project.filePath ? handleLoadRecent(project.filePath) : null}
-                disabled={!project.filePath || isLoading}
-                className="w-full text-left p-3 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors disabled:opacity-50"
+                className="group w-full flex items-center justify-between p-3 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors"
               >
-                <p className="font-medium text-slate-900 text-sm">{project.name}</p>
-                {project.filePath && (
-                  <p className="text-xs text-slate-400 font-mono truncate mt-1">{project.filePath}</p>
+                <button
+                  onClick={() => project.filePath ? handleLoadRecent(project.filePath) : null}
+                  disabled={!project.filePath || isLoading}
+                  className="flex-1 text-left min-w-0 disabled:opacity-50"
+                >
+                  <p className="font-medium text-slate-900 text-sm group-hover:text-indigo-600 transition-colors">{project.name}</p>
+                  {project.filePath && (
+                    <p className="text-xs text-slate-400 font-mono truncate mt-1">{project.filePath}</p>
+                  )}
+                  <p className="text-xs text-slate-400 mt-1">
+                    {new Date(project.lastOpened).toLocaleString()}
+                  </p>
+                </button>
+                
+                {isElectron() && project.filePath && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      windowAPI.openNew(project.filePath!);
+                    }}
+                    className="ml-3 p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors flex-shrink-0"
+                    title={t('project_open_new_window')}
+                  >
+                    <AppWindow className="w-4 h-4" />
+                  </button>
                 )}
-                <p className="text-xs text-slate-400 mt-1">
-                  {new Date(project.lastOpened).toLocaleString()}
-                </p>
-              </button>
+              </div>
             ))}
           </div>
         </div>

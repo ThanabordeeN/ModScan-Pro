@@ -1,10 +1,13 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { AlertTriangle, X } from 'lucide-react';
 import type { ModbusDevice, ReadRange, UILogEntry } from '@/types/modbus';
-import { modbusAPI, loggerAPI, LogEntry } from '@/lib/electron-api';
+import { modbusAPI, loggerAPI, dashboardAPI, LogEntry } from '@/lib/electron-api';
 import { registersToValue } from '@/lib/modbus-utils';
 import { DataBufferEntry, bufferToCSV, downloadCSV } from '@/lib/data-buffer';
+import { getWindowItem, setWindowItem } from '@/lib/window-storage';
 
 interface ConnectionSettings {
   type: 'serial' | 'tcp';
@@ -17,6 +20,17 @@ interface ConnectionSettings {
   tcpPort?: number;
 }
 
+export type ActiveProcess = 'none' | 'scan' | 'read' | 'topology';
+
+export interface ScanHistoryEntry {
+  id: number;
+  timestamp: Date;
+  startAddr: number;
+  endAddr: number;
+  devices: import('@/types/modbus').ModbusDevice[];
+  scannedCount: number;
+}
+
 interface ModbusContextType {
   // Connection settings
   connection: ConnectionSettings;
@@ -26,6 +40,12 @@ interface ModbusContextType {
   // Scanned devices & Scan State
   scannedDevices: ModbusDevice[];
   setScannedDevices: (devices: ModbusDevice[]) => void;
+  previousScannedDevices: ModbusDevice[];
+  scanDiff: {
+    added: ModbusDevice[];
+    removed: ModbusDevice[];
+    unchanged: ModbusDevice[];
+  } | null;
   
   scanStartAddr: number;
   setScanStartAddr: (n: number) => void;
@@ -40,6 +60,12 @@ interface ModbusContextType {
   scannedCount: number;
   hasScanned: boolean;
   startScan: () => Promise<void>;
+  cancelScan: () => Promise<void>;
+
+  // Scan History
+  scanHistory: ScanHistoryEntry[];
+  clearScanHistory: () => void;
+  exportScanHistoryCSV: () => void;
 
   // Read State
   readRanges: ReadRange[];
@@ -56,6 +82,7 @@ interface ModbusContextType {
   
   // Read Data/Results
   readData: {rangeId: string, data: number[]}[] | null;
+  setReadData: (data: {rangeId: string, data: number[]}[] | null) => void;
   readError: string | null;
   isReading: boolean;
   readOnce: () => Promise<void>;
@@ -83,6 +110,33 @@ interface ModbusContextType {
   dataBuffer: DataBufferEntry[];
   clearDataBuffer: () => void;
   exportDataCSV: () => void;
+
+  // Topology State
+  isLiveMonitoring: boolean;
+  setIsLiveMonitoring: (val: boolean) => void;
+
+  // Change Address State
+  changeAddrState: {
+    currentAddress: number;
+    newAddress: number;
+    registerAddress: number;
+    functionCode: 6 | 16;
+    useScannedDevice: boolean;
+  };
+  setChangeAddrState: React.Dispatch<React.SetStateAction<{
+    currentAddress: number;
+    newAddress: number;
+    registerAddress: number;
+    functionCode: 6 | 16;
+    useScannedDevice: boolean;
+  }>>;
+
+  // Process Manager
+  activeProcess: ActiveProcess;
+  pendingProcess: { name: ActiveProcess, conflicting: ActiveProcess } | null;
+  requestStartProcess: (name: ActiveProcess, startCallback: () => void) => Promise<void>;
+  confirmStartProcess: () => Promise<void>;
+  cancelStartProcess: () => void;
 }
 
 const defaultConnection: ConnectionSettings = {
@@ -105,6 +159,7 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
 
   // --- Scan State ---
   const [scannedDevices, setScannedDevices] = useState<ModbusDevice[]>([]);
+  const [previousScannedDevices, setPreviousScannedDevices] = useState<ModbusDevice[]>([]);
   const [scanStartAddr, setScanStartAddr] = useState(1);
   const [scanEndAddr, setScanEndAddr] = useState(10);
   const [scanTimeout, setScanTimeout] = useState(500);
@@ -115,6 +170,9 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
   const [scannedCount, setScannedCount] = useState(0);
   const [hasScanned, setHasScanned] = useState(false);
   const isScanningRef = useRef(false);
+
+  // --- Scan History ---
+  const [scanHistory, setScanHistory] = useState<ScanHistoryEntry[]>([]);
 
   // --- Read Configuration ---
   const [readRanges, setReadRanges] = useState<ReadRange[]>([
@@ -142,21 +200,68 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
   const MAX_GRAPH_POINTS = 500;
   const [dataBuffer, setDataBuffer] = useState<DataBufferEntry[]>([]);
 
-  // --- Persistence ---
+  // --- Topology Global State ---
+  const [isLiveMonitoring, setIsLiveMonitoring] = useState(false);
+
+  // --- Change Address Global State ---
+  const [changeAddrState, setChangeAddrState] = useState({
+    currentAddress: 1,
+    newAddress: 2,
+    registerAddress: 0,
+    functionCode: 6 as 6 | 16,
+    useScannedDevice: false
+  });
+
+  // --- Process Conflict Manager ---
+  const [activeProcess, setActiveProcess] = useState<ActiveProcess>('none');
+  const [pendingProcess, setPendingProcess] = useState<{name: ActiveProcess, callback: () => void, conflicting: ActiveProcess} | null>(null);
+
+  const requestStartProcess = useCallback(async (processName: ActiveProcess, startCallback: () => void) => {
+    const status = await dashboardAPI.status();
+    let current: ActiveProcess = 'none';
+    if (status.running) current = 'read';
+    else if (isLiveMonitoring) current = 'topology';
+    else if (isScanningRef.current) current = 'scan';
+    
+    if (current !== 'none' && current !== processName) {
+      setPendingProcess({ name: processName, callback: startCallback, conflicting: current });
+    } else {
+      setActiveProcess(processName);
+      startCallback();
+    }
+  }, [isLiveMonitoring]);
+
+  const confirmStartProcess = useCallback(async () => {
+    if (pendingProcess) {
+      if (pendingProcess.conflicting === 'read') await dashboardAPI.stop();
+      if (pendingProcess.conflicting === 'topology') setIsLiveMonitoring(false);
+      if (pendingProcess.conflicting === 'scan') {
+        setIsScanning(false);
+        isScanningRef.current = false;
+      }
+      setActiveProcess(pendingProcess.name);
+      pendingProcess.callback();
+      setPendingProcess(null);
+    }
+  }, [pendingProcess]);
+
+  const cancelStartProcess = useCallback(() => setPendingProcess(null), []);
+
+  // --- Persistence (window-scoped) ---
   const hasLoaded = useRef(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && !hasLoaded.current) {
-      const savedConnection = localStorage.getItem('modbus_connection');
+      const savedConnection = getWindowItem('modbus_connection');
       if (savedConnection) setConnection(JSON.parse(savedConnection));
 
-      const savedRanges = localStorage.getItem('modbus_read_ranges');
+      const savedRanges = getWindowItem('modbus_read_ranges');
       if (savedRanges) setReadRanges(JSON.parse(savedRanges));
 
-      const savedInterval = localStorage.getItem('modbus_refresh_interval');
+      const savedInterval = getWindowItem('modbus_refresh_interval');
       if (savedInterval) setRefreshInterval(Number(savedInterval));
 
-      const savedTimeout = localStorage.getItem('modbus_read_timeout');
+      const savedTimeout = getWindowItem('modbus_read_timeout');
       if (savedTimeout) setReadTimeout(Number(savedTimeout));
 
       hasLoaded.current = true;
@@ -165,25 +270,25 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (hasLoaded.current) {
-      localStorage.setItem('modbus_connection', JSON.stringify(connection));
+      setWindowItem('modbus_connection', JSON.stringify(connection));
     }
   }, [connection]);
 
   useEffect(() => {
     if (hasLoaded.current) {
-      localStorage.setItem('modbus_read_ranges', JSON.stringify(readRanges));
+      setWindowItem('modbus_read_ranges', JSON.stringify(readRanges));
     }
   }, [readRanges]);
 
   useEffect(() => {
     if (hasLoaded.current) {
-      localStorage.setItem('modbus_refresh_interval', refreshInterval.toString());
+      setWindowItem('modbus_refresh_interval', refreshInterval.toString());
     }
   }, [refreshInterval]);
 
   useEffect(() => {
     if (hasLoaded.current) {
-      localStorage.setItem('modbus_read_timeout', readTimeout.toString());
+      setWindowItem('modbus_read_timeout', readTimeout.toString());
     }
   }, [readTimeout]);
 
@@ -191,22 +296,29 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
 
   // Scan Action
   const startScan = useCallback(async () => {
-    if (!isConnectionReady) {
-      setScanError('Connection not configured');
-      return;
-    }
-    if (isScanningRef.current) return;
+    requestStartProcess('scan', async () => {
+      if (!isConnectionReady) {
+        setScanError('Connection not configured');
+        return;
+      }
+      if (isScanningRef.current) return;
 
     setIsScanning(true);
     isScanningRef.current = true;
     setScanError(null);
+    setPreviousScannedDevices(scannedDevices);
     setScannedDevices([]);
-    setHasScanned(false);
+    setHasScanned(true);
     setScanProgress(0);
 
     // Setup progress listener
     modbusAPI.onScanProgress((progress) => {
       setScanProgress(progress);
+    });
+
+    // Setup real-time found device listener
+    modbusAPI.onScanFound((device) => {
+      setScannedDevices(prev => [...prev, device]);
     });
 
     try {
@@ -225,20 +337,43 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
       });
 
       if (data.success && data.devices) {
+        // Final reconciliation: use the complete list from backend
         setScannedDevices(data.devices);
         setScannedCount(data.scannedCount || 0);
-        setHasScanned(true);
+        // Push to scan history
+        setScanHistory(prev => [{
+          id: Date.now(),
+          timestamp: new Date(),
+          startAddr: scanStartAddr,
+          endAddr: scanEndAddr,
+          devices: data.devices || [],
+          scannedCount: data.scannedCount || 0,
+        }, ...prev]);
       } else {
         setScanError(data.error || 'Scan failed');
       }
     } catch (err: any) {
       setScanError(err.message || 'Connection failed');
-    } finally {
-      modbusAPI.removeScanProgress();
-      setIsScanning(false);
-      isScanningRef.current = false;
-    }
-  }, [connection, isConnectionReady, scanStartAddr, scanEndAddr, scanTimeout]);
+      } finally {
+        modbusAPI.removeScanProgress();
+        modbusAPI.removeScanFound();
+        setIsScanning(false);
+        isScanningRef.current = false;
+        setActiveProcess('none');
+      }
+    });
+  }, [connection, isConnectionReady, scanStartAddr, scanEndAddr, scanTimeout, requestStartProcess]);
+
+  // Cancel Scan Action
+  const cancelScan = useCallback(async () => {
+    if (!isScanningRef.current) return;
+    await modbusAPI.scanCancel();
+    modbusAPI.removeScanProgress();
+    modbusAPI.removeScanFound();
+    setIsScanning(false);
+    isScanningRef.current = false;
+    setActiveProcess('none');
+  }, []);
 
 
   // Read Action
@@ -461,6 +596,18 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
     downloadCSV(csv, filename);
   }, [dataBuffer]);
 
+  // --- Scan Diff ---
+  const scanDiff = (() => {
+    if (previousScannedDevices.length === 0) return null;
+    const prevAddrs = new Set(previousScannedDevices.map(d => d.address));
+    const currAddrs = new Set(scannedDevices.map(d => d.address));
+    return {
+      added: scannedDevices.filter(d => !prevAddrs.has(d.address)),
+      removed: previousScannedDevices.filter(d => !currAddrs.has(d.address)),
+      unchanged: scannedDevices.filter(d => prevAddrs.has(d.address)),
+    };
+  })();
+
   return (
     <ModbusContext.Provider value={{
       connection,
@@ -470,6 +617,8 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
       // Scan
       scannedDevices,
       setScannedDevices,
+      previousScannedDevices,
+      scanDiff,
       scanStartAddr,
       setScanStartAddr,
       scanEndAddr,
@@ -482,6 +631,38 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
       scannedCount,
       hasScanned,
       startScan,
+      cancelScan,
+
+      scanHistory,
+      clearScanHistory: () => setScanHistory([]),
+      exportScanHistoryCSV: () => {
+        if (scanHistory.length === 0) return;
+        const rows: string[] = ['Scan #,Timestamp,Range,Address,Response (ms),Register[0],Diff Status'];
+        scanHistory.forEach((entry, idx) => {
+          const scanNum = scanHistory.length - idx;
+          const ts = entry.timestamp.toLocaleString();
+          const range = `${entry.startAddr}-${entry.endAddr}`;
+          if (entry.devices.length === 0) {
+            rows.push(`${scanNum},"${ts}","${range}",-,-,-,-`);
+          } else {
+            entry.devices.forEach(d => {
+              rows.push(`${scanNum},"${ts}","${range}",${d.address},${d.responseTime},${d.holdingRegisters?.[0] ?? ''},`);
+            });
+          }
+        });
+        const csv = rows.join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const now = new Date();
+        const pad = (n: number) => String(n).padStart(2, '0');
+        a.href = url;
+        a.download = `scan_history_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      },
 
       // Read
       readRanges,
@@ -496,6 +677,7 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
       lastUpdated,
       
       readData,
+      setReadData,
       readError,
       isReading,
       readOnce,
@@ -519,9 +701,80 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
 
       dataBuffer,
       clearDataBuffer,
-      exportDataCSV
+      exportDataCSV,
+      
+      isLiveMonitoring,
+      setIsLiveMonitoring,
+      changeAddrState,
+      setChangeAddrState,
+      activeProcess,
+      pendingProcess,
+      requestStartProcess,
+      confirmStartProcess,
+      cancelStartProcess
     }}>
       {children}
+
+      {/* Global Process Conflict Dialog — rendered via Portal to escape parent overflow */}
+      {pendingProcess && typeof document !== 'undefined' && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(15, 23, 42, 0.5)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            animation: 'fadeIn 200ms ease-out',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: '1rem',
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+              width: '100%',
+              maxWidth: '28rem',
+              overflow: 'hidden',
+              animation: 'scaleIn 200ms ease-out',
+            }}
+          >
+            <div className="p-6 border-b border-slate-100 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-6 h-6 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 mb-1">Process Conflict</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  The system is currently running a background process (<span className="font-semibold text-slate-800 uppercase">{pendingProcess.conflicting}</span>). 
+                  Starting a new process (<span className="font-semibold text-slate-800 uppercase">{pendingProcess.name}</span>) requires stopping the current one.
+                </p>
+              </div>
+            </div>
+            <div className="p-4 bg-slate-50 flex gap-3 justify-end">
+              <button
+                onClick={cancelStartProcess}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmStartProcess}
+                className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                Stop & Switch Process
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </ModbusContext.Provider>
   );
 }

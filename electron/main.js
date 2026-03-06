@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const http = require('http');
 const fs = require('fs');
+const crypto = require('crypto');
 
 // Import IPC handlers
 const { registerSerialHandlers } = require('./ipc/serial');
@@ -12,7 +13,8 @@ const { registerLoggerHandlers } = require('./ipc/logger');
 const { registerProjectHandlers } = require('./ipc/project');
 const logger = require('./logger');
 
-let mainWindow;
+// Multi-window manager: windowId -> BrowserWindow
+const windowManager = new Map();
 let server;
 const PORT = 3456; // Use a fixed port for the local server
 
@@ -184,23 +186,29 @@ function createStaticServer() {
         else if (filePath === '/api/modbus/read-batch') result = await ModbusService.readBatch(body);
         else if (filePath === '/api/modbus/change-address') result = await ModbusService.changeAddress(body);
         else if (filePath === '/api/modbus/dashboard-start') {
-          const { dashboardQueue } = require('./ipc/modbus');
-          try { dashboardQueue.start(body); result = { success: true }; }
+          const { dashboardQueues, ModbusQueue } = require('./ipc/modbus');
+          const remoteKey = 'remote';
+          let queue = dashboardQueues.get(remoteKey);
+          if (!queue) { queue = new ModbusQueue(); dashboardQueues.set(remoteKey, queue); }
+          try { queue.start(body); result = { success: true }; }
           catch (e) { result = { success: false, error: e.message }; }
         }
         else if (filePath === '/api/modbus/dashboard-stop') {
-          const { dashboardQueue } = require('./ipc/modbus');
-          dashboardQueue.stop();
+          const { dashboardQueues } = require('./ipc/modbus');
+          const queue = dashboardQueues.get('remote');
+          if (queue) queue.stop();
           result = { success: true };
         }
         else if (filePath === '/api/modbus/dashboard-update') {
-          const { dashboardQueue } = require('./ipc/modbus');
-          dashboardQueue.update(body);
+          const { dashboardQueues } = require('./ipc/modbus');
+          const queue = dashboardQueues.get('remote');
+          if (queue) queue.update(body);
           result = { success: true };
         }
         else if (filePath === '/api/modbus/dashboard-status') {
-          const { dashboardQueue } = require('./ipc/modbus');
-          result = dashboardQueue.getStatus();
+          const { dashboardQueues } = require('./ipc/modbus');
+          const queue = dashboardQueues.get('remote');
+          result = queue ? queue.getStatus() : { running: false, interval: 1000, cards: [], results: {} };
         }
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -288,11 +296,14 @@ function createStaticServer() {
   });
 }
 
-function createWindow() {
+function createWindow(options = {}) {
+  const { projectFilePath, isNewWindow } = options;
+  const windowId = crypto.randomUUID();
+  
   // Get icon path
   const iconPath = path.join(__dirname, '../build/icon.png');
 
-  mainWindow = new BrowserWindow({
+  const win = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 1024,
@@ -302,43 +313,86 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      additionalArguments: [`--window-id=${windowId}`],
     },
     title: 'ModScan Pro',
     autoHideMenuBar: true,
   });
 
-  // Load the app
+  windowManager.set(windowId, win);
+
+  // Build query string
+  const params = new URLSearchParams();
+  if (projectFilePath) {
+    params.set('project', projectFilePath);
+  }
+  if (isNewWindow) {
+    params.set('newWindow', 'true');
+  }
+  const query = params.toString() ? `?${params.toString()}` : '';
+
   if (process.env.NODE_ENV === 'development') {
-    // Development: load from Next.js dev server
-    mainWindow.loadURL('http://localhost:3000');
-    mainWindow.webContents.openDevTools();
+    win.loadURL(`http://localhost:3000${query}`);
+    win.webContents.openDevTools();
   } else {
-    // Production: load from local static server
-    mainWindow.loadURL(`http://127.0.0.1:${PORT}`);
+    win.loadURL(`http://127.0.0.1:${PORT}${query}`);
   }
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
+  win.on('closed', () => {
+    windowManager.delete(windowId);
+    try {
+      const { cleanupWindow } = require('./ipc/modbus');
+      cleanupWindow(windowId);
+    } catch (e) { /* ignore */ }
   });
+
+  logger.info(`Created window ${windowId}`);
+  return { windowId, win };
 }
 
 // Register all IPC handlers
 function registerIpcHandlers() {
-  registerSerialHandlers(ipcMain);
-  registerModbusHandlers(ipcMain);
-  registerLicenseHandlers(ipcMain);
-  registerTunnelHandlers(ipcMain);
-  registerLoggerHandlers(ipcMain);
-  registerProjectHandlers(ipcMain);
+  // Register window management handlers FIRST — these must always work
+  ipcMain.handle('window:new', async (_event, projectFilePath) => {
+    try {
+      const { windowId } = createWindow({
+        projectFilePath: projectFilePath || undefined,
+        isNewWindow: true,
+      });
+      return { success: true, windowId };
+    } catch (error) {
+      logger.error('Failed to create new window:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('window:set-title', async (event, title) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win) {
+      win.setTitle(title ? `${title} — ModScan Pro` : 'ModScan Pro');
+    }
+    return { success: true };
+  });
+
+  // Register other handlers — wrap in try-catch so failures don't break window management
+  try {
+    registerSerialHandlers(ipcMain);
+    registerModbusHandlers(ipcMain);
+    registerLicenseHandlers(ipcMain);
+    registerTunnelHandlers(ipcMain);
+    registerLoggerHandlers(ipcMain);
+    registerProjectHandlers(ipcMain);
+  } catch (error) {
+    logger.error('Failed to register some IPC handlers:', error);
+  }
 }
 
 app.whenReady().then(async () => {
-  // Start static server in production
   // Start unified server (Proxies to Next.js in dev, serves static in prod)
   await createStaticServer();
 
   registerIpcHandlers();
-  createWindow();
+  createWindow(); // Initial window — no special params
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -355,4 +409,3 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
-

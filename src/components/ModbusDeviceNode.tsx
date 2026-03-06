@@ -3,6 +3,7 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { Cpu, Radio } from 'lucide-react';
+import { useProject } from '@/context/ProjectContext';
 
 export interface ModbusDeviceNodeData {
   address: number;
@@ -28,7 +29,10 @@ export function getSignalColor(responseTime: number): { bg: string; border: stri
 }
 
 function ModbusDeviceNode({ data }: NodeProps<ModbusDeviceNodeData>) {
-  const { responseTime, label, isMaster } = data;
+  const { responseTime, label, isMaster, address } = data;
+  const { getDeviceDisplayName } = useProject();
+  
+  const displayLabel = isMaster ? label : (address ? getDeviceDisplayName(address) : label);
   const colors = isMaster
     ? { bg: 'bg-slate-100', border: 'border-slate-400', text: 'text-slate-700', dot: 'bg-slate-500' }
     : getSignalColor(responseTime);
@@ -50,7 +54,7 @@ function ModbusDeviceNode({ data }: NodeProps<ModbusDeviceNodeData>) {
         ) : (
           <Cpu className={`w-4 h-4 ${colors.text}`} />
         )}
-        <span className={`text-sm font-bold ${colors.text}`}>{label}</span>
+        <span className={`text-sm font-bold ${colors.text}`}>{displayLabel}</span>
       </div>
 
       {!isMaster && (

@@ -132,13 +132,21 @@ export function isElectron(): boolean {
 interface ElectronWindow extends Window {
   electronAPI?: {
     isElectron: boolean;
+    windowId: string;
+    window: {
+      openNew: (projectFilePath?: string) => Promise<{ success: boolean; windowId?: string }>;
+      setTitle: (title: string) => Promise<{ success: boolean }>;
+    };
     serial: {
       listPorts: () => Promise<{ success: boolean; ports?: SerialPortInfo[]; error?: string }>;
     };
     modbus: {
       scan: (config: ScanConfig) => Promise<{ success: boolean; devices?: ModbusDevice[]; scannedCount?: number; error?: string }>;
+      scanCancel: () => Promise<{ success: boolean }>;
       onScanProgress: (callback: (progress: number) => void) => void;
       removeScanProgress: () => void;
+      onScanFound: (callback: (device: ModbusDevice) => void) => void;
+      removeScanFound: () => void;
       read: (config: ReadConfig) => Promise<{ success: boolean; data?: number[]; error?: string }>;
       write: (config: WriteConfig) => Promise<{ success: boolean; error?: string }>;
       readBatch: (config: BatchReadConfig) => Promise<{ results: Array<{ success: boolean; data?: number[]; error?: string }>; error?: string }>;
@@ -220,6 +228,28 @@ export const modbusAPI = {
     if (api) {
       api.modbus.removeScanProgress();
     }
+  },
+
+  onScanFound(callback: (device: ModbusDevice) => void) {
+    const api = getElectronAPI();
+    if (api) {
+      api.modbus.onScanFound(callback);
+    }
+  },
+
+  removeScanFound() {
+    const api = getElectronAPI();
+    if (api) {
+      api.modbus.removeScanFound();
+    }
+  },
+
+  async scanCancel(): Promise<{ success: boolean }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.modbus.scanCancel();
+    }
+    return { success: false };
   },
 
   async read(config: ReadConfig): Promise<{ success: boolean; data?: number[]; error?: string }> {
@@ -544,5 +574,33 @@ export const projectAPI = {
     } catch {
       return { success: true, projects: [] };
     }
+  },
+};
+// Window management API
+export const windowAPI = {
+  async openNew(projectFilePath?: string): Promise<{ success: boolean; windowId?: string }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.window.openNew(projectFilePath);
+    }
+    // Web fallback: open in new tab
+    const url = projectFilePath ? `/?project=${encodeURIComponent(projectFilePath)}` : '/';
+    window.open(url, '_blank');
+    return { success: true };
+  },
+
+  async setTitle(title: string): Promise<{ success: boolean }> {
+    const api = getElectronAPI();
+    if (api) {
+      return api.window.setTitle(title);
+    }
+    // Web fallback
+    document.title = title ? `${title} — ModScan Pro` : 'ModScan Pro';
+    return { success: true };
+  },
+
+  getWindowId(): string {
+    const api = getElectronAPI();
+    return api?.windowId || 'default';
   },
 };

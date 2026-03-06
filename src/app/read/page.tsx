@@ -229,10 +229,10 @@ export default function ReadPage() {
 
       const cardConfigs: DashboardCardConfig[] = cards.map(c => ({
         cardId: c.cardId,
-        slaveAddress: c.slaveAddress,
+        slaveAddress: Number(c.slaveAddress) || 1,
         functionCode: c.functionCode,
-        registerAddress: c.registerAddress,
-        quantity: c.quantity,
+        registerAddress: Number(c.registerAddress) || 0,
+        quantity: Number(c.quantity) || 1,
       }));
 
       const res = await dashboardAPI.start({
@@ -269,10 +269,10 @@ export default function ReadPage() {
 
     const cardConfigs: DashboardCardConfig[] = cards.map(c => ({
       cardId: c.cardId,
-      slaveAddress: c.slaveAddress,
+      slaveAddress: Number(c.slaveAddress) || 1,
       functionCode: c.functionCode,
-      registerAddress: c.registerAddress,
-      quantity: c.quantity,
+      registerAddress: Number(c.registerAddress) || 0,
+      quantity: Number(c.quantity) || 1,
     }));
 
     await dashboardAPI.update({
@@ -401,7 +401,8 @@ export default function ReadPage() {
             <input
               type="number"
               value={pollTimeout}
-              onChange={(e) => setPollTimeout(Math.max(100, Number(e.target.value)))}
+              onChange={(e) => setPollTimeout(e.target.value === '' ? '' as any : Number(e.target.value))}
+              onBlur={() => setPollTimeout(prev => Math.max(100, Number(prev) || 100))}
               className="w-24 px-3 py-1.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-slate-400"
               min={100}
               step={100}
@@ -523,7 +524,7 @@ export default function ReadPage() {
                       <input
                         type="number"
                         value={card.slaveAddress}
-                        onChange={(e) => updateCard(card.cardId, 'slaveAddress', Number(e.target.value))}
+                        onChange={(e) => updateCard(card.cardId, 'slaveAddress', e.target.value === '' ? '' as any : Number(e.target.value))}
                         className="w-full mt-1 px-2 py-1 rounded border border-slate-200 text-sm focus:ring-1 focus:ring-slate-400"
                         min={1}
                         max={247}
@@ -546,7 +547,7 @@ export default function ReadPage() {
                       <input
                         type="number"
                         value={card.registerAddress}
-                        onChange={(e) => updateCard(card.cardId, 'registerAddress', Number(e.target.value))}
+                        onChange={(e) => updateCard(card.cardId, 'registerAddress', e.target.value === '' ? '' as any : Number(e.target.value))}
                         className="w-full mt-1 px-2 py-1 rounded border border-slate-200 text-sm focus:ring-1 focus:ring-slate-400"
                         min={0}
                       />
@@ -556,7 +557,8 @@ export default function ReadPage() {
                       <input
                         type="number"
                         value={card.quantity}
-                        onChange={(e) => updateCard(card.cardId, 'quantity', Math.max(1, Number(e.target.value)))}
+                        onChange={(e) => updateCard(card.cardId, 'quantity', e.target.value === '' ? '' as any : Number(e.target.value))}
+                        onBlur={(e) => updateCard(card.cardId, 'quantity', Math.max(1, Number(e.target.value) || 1))}
                         className="w-full mt-1 px-2 py-1 rounded border border-slate-200 text-sm focus:ring-1 focus:ring-slate-400"
                         min={1}
                         max={125}

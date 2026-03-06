@@ -344,18 +344,32 @@ export const projectAPI = {
     if (api) {
       return api.project.save(data);
     }
-    // Fallback: save to localStorage
+    // Web fallback: trigger browser file download + save to localStorage
     try {
-      const projects = JSON.parse(localStorage.getItem('modscan_projects') || '[]');
-      const existing = projects.findIndex((p: { name: string }) => p.name === data.name);
-      const projectData = { version: 1, ...data };
+      const projectData: ProjectData = { version: 1, ...data };
+      // Save to localStorage for recent projects tracking
+      const projects: ProjectData[] = JSON.parse(localStorage.getItem('modscan_projects') || '[]');
+      const existing = projects.findIndex((p) => p.name === data.name);
       if (existing >= 0) {
         projects[existing] = projectData;
       } else {
         projects.push(projectData);
       }
       localStorage.setItem('modscan_projects', JSON.stringify(projects));
-      return { success: true };
+
+      // Trigger browser file download
+      const json = JSON.stringify(projectData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${data.name.replace(/[^a-zA-Z0-9_\-\s]/g, '')}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      return { success: true, filePath: a.download };
     } catch (e: any) {
       return { success: false, error: e.message || 'Failed to save project' };
     }
@@ -366,7 +380,43 @@ export const projectAPI = {
     if (api) {
       return api.project.load();
     }
-    return { success: false, error: 'File dialog not available in web mode. Use loadFromLocalStorage instead.' };
+    // Web fallback: use a hidden file input to let user pick a .json file
+    return new Promise((resolve) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) {
+          resolve({ success: false, cancelled: true });
+          return;
+        }
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text) as ProjectData;
+          if (!data.version || !data.name || !data.connection || !Array.isArray(data.devices) || !Array.isArray(data.readRanges) || !data.settings) {
+            resolve({ success: false, error: 'Invalid project file format' });
+            return;
+          }
+          // Save to localStorage recent list
+          const projects: ProjectData[] = JSON.parse(localStorage.getItem('modscan_projects') || '[]');
+          const existing = projects.findIndex((p) => p.name === data.name);
+          if (existing >= 0) {
+            projects[existing] = data;
+          } else {
+            projects.push(data);
+          }
+          localStorage.setItem('modscan_projects', JSON.stringify(projects));
+          resolve({ success: true, data, filePath: file.name });
+        } catch {
+          resolve({ success: false, error: 'Failed to read project file' });
+        }
+      };
+      input.oncancel = () => {
+        resolve({ success: false, cancelled: true });
+      };
+      input.click();
+    });
   },
 
   async loadPath(filePath: string): Promise<{ success: boolean; data?: ProjectData; filePath?: string; error?: string }> {
@@ -374,7 +424,17 @@ export const projectAPI = {
     if (api) {
       return api.project.loadPath(filePath);
     }
-    return { success: false, error: 'File loading not available in web mode' };
+    // Web fallback: load from localStorage by name (filePath is used as name)
+    try {
+      const projects: ProjectData[] = JSON.parse(localStorage.getItem('modscan_projects') || '[]');
+      const project = projects.find((p) => p.name === filePath);
+      if (project) {
+        return { success: true, data: project, filePath };
+      }
+      return { success: false, error: 'Project not found' };
+    } catch {
+      return { success: false, error: 'Failed to load project' };
+    }
   },
 
   async recent(): Promise<{ success: boolean; projects?: RecentProject[]; error?: string }> {
@@ -384,25 +444,15 @@ export const projectAPI = {
     }
     // Fallback: list from localStorage
     try {
-      const projects = JSON.parse(localStorage.getItem('modscan_projects') || '[]');
-      const recentList: RecentProject[] = projects.map((p: ProjectData) => ({
+      const projects: ProjectData[] = JSON.parse(localStorage.getItem('modscan_projects') || '[]');
+      const recentList: RecentProject[] = projects.map((p) => ({
         name: p.name,
-        filePath: '',
+        filePath: p.name, // In web mode, name acts as the key
         lastOpened: new Date().toISOString(),
       }));
       return { success: true, projects: recentList };
     } catch {
       return { success: true, projects: [] };
-    }
-  },
-
-  // Web-only: load project from localStorage by name
-  loadFromLocalStorage(name: string): ProjectData | null {
-    try {
-      const projects = JSON.parse(localStorage.getItem('modscan_projects') || '[]');
-      return projects.find((p: ProjectData) => p.name === name) || null;
-    } catch {
-      return null;
     }
   },
 };

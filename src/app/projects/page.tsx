@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FolderOpen, Save, Upload, Trash2, Plus, XCircle, CheckCircle2, Clock, Tag } from 'lucide-react';
+import { FolderOpen, Save, Upload, Trash2, Plus, XCircle, CheckCircle2, Clock, Tag, Download } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -41,6 +41,8 @@ export default function ProjectsPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [newAliasId, setNewAliasId] = useState(1);
   const [newAliasName, setNewAliasName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Load current project values into form
   useEffect(() => {
@@ -56,52 +58,68 @@ export default function ProjectsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const showMessage = (type: 'success' | 'error', text: string) => {
+    setMessage({ type, text });
+    globalThis.setTimeout(() => setMessage(null), 4000);
+  };
+
   const handleSave = async () => {
     if (!projectName.trim()) {
-      setMessage({ type: 'error', text: 'Project name is required' });
+      showMessage('error', t('project_name') + ' is required');
       return;
     }
 
-    const result = await saveProject({
-      name: projectName.trim(),
-      description: projectDescription.trim(),
-      connection,
-      devices: deviceAliases,
-      readRanges,
-      settings: {
-        refreshInterval,
-        readTimeout,
-      },
-    });
+    setIsSaving(true);
+    try {
+      const result = await saveProject({
+        name: projectName.trim(),
+        description: projectDescription.trim(),
+        connection,
+        devices: deviceAliases,
+        readRanges,
+        settings: {
+          refreshInterval,
+          readTimeout,
+        },
+      });
 
-    if (result.success) {
-      setMessage({ type: 'success', text: t('project_save_success') });
-    } else if (result.error !== 'cancelled') {
-      setMessage({ type: 'error', text: result.error || t('project_save_error') });
+      if (result.success) {
+        showMessage('success', t('project_save_success'));
+        await refreshRecentProjects();
+      } else if (result.error !== 'cancelled') {
+        showMessage('error', result.error || t('project_save_error'));
+      }
+    } finally {
+      setIsSaving(false);
     }
-
-    setTimeout(() => setMessage(null), 3000);
   };
 
   const handleLoad = async () => {
-    const result = await loadProject();
-    if (result.success) {
-      setMessage({ type: 'success', text: t('project_load_success') });
-      setTimeout(() => setMessage(null), 3000);
-    } else if (result.error && result.error !== 'cancelled') {
-      setMessage({ type: 'error', text: result.error || t('project_load_error') });
-      setTimeout(() => setMessage(null), 3000);
+    setIsLoading(true);
+    try {
+      const result = await loadProject();
+      if (result.success) {
+        showMessage('success', t('project_load_success'));
+      } else if (result.error && result.error !== 'cancelled') {
+        showMessage('error', result.error || t('project_load_error'));
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleLoadRecent = async (filePath: string) => {
-    const result = await loadProjectFromPath(filePath);
-    if (result.success) {
-      setMessage({ type: 'success', text: t('project_load_success') });
-    } else {
-      setMessage({ type: 'error', text: result.error || t('project_load_error') });
+    setIsLoading(true);
+    try {
+      const result = await loadProjectFromPath(filePath);
+      if (result.success) {
+        showMessage('success', t('project_load_success'));
+      } else {
+        showMessage('error', result.error || t('project_load_error'));
+      }
+    } finally {
+      setIsLoading(false);
     }
-    setTimeout(() => setMessage(null), 3000);
   };
 
   // When a project is loaded, apply its settings to the Modbus context
@@ -150,13 +168,13 @@ export default function ProjectsPage() {
 
       {/* Status Message */}
       {message && (
-        <div className={`p-4 rounded-lg flex items-center gap-2 ${
+        <div className={`p-4 rounded-lg flex items-center gap-2 transition-all ${
           message.type === 'success' 
             ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
             : 'bg-red-50 border border-red-200 text-red-700'
         }`}>
           {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
-          <span>{message.text}</span>
+          <span className="font-medium">{message.text}</span>
         </div>
       )}
 
@@ -180,6 +198,9 @@ export default function ProjectsPage() {
             {currentProject.description && (
               <p><span className="font-medium text-slate-700">{t('project_description')}:</span> {currentProject.description}</p>
             )}
+            <p className="text-xs text-slate-500">
+              {currentProject.devices?.length || 0} {t('project_devices').toLowerCase()} · {currentProject.readRanges?.length || 0} read ranges
+            </p>
             {projectFilePath && (
               <p className="text-xs text-slate-400 font-mono truncate">{projectFilePath}</p>
             )}
@@ -217,17 +238,19 @@ export default function ProjectsPage() {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium transition-all shadow-sm"
+            disabled={isSaving || !projectName.trim()}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium transition-all shadow-sm"
           >
-            <Save className="w-4 h-4" />
-            {t('project_save')}
+            <Download className="w-4 h-4" />
+            {isSaving ? t('common_loading') : t('project_save')}
           </button>
           <button
             onClick={handleLoad}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-medium transition-all"
+            disabled={isLoading}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50 text-indigo-700 border border-indigo-200 font-medium transition-all"
           >
             <Upload className="w-4 h-4" />
-            {t('project_load')}
+            {isLoading ? t('common_loading') : t('project_load')}
           </button>
         </div>
       </div>
@@ -344,7 +367,7 @@ export default function ProjectsPage() {
               <button
                 key={index}
                 onClick={() => project.filePath ? handleLoadRecent(project.filePath) : null}
-                disabled={!project.filePath}
+                disabled={!project.filePath || isLoading}
                 className="w-full text-left p-3 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors disabled:opacity-50"
               >
                 <p className="font-medium text-slate-900 text-sm">{project.name}</p>

@@ -8,6 +8,8 @@
 const ModbusRTU = require('modbus-serial');
 
 const port = parseInt(process.argv[2] || '1502', 10); // Use 1502 as non-root port
+const unitIDsArg = process.argv.slice(3).map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+const activeUnitIDs = unitIDsArg.length > 0 ? unitIDsArg : [1, 2, 3, 4];
 
 // Create a vector of holding and coil registers
 const coils = new Array(1000).fill(false);
@@ -34,9 +36,6 @@ discreteInputs[0] = true;
 discreteInputs[1] = true;
 discreteInputs[2] = false;
 
-// Initial Unit ID
-let currentUnitID = 1;
-
 // Helper to simulate "no response" (timeout)
 const ignoreRequest = async (unitID) => {
     // Wait 2 seconds (longer than typical scan timeout of 500ms)
@@ -49,64 +48,69 @@ const ignoreRequest = async (unitID) => {
 // Vector for callback functions
 const vector = {
   getInputRegister: async (addr, unitID) => {
-    if (unitID !== currentUnitID && unitID !== 0) { 
+    if (!activeUnitIDs.includes(unitID) && unitID !== 0) { 
        await ignoreRequest(unitID);
        return 0;
     }
-    console.log(`  [FC04] Read Input Register: addr=${addr}, unitID=${unitID} (MyID: ${currentUnitID})`);
+    console.log(`  [FC04] Read Input Register: addr=${addr}, unitID=${unitID}`);
     return inputRegisters[addr] || 0;
   },
   
   getHoldingRegister: async (addr, unitID) => {
-    if (unitID !== currentUnitID && unitID !== 0) {
+    if (!activeUnitIDs.includes(unitID) && unitID !== 0) {
        await ignoreRequest(unitID);
        return 0;
     }
-    console.log(`  [FC03] Read Holding Register: addr=${addr}, unitID=${unitID} (MyID: ${currentUnitID})`);
+    console.log(`  [FC03] Read Holding Register: addr=${addr}, unitID=${unitID}`);
     return holdingRegisters[addr] || 0;
   },
   
   getCoil: async (addr, unitID) => {
-    if (unitID !== currentUnitID && unitID !== 0) {
+    if (!activeUnitIDs.includes(unitID) && unitID !== 0) {
        await ignoreRequest(unitID);
        return false;
     }
-    console.log(`  [FC01] Read Coil: addr=${addr}, unitID=${unitID} (MyID: ${currentUnitID})`);
+    console.log(`  [FC01] Read Coil: addr=${addr}, unitID=${unitID}`);
     return coils[addr] || false;
   },
   
   getDiscreteInput: async (addr, unitID) => {
-    if (unitID !== currentUnitID && unitID !== 0) {
+    if (!activeUnitIDs.includes(unitID) && unitID !== 0) {
        await ignoreRequest(unitID);
        return false;
     }
-    console.log(`  [FC02] Read Discrete Input: addr=${addr}, unitID=${unitID} (MyID: ${currentUnitID})`);
+    console.log(`  [FC02] Read Discrete Input: addr=${addr}, unitID=${unitID}`);
     return discreteInputs[addr] || false;
   },
   
   setRegister: async (addr, value, unitID) => {
-    if (unitID !== currentUnitID && unitID !== 0) {
+    if (!activeUnitIDs.includes(unitID) && unitID !== 0) {
        await ignoreRequest(unitID);
        return;
     }
     
-    console.log(`  [FC06/16] Write Register: addr=${addr}, value=${value}, unitID=${unitID} (MyID: ${currentUnitID})`);
+    console.log(`  [FC06/16] Write Register: addr=${addr}, value=${value}, unitID=${unitID}`);
     
     // Special Logic: Changing Device ID via Register 0
     if (addr === 0) {
-        console.log(`  \x1b[33m[CONFIG CHANGE] Updating Unit ID from ${currentUnitID} to ${value}...\x1b[0m`);
-        currentUnitID = value;
+        console.log(`  \x1b[33m[CONFIG CHANGE] Updating Unit ID from ${unitID} to ${value}...\x1b[0m`);
+        const index = activeUnitIDs.indexOf(unitID);
+        if (index !== -1) {
+            activeUnitIDs[index] = value;
+        } else if (unitID === 0) { // Broadcast write
+            activeUnitIDs.push(value);
+        }
     }
     
     holdingRegisters[addr] = value;
   },
   
   setCoil: async (addr, value, unitID) => {
-    if (unitID !== currentUnitID && unitID !== 0) {
+    if (!activeUnitIDs.includes(unitID) && unitID !== 0) {
        await ignoreRequest(unitID);
        return;
     }
-    console.log(`  [FC05/15] Write Coil: addr=${addr}, value=${value}, unitID=${unitID} (MyID: ${currentUnitID})`);
+    console.log(`  [FC05/15] Write Coil: addr=${addr}, value=${value}, unitID=${unitID}`);
     coils[addr] = value;
   },
 };
@@ -126,7 +130,7 @@ console.log(`║     Modbus TCP Simulator Started           ║`);
 console.log(`╠════════════════════════════════════════════╣`);
 console.log(`║  IP: 0.0.0.0 (all interfaces)              ║`);
 console.log(`║  Port: ${port.toString().padEnd(36)}║`);
-console.log(`║  Initial Unit ID: 1                        ║`);
+console.log(`║  Active Unit IDs: ${activeUnitIDs.join(', ').padEnd(25)}║`);
 console.log(`╠════════════════════════════════════════════╣`);
 console.log(`║  Test with:                                ║`);
 console.log(`║  node scripts/test-tcp.js 127.0.0.1 ${port.toString().padEnd(5)} 1  ║`);

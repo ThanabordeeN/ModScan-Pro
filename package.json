@@ -21,6 +21,7 @@
   "dependencies": {
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
+    "dagre": "^0.8.5",
     "http-proxy": "^1.18.1",
     "js-cookie": "^3.0.5",
     "localtunnel": "^1.8.3",
@@ -30,11 +31,13 @@
     "node-machine-id": "^1.1.12",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "reactflow": "^11.11.4",
     "recharts": "^3.7.0",
     "serialport": "^13.0.0",
     "wait-on": "^9.0.3"
   },
   "devDependencies": {
+    "@types/dagre": "^0.7.54",
     "@types/jest": "^30.0.0",
     "@types/js-cookie": "^3.0.6",
     "@types/localtunnel": "^2.0.4",

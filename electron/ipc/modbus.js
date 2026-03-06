@@ -472,11 +472,16 @@ class ModbusQueue {
    */
   _scheduleLoop() {
     if (!this.running) return;
-    this._pollAll().then(() => {
-      if (this.running) {
-        this.loopTimer = setTimeout(() => this._scheduleLoop(), this.interval);
-      }
-    });
+    this._pollAll()
+      .then(() => {
+        if (this.running) {
+          this.loopTimer = setTimeout(() => this._scheduleLoop(), this.interval);
+        }
+      })
+      .catch((err) => {
+        console.error('ModbusQueue polling loop terminated due to an unexpected error:', err);
+        this.running = false;
+      });
   }
 
   /**

@@ -187,6 +187,13 @@ export const i18n = {
     dashboard_polling_stopped: 'หยุดแล้ว',
     dashboard_error: 'ข้อผิดพลาด',
     dashboard_no_data: 'ยังไม่มีข้อมูล',
+    dashboard_timeout: 'Timeout',
+    dashboard_err_no_cards: 'กรุณาเพิ่มอย่างน้อย 1 Card ก่อนเริ่ม Polling',
+    dashboard_failed_start_polling: 'ไม่สามารถเริ่ม Polling ได้',
+    dashboard_slave_id: 'Slave ID',
+    dashboard_function_code: 'Function Code',
+    dashboard_start_address: 'Start Address',
+    dashboard_quantity: 'Quantity',
   },
   en: {
     // Navigation
@@ -374,6 +381,13 @@ export const i18n = {
     dashboard_polling_stopped: 'Stopped',
     dashboard_error: 'Error',
     dashboard_no_data: 'No data yet',
+    dashboard_timeout: 'Timeout',
+    dashboard_err_no_cards: 'Please add at least one card before starting polling',
+    dashboard_failed_start_polling: 'Failed to start polling',
+    dashboard_slave_id: 'Slave ID',
+    dashboard_function_code: 'Function Code',
+    dashboard_start_address: 'Start Address',
+    dashboard_quantity: 'Quantity',
   }
 };
 

@@ -34,31 +34,42 @@ export default function DashboardPage() {
   const { connection, isConnectionReady } = useModbus();
   const { t } = useLanguage();
 
-  const [cards, setCards] = useState<DashboardCard[]>([]);
-  const [pollInterval, setPollInterval] = useState(1000);
-  const [pollTimeout, setPollTimeout] = useState(1000);
+  const [cards, setCards] = useState<DashboardCard[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('dashboard_cards');
+      if (saved) {
+        try { return JSON.parse(saved); } catch { /* ignore */ }
+      }
+    }
+    return [];
+  });
+  const [pollInterval, setPollInterval] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('dashboard_interval');
+      if (saved) return Number(saved);
+    }
+    return 1000;
+  });
+  const [pollTimeout, setPollTimeout] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('dashboard_timeout');
+      if (saved) return Number(saved);
+    }
+    return 1000;
+  });
   const [polling, setPolling] = useState(false);
   const [results, setResults] = useState<Record<string, DashboardCardResult>>({});
   const [error, setError] = useState<string | null>(null);
   const statusTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Persistence
+  // Persistence: save cards
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('dashboard_cards');
-      if (saved) {
-        try { setCards(JSON.parse(saved)); } catch { /* ignore */ }
+      if (cards.length > 0) {
+        localStorage.setItem('dashboard_cards', JSON.stringify(cards));
+      } else {
+        localStorage.removeItem('dashboard_cards');
       }
-      const savedInterval = localStorage.getItem('dashboard_interval');
-      if (savedInterval) setPollInterval(Number(savedInterval));
-      const savedTimeout = localStorage.getItem('dashboard_timeout');
-      if (savedTimeout) setPollTimeout(Number(savedTimeout));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && cards.length > 0) {
-      localStorage.setItem('dashboard_cards', JSON.stringify(cards));
     }
   }, [cards]);
 
@@ -90,8 +101,9 @@ export default function DashboardPage() {
     if (polling) {
       // Poll status faster than the device interval so UI stays fresh
       const pollMs = Math.min(pollInterval, 1000);
-      statusTimerRef.current = setInterval(fetchStatus, pollMs);
-      fetchStatus();
+      statusTimerRef.current = globalThis.setInterval(fetchStatus, pollMs);
+      // Schedule initial fetch asynchronously to avoid sync setState in effect
+      globalThis.setTimeout(fetchStatus, 0);
     } else {
       if (statusTimerRef.current) {
         clearInterval(statusTimerRef.current);
@@ -140,7 +152,7 @@ export default function DashboardPage() {
       return;
     }
     if (cards.length === 0) {
-      setError(t('dashboard_no_cards'));
+      setError(t('dashboard_err_no_cards'));
       return;
     }
 
@@ -173,7 +185,7 @@ export default function DashboardPage() {
     if (res.success) {
       setPolling(true);
     } else {
-      setError(res.error || 'Failed to start polling');
+      setError(res.error || t('dashboard_failed_start_polling'));
     }
   };
 
@@ -259,7 +271,7 @@ export default function DashboardPage() {
           {/* Timeout */}
           <div className="flex items-center gap-2">
             <Settings2 className="w-4 h-4 text-slate-500" />
-            <label className="text-sm font-medium text-slate-700">Timeout:</label>
+            <label className="text-sm font-medium text-slate-700">{t('dashboard_timeout')}:</label>
             <input
               type="number"
               value={pollTimeout}
@@ -380,7 +392,7 @@ export default function DashboardPage() {
                 {!polling && (
                   <div className="px-4 py-3 border-b border-slate-100 grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <label className="text-xs text-slate-500 font-medium">Slave ID</label>
+                      <label className="text-xs text-slate-500 font-medium">{t('dashboard_slave_id')}</label>
                       <input
                         type="number"
                         value={card.slaveAddress}
@@ -391,7 +403,7 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-500 font-medium">Function Code</label>
+                      <label className="text-xs text-slate-500 font-medium">{t('dashboard_function_code')}</label>
                       <select
                         value={card.functionCode}
                         onChange={(e) => updateCard(card.cardId, 'functionCode', Number(e.target.value) as 1 | 2 | 3 | 4)}
@@ -403,7 +415,7 @@ export default function DashboardPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs text-slate-500 font-medium">Start Address</label>
+                      <label className="text-xs text-slate-500 font-medium">{t('dashboard_start_address')}</label>
                       <input
                         type="number"
                         value={card.registerAddress}
@@ -413,7 +425,7 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-500 font-medium">Quantity</label>
+                      <label className="text-xs text-slate-500 font-medium">{t('dashboard_quantity')}</label>
                       <input
                         type="number"
                         value={card.quantity}

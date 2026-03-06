@@ -91,7 +91,7 @@ export interface DashboardCardConfig {
   quantity: number;
 }
 
-export interface DashboardStartConfig extends ConnectionConfig {
+export interface DashboardStartConfig {
   cards: DashboardCardConfig[];
   connectionConfig: ConnectionConfig;
   interval?: number;
@@ -387,10 +387,7 @@ export const dashboardAPI = {
     if (api) {
       return api.modbus.dashboardStatus();
     }
-    const res = await fetch('/api/modbus/dashboard-status', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const res = await fetch('/api/modbus/dashboard-status');
     return res.json();
   },
 };

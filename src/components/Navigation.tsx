@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, Settings, Globe, Menu, X, FolderOpen, LayoutGrid, Network, AppWindow } from 'lucide-react';
+import { Radar, Settings, Globe, Menu, X, FolderOpen, LayoutGrid, Network, AppWindow } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { windowAPI, isElectron } from '@/lib/electron-api';
 import LanguageToggle from './LanguageToggle';
@@ -14,7 +14,7 @@ export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
-    { href: '/scan', label: t('nav_scan'), icon: Search },
+    { href: '/scan', label: t('nav_scan'), icon: Radar },
     { href: '/read', label: t('nav_read'), icon: LayoutGrid },
     { href: '/topology', label: t('nav_topology'), icon: Network },
     { href: '/change-address', label: t('nav_change_id'), icon: Settings },
@@ -23,21 +23,21 @@ export default function Navigation() {
   ];
 
   return (
-    <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="max-w-5xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+    <header className="border-b border-slate-200/80 bg-white/70 backdrop-blur-md sticky top-0 z-50 transition-all duration-300">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center justify-between h-14">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <img src="/logo.svg" alt="ModScan Pro" className="w-10 h-10" />
-            <div>
-              <h1 className="text-xl font-bold text-slate-900 leading-tight">ModScan Pro</h1>
-              <p className="text-[10px] text-slate-500 font-medium tracking-wider hidden sm:block">BY 2EDGE TECHNOLOGY Co.,Ltd</p>
+          <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity group flex-shrink-0">
+            <img src="/logo.svg" alt="ModScan Pro" className="w-8 h-8 group-hover:scale-105 transition-transform duration-300" />
+            <div className="flex items-baseline gap-2">
+              <h1 className="text-base font-bold text-slate-900 leading-none tracking-tight whitespace-nowrap">ModScan Pro</h1>
+              <span className="text-[10px] text-slate-400 font-semibold tracking-wider hidden lg:block uppercase whitespace-nowrap">by 2Edge</span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
-            <nav className="flex items-center gap-2">
+            <nav className="flex items-center gap-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
@@ -46,14 +46,14 @@ export default function Navigation() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                       isActive
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                        ? 'bg-slate-800 text-white shadow-md shadow-slate-900/5 ring-1 ring-slate-900/10'
+                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/80 active:scale-95'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
-                    <span className="hidden lg:inline">{item.label}</span>
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="hidden lg:inline whitespace-nowrap">{item.label}</span>
                   </Link>
                 );
               })}
@@ -62,10 +62,10 @@ export default function Navigation() {
             {isElectron() && (
               <button
                 onClick={() => windowAPI.openNew()}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100/80 transition-all duration-200 active:scale-95 whitespace-nowrap"
                 title={t('nav_new_window')}
               >
-                <AppWindow className="w-4 h-4" />
+                <AppWindow className="w-4 h-4 flex-shrink-0" />
               </button>
             )}
             <LanguageToggle />
@@ -97,10 +97,10 @@ export default function Navigation() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setIsMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                        ? 'bg-slate-800 text-white shadow-md shadow-slate-900/5 ring-1 ring-slate-900/10'
+                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/80 active:scale-95'
                     }`}
                   >
                     <Icon className="w-5 h-5" />

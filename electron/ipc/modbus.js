@@ -118,7 +118,7 @@ const ModbusService = {
       await client.close(() => { });
       // Clear abort flag
       if (windowId) scanAbortFlags.delete(windowId);
-      const cancelled = windowId ? false : false; // not cancelled here
+      // not cancelled here
       return { success: true, devices, scannedCount: total, cancelled: !!(windowId && scanAbortFlags.get(windowId)) };
     } catch (error) {
       try { await client.close(() => { }); } catch { }
@@ -313,7 +313,7 @@ const ModbusService = {
             await new Promise(resolve => {
               client.close(() => resolve(null));
             });
-          } catch (e) { /* ignore */ }
+          } catch { /* ignore */ }
           
           if (i < maxRetries - 1) {
             await new Promise(resolve => setTimeout(resolve, 1500));
@@ -331,7 +331,7 @@ const ModbusService = {
         await new Promise(resolve => {
           client.close(() => resolve(null));
         });
-      } catch (e) { /* ignore */ }
+      } catch { /* ignore */ }
       return { success: false, error: getErrorMessage(error) };
     }
   }

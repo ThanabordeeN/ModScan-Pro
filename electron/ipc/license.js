@@ -129,7 +129,7 @@ function registerLicenseHandlers(ipcMain) {
     try {
       const status = verifyLicense();
       return { success: true, ...status };
-    } catch (error) {
+    } catch {
       return { success: false, error: 'Internal error checking license' };
     }
   });
@@ -162,7 +162,7 @@ function registerLicenseHandlers(ipcMain) {
           error: status.error || 'Invalid license key'
         };
       }
-    } catch (error) {
+    } catch {
       return { success: false, error: 'Internal error processing license' };
     }
   });

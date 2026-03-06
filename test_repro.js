@@ -1,4 +1,4 @@
-
+/* eslint-disable @typescript-eslint/no-require-imports */
 const modbus = require('./electron/ipc/modbus.js');
 
 async function runTest() {

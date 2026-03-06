@@ -1,4 +1,4 @@
-const { validateProjectData } = require('../../electron/ipc/project');
+import { validateProjectData } from '../../electron/ipc/project';
 
 describe('project validation', () => {
   test('validates a correct project', () => {

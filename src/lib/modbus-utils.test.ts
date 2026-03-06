@@ -172,7 +172,6 @@ describe('modbus-utils', () => {
     });
 
     test('returns default 1 register for unknown type', () => {
-      // @ts-ignore: Intentionally testing invalid input
       expect(getRegisterCount('unknown' as DataType)).toBe(1);
     });
   });

@@ -17,7 +17,7 @@ function loadRecentProjects() {
     if (fs.existsSync(filePath)) {
       return JSON.parse(fs.readFileSync(filePath, 'utf8'));
     }
-  } catch (e) {
+  } catch {
     // ignore
   }
   return [];

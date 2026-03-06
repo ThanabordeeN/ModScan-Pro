@@ -1,6 +1,5 @@
-const { dialog, ipcMain } = require('electron');
+const { dialog } = require('electron');
 const fs = require('fs');
-const path = require('path');
 
 let logStream = null;
 let currentFilePath = null;
@@ -76,7 +75,7 @@ const LoggerService = {
 };
 
 function registerLoggerHandlers(ipcMain) {
-  ipcMain.handle('logger:start', async (event) => {
+  ipcMain.handle('logger:start', async () => {
     return LoggerService.start();
   });
 
@@ -84,7 +83,7 @@ function registerLoggerHandlers(ipcMain) {
     return LoggerService.log(entries);
   });
 
-  ipcMain.handle('logger:stop', async (event) => {
+  ipcMain.handle('logger:stop', async () => {
     return LoggerService.stop();
   });
 }

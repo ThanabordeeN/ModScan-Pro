@@ -1,5 +1,4 @@
 import { changeModbusAddress } from './modbus';
-import ModbusRTU from 'modbus-serial';
 
 // Mock modbus-serial
 jest.mock('modbus-serial', () => {

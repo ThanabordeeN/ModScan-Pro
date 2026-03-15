@@ -1,48 +1,72 @@
-appId: com.modscanpro.app
+appId: com.2edge.modscan-pro
 productName: ModScan Pro
-copyright: Copyright © 2024
+copyright: Copyright © 2024 2Edge Technology Co.,Ltd.
 
 directories:
-  output: release
+  output: dist
   buildResources: build
 
 files:
   - electron/**/*
   - out/**/*
-  - build/**/*
   - package.json
+  - !**/node_modules
+  - "!src"
+  - "!bin"
+  - "!dist"
+  - "!scripts"
+  - "!.next"
+  - "!**/*.ts"
+  - "!**/*.tsx"
+  - "!**/*.map"
+  - "!**/*.md"
+
+asar: true
+asarUnpack:
+  - "**/node_modules/serialport/**/*"
+  - "**/node_modules/@serialport/**/*"
+  - "**/node_modules/modbus-serial/**/*"
 
 extraResources:
   - from: src/lib/public_key.pem
     to: public_key.pem
 
+publish:
+  provider: github
+  owner: 2Edge
+  repo: ModScan-Pro
+
 mac:
-  category: public.app-category.developer-tools
+  category: public.app-category.utilities
   target:
     - dmg
-    - zip
+  icon: public/icon.icns
+  extraResources:
+    - from: bin/cloudflared-darwin-amd64
+      to: bin/cloudflared-darwin-amd64
+    - from: bin/cloudflared-darwin-arm64
+      to: bin/cloudflared-darwin-arm64
 
 win:
   target:
     - nsis
     - portable
-  icon: build/icon.ico
+  icon: public/icon.ico
+  extraResources:
+    - from: bin/cloudflared.exe
+      to: bin/cloudflared.exe
 
 linux:
   target:
     - AppImage
-  category: Development
-  icon: build/icon.png
+  category: Utility
+  icon: public/icon.png
+  extraResources:
+    - from: bin/cloudflared-linux-amd64
+      to: bin/cloudflared-linux-amd64
 
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-
-# Rebuild native modules for the target platform
-electronDownload:
-  cache: .cache/electron
-
-# Native module handling
-npmRebuild: true

@@ -9,7 +9,7 @@ import ConnectionSettings from '@/components/ConnectionSettings';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useProject } from '@/context/ProjectContext';
-import { dashboardAPI, DashboardCardConfig, DashboardStatus, DashboardCardResult } from '@/lib/electron-api';
+import { dashboardAPI, DashboardCardConfig, DashboardStatus } from '@/lib/electron-api';
 import { getWindowItem, setWindowItem, removeWindowItem } from '@/lib/window-storage';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer
@@ -121,17 +121,6 @@ export default function ReadPage() {
       setWindowItem('dashboard_timeout', pollTimeout.toString());
     }
   }, [pollTimeout]);
-
-  // Poll status from backend
-  const fetchStatus = useCallback(async () => {
-    try {
-      const status: DashboardStatus = await dashboardAPI.status();
-      // setResults(status.results || {}); // This line is replaced by the new useEffect logic
-      setPolling(status.running);
-    } catch {
-      // Status fetch failed
-    }
-  }, []);
 
   // Start/stop status polling
   useEffect(() => {

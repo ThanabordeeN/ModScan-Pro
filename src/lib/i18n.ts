@@ -238,6 +238,16 @@ export const i18n = {
     dashboard_function_code: 'Function Code',
     dashboard_start_address: 'Start Address',
     dashboard_quantity: 'Quantity',
+
+    // Updates
+    update_available: 'พบเวอร์ชันใหม่ ({version})',
+    update_not_available: 'ซอฟต์แวร์เป็นเวอร์ชันล่าสุดแล้ว',
+    update_checking: 'กำลังตรวจสอบการอัปเดต...',
+    update_downloading: 'กำลังดาวน์โหลด... {progress}%',
+    update_ready: 'ดาวน์โหลดเสร็จสิ้น พร้อมติดตั้ง',
+    update_btn_download: 'ดาวน์โหลดตอนนี้',
+    update_btn_install: 'เริ่มใหม่เพื่ออัปเดต',
+    update_error: 'การอัปเดตล้มเหลว: {error}',
   },
   en: {
     // Navigation
@@ -476,6 +486,16 @@ export const i18n = {
     dashboard_function_code: 'Function Code',
     dashboard_start_address: 'Start Address',
     dashboard_quantity: 'Quantity',
+
+    // Updates
+    update_available: 'New update available ({version})',
+    update_not_available: 'Software is up to date',
+    update_checking: 'Checking for updates...',
+    update_downloading: 'Downloading update... {progress}%',
+    update_ready: 'Update ready to install',
+    update_btn_download: 'Download Now',
+    update_btn_install: 'Restart & Update',
+    update_error: 'Update failed: {error}',
   }
 };
 

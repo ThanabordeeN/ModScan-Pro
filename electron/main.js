@@ -11,6 +11,7 @@ const { registerLicenseHandlers } = require('./ipc/license');
 const { registerTunnelHandlers } = require('./ipc/tunnel');
 const { registerLoggerHandlers } = require('./ipc/logger');
 const { registerProjectHandlers } = require('./ipc/project');
+const { registerUpdateHandlers } = require('./ipc/update');
 const logger = require('./logger');
 
 // Multi-window manager: windowId -> BrowserWindow
@@ -343,7 +344,7 @@ function createWindow(options = {}) {
     try {
       const { cleanupWindow } = require('./ipc/modbus');
       cleanupWindow(windowId);
-    } catch (e) { /* ignore */ }
+    } catch (_e) { /* ignore */ }
   });
 
   logger.info(`Created window ${windowId}`);
@@ -382,6 +383,7 @@ function registerIpcHandlers() {
     registerTunnelHandlers(ipcMain);
     registerLoggerHandlers(ipcMain);
     registerProjectHandlers(ipcMain);
+    registerUpdateHandlers(ipcMain);
   } catch (error) {
     logger.error('Failed to register some IPC handlers:', error);
   }
@@ -393,6 +395,14 @@ app.whenReady().then(async () => {
 
   registerIpcHandlers();
   createWindow(); // Initial window — no special params
+
+  // Check for updates on startup with a delay to ensure app is ready
+  setTimeout(() => {
+    const { autoUpdater } = require('electron-updater');
+    autoUpdater.checkForUpdatesAndNotify().catch(err => {
+      logger.error('Initial update check failed:', err);
+    });
+  }, 5000);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

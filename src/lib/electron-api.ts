@@ -121,6 +121,22 @@ export interface DashboardStatus {
   results: Record<string, DashboardCardResult>;
 }
 
+export type UpdateStatus = 'checking' | 'available' | 'not-available' | 'downloading' | 'ready' | 'error';
+
+export interface UpdateInfo {
+  status: UpdateStatus;
+  version?: string;
+  releaseNotes?: string;
+  error?: string;
+}
+
+export interface UpdateProgress {
+  percent: number;
+  bytesPerSecond: number;
+  transferred: number;
+  total: number;
+}
+
 // Check if running in Electron
 export function isElectron(): boolean {
   return typeof window !== 'undefined' &&
@@ -176,6 +192,14 @@ interface ElectronWindow extends Window {
       load: () => Promise<{ success: boolean; data?: ProjectData; filePath?: string; cancelled?: boolean; error?: string }>;
       loadPath: (filePath: string) => Promise<{ success: boolean; data?: ProjectData; filePath?: string; error?: string }>;
       recent: () => Promise<{ success: boolean; projects?: RecentProject[]; error?: string }>;
+    };
+    update: {
+      check: () => Promise<{ success: boolean; error?: string }>;
+      download: () => Promise<{ success: boolean; error?: string }>;
+      install: () => Promise<{ success: boolean; error?: string }>;
+      onStatus: (callback: (info: UpdateInfo) => void) => void;
+      onProgress: (callback: (progress: UpdateProgress) => void) => void;
+      removeListeners: () => void;
     };
   };
 }
@@ -576,6 +600,43 @@ export const projectAPI = {
     }
   },
 };
+
+// Update API
+export const updateAPI = {
+  async check(): Promise<{ success: boolean; error?: string }> {
+    const api = getElectronAPI();
+    if (api) return api.update.check();
+    return { success: false, error: 'Update not available in web mode' };
+  },
+
+  async download(): Promise<{ success: boolean; error?: string }> {
+    const api = getElectronAPI();
+    if (api) return api.update.download();
+    return { success: false, error: 'Update not available in web mode' };
+  },
+
+  async install(): Promise<{ success: boolean; error?: string }> {
+    const api = getElectronAPI();
+    if (api) return api.update.install();
+    return { success: false, error: 'Update not available in web mode' };
+  },
+
+  onStatus(callback: (info: UpdateInfo) => void) {
+    const api = getElectronAPI();
+    if (api) api.update.onStatus(callback);
+  },
+
+  onProgress(callback: (progress: UpdateProgress) => void) {
+    const api = getElectronAPI();
+    if (api) api.update.onProgress(callback);
+  },
+
+  removeListeners() {
+    const api = getElectronAPI();
+    if (api) api.update.removeListeners();
+  },
+};
+
 // Window management API
 export const windowAPI = {
   async openNew(projectFilePath?: string): Promise<{ success: boolean; windowId?: string }> {

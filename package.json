@@ -22,6 +22,7 @@
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "dagre": "^0.8.5",
+    "electron-updater": "^6.8.3",
     "http-proxy": "^1.18.1",
     "js-cookie": "^3.0.5",
     "localtunnel": "^1.8.3",
@@ -58,78 +59,10 @@
   "build": {
     "appId": "com.2edge.modscan-pro",
     "productName": "ModScan Pro",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "electron/**/*",
-      "out/**/*",
-      "package.json",
-      "!**/node_modules",
-      "!src",
-      "!bin",
-      "!dist",
-      "!scripts",
-      "!.next",
-      "!**/*.ts",
-      "!**/*.tsx",
-      "!**/*.map",
-      "!**/*.md"
-    ],
-    "asar": true,
-    "asarUnpack": [
-      "**/node_modules/serialport/**/*",
-      "**/node_modules/@serialport/**/*",
-      "**/node_modules/modbus-serial/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "src/lib/public_key.pem",
-        "to": "public_key.pem"
-      }
-    ],
-    "win": {
-      "extraResources": [
-        {
-          "from": "bin/cloudflared.exe",
-          "to": "bin/cloudflared.exe"
-        }
-      ],
-      "target": [
-        "nsis",
-        "portable"
-      ],
-      "icon": "public/icon.ico"
-    },
-    "linux": {
-      "extraResources": [
-        {
-          "from": "bin/cloudflared-linux-amd64",
-          "to": "bin/cloudflared-linux-amd64"
-        }
-      ],
-      "target": [
-        "AppImage"
-      ],
-      "icon": "public/icon.png",
-      "category": "Utility"
-    },
-    "mac": {
-      "extraResources": [
-        {
-          "from": "bin/cloudflared-darwin-amd64",
-          "to": "bin/cloudflared-darwin-amd64"
-        },
-        {
-          "from": "bin/cloudflared-darwin-arm64",
-          "to": "bin/cloudflared-darwin-arm64"
-        }
-      ],
-      "target": [
-        "dmg"
-      ],
-      "icon": "public/icon.icns",
-      "category": "public.app-category.utilities"
+    "publish": {
+      "provider": "github",
+      "owner": "2Edge",
+      "repo": "ModScan-Pro"
     }
   }
 }

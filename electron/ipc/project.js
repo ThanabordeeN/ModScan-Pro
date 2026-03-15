@@ -31,7 +31,7 @@ function saveRecentProjects(projects) {
       fs.mkdirSync(dir, { recursive: true });
     }
     fs.writeFileSync(filePath, JSON.stringify(projects, null, 2));
-  } catch (e) {
+  } catch (_e) {
     // ignore
   }
 }

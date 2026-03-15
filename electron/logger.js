@@ -15,7 +15,7 @@ class Logger {
       if (app) {
         this.logsPath = path.join(app.getPath('userData'), 'app.log');
       }
-    } catch (e) {
+    } catch (_e) {
       // Ignore if app is not ready
     }
   }

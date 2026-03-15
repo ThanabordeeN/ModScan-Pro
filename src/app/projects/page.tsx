@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FolderOpen, Save, Upload, Trash2, Plus, XCircle, CheckCircle2, Clock, Tag, Download, AppWindow } from 'lucide-react';
+import { FolderOpen, Upload, Trash2, Plus, XCircle, CheckCircle2, Clock, Tag, Download, AppWindow } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { windowAPI, isElectron } from '@/lib/electron-api';
 import { getWindowItem, setWindowItem } from '@/lib/window-storage';
-import type { DeviceAlias } from '@/types/project';
 
 export default function ProjectsPage() {
   const { t } = useLanguage();
@@ -20,7 +19,6 @@ export default function ProjectsPage() {
     saveProject,
     loadProject,
     loadProjectFromPath,
-    applyProject,
     clearProject,
     recentProjects,
     refreshRecentProjects,

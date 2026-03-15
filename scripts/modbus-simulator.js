@@ -37,7 +37,7 @@ discreteInputs[1] = true;
 discreteInputs[2] = false;
 
 // Helper to simulate "no response" (timeout)
-const ignoreRequest = async (unitID) => {
+const ignoreRequest = async (_unitID) => {
     // Wait 2 seconds (longer than typical scan timeout of 500ms)
     // yielding a timeout on the client side.
     await new Promise(resolve => setTimeout(resolve, 2000));

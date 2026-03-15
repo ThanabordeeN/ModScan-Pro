@@ -8,7 +8,7 @@ import { useProject } from '@/context/ProjectContext';
 
 export default function ScanPage() {
   const { 
-    connection, isConnectionReady,
+    isConnectionReady,
     scannedDevices, 
     scanStartAddr, setScanStartAddr,
     scanEndAddr, setScanEndAddr,
@@ -20,7 +20,6 @@ export default function ScanPage() {
     hasScanned,
     startScan,
     cancelScan,
-    previousScannedDevices,
     scanDiff,
     scanHistory,
     exportScanHistoryCSV,

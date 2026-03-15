@@ -68,6 +68,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
     recent: () => ipcRenderer.invoke('project:recent'),
   },
 
+  // Update operations
+  update: {
+    check: () => ipcRenderer.invoke('update:check'),
+    download: () => ipcRenderer.invoke('update:download'),
+    install: () => ipcRenderer.invoke('update:install'),
+    onStatus: (callback) => ipcRenderer.on('update:status', (_event, value) => callback(value)),
+    onProgress: (callback) => ipcRenderer.on('update:progress', (_event, value) => callback(value)),
+    removeListeners: () => {
+      ipcRenderer.removeAllListeners('update:status');
+      ipcRenderer.removeAllListeners('update:progress');
+    },
+  },
+
   // Utility
   isElectron: true,
 });

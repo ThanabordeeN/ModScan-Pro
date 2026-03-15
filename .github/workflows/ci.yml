@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "npm"
 
       - name: Install dependencies
@@ -26,7 +26,12 @@ jobs:
 
       - name: Lint Check
         run: npm run lint
-        continue-on-error: true # Don't fail build on lint warnings, just show them
+
+      - name: Unit Tests
+        run: npm test
 
       - name: Build Test (Next.js)
         run: npm run build
+
+      - name: Packaging Test (Electron Dry-Run)
+        run: npx electron-builder --linux --dir

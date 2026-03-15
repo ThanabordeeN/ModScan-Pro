@@ -2,10 +2,9 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import type { ModbusDevice, ReadRange, UILogEntry } from '@/types/modbus';
 import { modbusAPI, loggerAPI, dashboardAPI, LogEntry } from '@/lib/electron-api';
-import { registersToValue } from '@/lib/modbus-utils';
 import { DataBufferEntry, bufferToCSV, downloadCSV } from '@/lib/data-buffer';
 import { getWindowItem, setWindowItem } from '@/lib/window-storage';
 

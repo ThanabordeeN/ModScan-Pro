@@ -7,6 +7,7 @@ import { ProjectProvider } from "@/context/ProjectContext";
 import Navigation from "@/components/Navigation";
 import LicenseGuard from "@/components/LicenseGuard";
 import RemoteGuard from "@/components/RemoteGuard";
+import UpdateNotification from "@/components/UpdateNotification";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -35,6 +36,7 @@ export default function RootLayout({
                   <main className="max-w-5xl mx-auto px-4 py-8">
                     {children}
                   </main>
+                  <UpdateNotification />
                   <footer className="border-t border-gray-200 mt-auto bg-white/50 backdrop-blur-sm">
                     <div className="max-w-5xl mx-auto px-4 py-6">
                       <div className="flex flex-col md:flex-row items-center justify-between gap-4">

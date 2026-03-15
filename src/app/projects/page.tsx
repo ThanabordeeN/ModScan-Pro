@@ -104,9 +104,9 @@ export default function ProjectsPage() {
           selectedRegisters: Array.from(selectedRegisters),
         },
         scanSettings: {
-          startAddress: scanStartAddr,
-          endAddress: scanEndAddr,
-          timeout: scanTimeout,
+          startAddress: typeof scanStartAddr === 'number' ? scanStartAddr : 1,
+          endAddress: typeof scanEndAddr === 'number' ? scanEndAddr : 247,
+          timeout: typeof scanTimeout === 'number' ? scanTimeout : 1000,
         },
         scannedDevices,
         readData: readData || undefined,

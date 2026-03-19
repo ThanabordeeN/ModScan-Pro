@@ -1,8 +1,8 @@
 const { autoUpdater } = require('electron-updater');
 const logger = require('../logger');
 
-// Disable auto-download to give users control
-autoUpdater.autoDownload = false;
+// Enable auto-download to automatically download updates when available
+autoUpdater.autoDownload = true;
 autoUpdater.logger = logger;
 
 /**

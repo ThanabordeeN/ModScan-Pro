@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   LayoutGrid, Plus, Trash2, Play, Square, Timer, AlertCircle,
-  CheckCircle2, Clock, Loader2, Settings2, Hash, Search
+  CheckCircle2, Clock, Loader2, Settings2, Hash, Search, Edit3, Check, X
 } from 'lucide-react';
 import ConnectionSettings from '@/components/ConnectionSettings';
 import { useModbus } from '@/context/ModbusContext';
@@ -85,6 +85,32 @@ export default function ReadPage() {
   // Track which registers are selected for plotting per card: { cardId: Set<registerIndex> }
   const [selectedRegisters, setSelectedRegisters] = useState<Record<string, Set<number>>>({});
 
+  // Track register aliases using stable key: "{slaveId}-{functionCode}-{registerAddress}-{regIndex}"
+  const [registerAliases, setRegisterAliases] = useState<Record<string, string>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = getWindowItem('dashboard_register_aliases');
+      if (saved) {
+        try { return JSON.parse(saved); } catch { /* ignore */ }
+      }
+    }
+    return {};
+  });
+
+  // Generate stable key for a register
+  const getRegKey = (slaveId: number, functionCode: number, regStartAddr: number, regIndex: number) => 
+    `${slaveId}-${functionCode}-${regStartAddr}-${regIndex}`;
+
+  // Track which register is being edited
+  const [editingAlias, setEditingAlias] = useState<{ cardId: string; regIndex: number; regKey: string } | null>(null);
+  const [editingValue, setEditingValue] = useState('');
+
+  // Persist register aliases
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setWindowItem('dashboard_register_aliases', JSON.stringify(registerAliases));
+    }
+  }, [registerAliases]);
+
   const toggleRegisterPlot = (cardId: string, regIndex: number) => {
     setSelectedRegisters(prev => {
       const current = new Set(prev[cardId] || []);
@@ -95,6 +121,28 @@ export default function ReadPage() {
       }
       return { ...prev, [cardId]: current };
     });
+  };
+
+  const startEditAlias = (cardId: string, regIndex: number, regKey: string, currentAlias?: string) => {
+    setEditingAlias({ cardId, regIndex, regKey });
+    setEditingValue(currentAlias || '');
+  };
+
+  const saveAlias = () => {
+    if (editingAlias) {
+      const { regKey } = editingAlias;
+      setRegisterAliases(prev => ({
+        ...prev,
+        [regKey]: editingValue.trim()
+      }));
+      setEditingAlias(null);
+      setEditingValue('');
+    }
+  };
+
+  const cancelEditAlias = () => {
+    setEditingAlias(null);
+    setEditingValue('');
   };
 
   const statusTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -587,30 +635,83 @@ export default function ReadPage() {
                         const isSelected = selectedRegisters[card.cardId]?.has(idx);
                         const colorIdx = isSelected ? [...(selectedRegisters[card.cardId] || [])].sort().indexOf(idx) : -1;
                         const borderColor = isSelected ? PLOT_COLORS[colorIdx % PLOT_COLORS.length] : undefined;
+                        const regKey = getRegKey(card.slaveAddress, card.functionCode, card.registerAddress, idx);
+                        const regAlias = registerAliases[regKey];
+                        const regAddr = card.registerAddress + idx;
+                        const isEditing = editingAlias?.regKey === regKey;
+
+                        // Determine what to show in the label area
+                        const labelText = regAlias || `Reg ${regAddr}`;
+
                         return (
-                          <button
-                            key={idx}
-                            onClick={() => toggleRegisterPlot(card.cardId, idx)}
-                            className={`text-center p-1.5 rounded border transition-all cursor-pointer ${
-                              isSelected
-                                ? 'bg-emerald-50 ring-2 shadow-sm'
-                                : 'bg-slate-50 border-slate-100 hover:border-slate-300 hover:bg-slate-100'
-                            }`}
-                            style={isSelected ? { borderColor, boxShadow: `0 0 0 2px ${borderColor}33` } : {}}
-                            title={isSelected ? `Click to remove Reg ${card.registerAddress + idx} from plot` : `Click to plot Reg ${card.registerAddress + idx}`}
-                          >
-                            <div className="text-[10px] text-slate-400 leading-none mb-0.5">
-                              {card.registerAddress + idx}
-                            </div>
-                            <div className={`text-sm font-mono font-medium ${
-                              isSelected ? 'text-emerald-700' : 'text-slate-800'
-                            }`}>
-                              {val}
-                            </div>
-                            {isSelected && (
-                              <div className="w-2 h-2 rounded-full mx-auto mt-1" style={{ backgroundColor: borderColor }} />
+                          <div key={idx} className="relative">
+                            {isEditing ? (
+                              // Edit mode
+                              <div className="text-center p-1.5 rounded border bg-white shadow-sm">
+                                <div className="text-[10px] text-slate-400 leading-none mb-1 truncate">
+                                  Reg {regAddr}
+                                </div>
+                                <input
+                                  type="text"
+                                  value={editingValue}
+                                  onChange={(e) => setEditingValue(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') saveAlias();
+                                    if (e.key === 'Escape') cancelEditAlias();
+                                  }}
+                                  className="w-full px-1 py-0.5 text-xs rounded border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                  placeholder="Alias..."
+                                  autoFocus
+                                />
+                                <div className="flex justify-center gap-1 mt-1">
+                                  <button
+                                    onClick={saveAlias}
+                                    className="p-0.5 rounded text-emerald-600 hover:bg-emerald-50"
+                                  >
+                                    <Check className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    onClick={cancelEditAlias}
+                                    className="p-0.5 rounded text-slate-400 hover:bg-slate-50"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              // Display mode
+                              <button
+                                onClick={() => {
+                                  if (!polling) {
+                                    startEditAlias(card.cardId, idx, regKey, regAlias);
+                                  } else {
+                                    toggleRegisterPlot(card.cardId, idx);
+                                  }
+                                }}
+                                className={`w-full text-center p-1.5 rounded border transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-emerald-50 ring-2 shadow-sm'
+                                    : 'bg-slate-50 border-slate-100 hover:border-slate-300 hover:bg-slate-100'
+                                }`}
+                                style={isSelected ? { borderColor, boxShadow: `0 0 0 2px ${borderColor}33` } : {}}
+                                title={polling
+                                  ? (isSelected ? `Click to remove Reg ${regAddr} from plot` : `Click to plot Reg ${regAddr}`)
+                                  : `Click to set alias for Reg ${regAddr}`}
+                              >
+                                <div className={`text-[10px] leading-none mb-0.5 truncate ${regAlias ? 'text-emerald-600 font-medium' : 'text-slate-400'}`}>
+                                  {labelText}
+                                </div>
+                                <div className={`text-sm font-mono font-medium ${
+                                  isSelected ? 'text-emerald-700' : 'text-slate-800'
+                                }`}>
+                                  {val}
+                                </div>
+                                {isSelected && (
+                                  <div className="w-2 h-2 rounded-full mx-auto mt-1" style={{ backgroundColor: borderColor }} />
+                                )}
+                              </button>
                             )}
-                          </button>
+                          </div>
                         );
                       })}
                     </div>
@@ -638,19 +739,25 @@ export default function ReadPage() {
                              contentStyle={{ borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                              labelStyle={{ fontSize: '12px', fontWeight: 600, color: '#0F172A', marginBottom: '4px' }}
                            />
-                           {[...(selectedRegisters[card.cardId] || [])].sort().map((regIdx, i) => (
-                             <Line
-                               key={`reg_${regIdx}`}
-                               type="monotone" 
-                               dataKey={`reg_${regIdx}`}
-                               name={`Reg ${card.registerAddress + regIdx}`}
-                               stroke={PLOT_COLORS[i % PLOT_COLORS.length]} 
-                               strokeWidth={2}
-                               dot={false}
-                               activeDot={{ r: 4, stroke: '#fff', strokeWidth: 2 }}
-                               isAnimationActive={false}
-                             />
-                           ))}
+                            {[...(selectedRegisters[card.cardId] || [])].sort().map((regIdx, i) => {
+                              const regKey = getRegKey(card.slaveAddress, card.functionCode, card.registerAddress, regIdx);
+                              const regAlias = registerAliases[regKey];
+                              const regAddr = card.registerAddress + regIdx;
+                              const lineName = regAlias || `Reg ${regAddr}`;
+                              return (
+                                <Line
+                                  key={`reg_${regIdx}`}
+                                  type="monotone" 
+                                  dataKey={`reg_${regIdx}`}
+                                  name={lineName}
+                                  stroke={PLOT_COLORS[i % PLOT_COLORS.length]} 
+                                  strokeWidth={2}
+                                  dot={false}
+                                  activeDot={{ r: 4, stroke: '#fff', strokeWidth: 2 }}
+                                  isAnimationActive={false}
+                                />
+                              );
+                            })}
                          </LineChart>
                        </ResponsiveContainer>
                      </div>

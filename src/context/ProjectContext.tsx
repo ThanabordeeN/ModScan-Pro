@@ -107,6 +107,12 @@ export function ProjectProvider({ children, onProjectLoad }: { children: ReactNo
     setProjectFilePath(filePath || null);
     setDeviceAliasesState(data.devices || []);
     setIsProjectDirty(false);
+
+    // Restore register aliases to window storage
+    if (data.registerAliases) {
+      setWindowItem('dashboard_register_aliases', JSON.stringify(data.registerAliases));
+    }
+
     if (onProjectLoad) {
       onProjectLoad(data);
     }

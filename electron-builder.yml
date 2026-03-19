@@ -35,6 +35,7 @@ publish:
   provider: github
   owner: 2Edge
   repo: ModScan-Pro
+  token: ${GH_TOKEN}
 
 mac:
   category: public.app-category.utilities

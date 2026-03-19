@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FolderOpen, Upload, Trash2, Plus, XCircle, CheckCircle2, Clock, Tag, Download, AppWindow } from 'lucide-react';
+import { FolderOpen, Upload, Trash2, Plus, XCircle, CheckCircle2, Clock, Tag, Download, AppWindow, Hash } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -91,6 +91,10 @@ export default function ProjectsPage() {
 
     setIsSaving(true);
     try {
+      // Get register aliases from window storage
+      const savedRegAliases = getWindowItem('dashboard_register_aliases');
+      const registerAliases = savedRegAliases ? JSON.parse(savedRegAliases) : undefined;
+
       const result = await saveProject({
         name: projectName.trim(),
         description: projectDescription.trim(),
@@ -116,6 +120,7 @@ export default function ProjectsPage() {
             return saved ? JSON.parse(saved) : undefined;
           } catch { return undefined; }
         })(),
+        registerAliases,
       });
 
       if (result.success) {

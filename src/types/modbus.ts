@@ -89,6 +89,7 @@ export interface ReadRange {
   quantity: number;
   dataType?: DataType;
   remark?: string;
+  alias?: string;
 }
 
 export interface UILogEntry {

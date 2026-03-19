@@ -43,6 +43,7 @@ export interface ProjectData {
   scannedDevices?: ModbusDevice[];
   readData?: { rangeId: string; data: number[] }[];
   topologyLayout?: { nodes: any[]; edges: any[] };
+  registerAliases?: Record<string, string>;
 }
 
 export interface RecentProject {

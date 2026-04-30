@@ -44,8 +44,8 @@ export default function LicenseGuard({ children }: { children: React.ReactNode }
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-slate-400 dark:text-slate-500 animate-spin" />
       </div>
     );
   }

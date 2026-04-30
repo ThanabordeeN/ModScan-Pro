@@ -119,14 +119,14 @@ interface ModbusContextType {
     currentAddress: number | '';
     newAddress: number | '';
     registerAddress: number | '';
-    functionCode: 6 | 16;
+    functionCode: 5 | 6 | 15 | 16;
     useScannedDevice: boolean;
   };
   setChangeAddrState: React.Dispatch<React.SetStateAction<{
     currentAddress: number | '';
     newAddress: number | '';
     registerAddress: number | '';
-    functionCode: 6 | 16;
+    functionCode: 5 | 6 | 15 | 16;
     useScannedDevice: boolean;
   }>>;
 
@@ -207,13 +207,13 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
     currentAddress: number | '';
     newAddress: number | '';
     registerAddress: number | '';
-    functionCode: 6 | 16;
+    functionCode: 5 | 6 | 15 | 16;
     useScannedDevice: boolean;
   }>({
     currentAddress: 1,
     newAddress: 2,
     registerAddress: 0,
-    functionCode: 6 as 6 | 16,
+    functionCode: 6 as 5 | 6 | 15 | 16,
     useScannedDevice: false
   });
 
@@ -740,8 +740,8 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
           }}
         >
           <div
+            className="bg-white dark:bg-slate-800"
             style={{
-              backgroundColor: '#fff',
               borderRadius: '1rem',
               boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
               width: '100%',
@@ -750,22 +750,22 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
               animation: 'scaleIn 200ms ease-out',
             }}
           >
-            <div className="p-6 border-b border-slate-100 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-6 h-6 text-amber-600" />
+            <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900 mb-1">Process Conflict</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  The system is currently running a background process (<span className="font-semibold text-slate-800 uppercase">{pendingProcess.conflicting}</span>). 
-                  Starting a new process (<span className="font-semibold text-slate-800 uppercase">{pendingProcess.name}</span>) requires stopping the current one.
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">Process Conflict</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  The system is currently running a background process (<span className="font-semibold text-slate-800 dark:text-slate-200 uppercase">{pendingProcess.conflicting}</span>). 
+                  Starting a new process (<span className="font-semibold text-slate-800 dark:text-slate-200 uppercase">{pendingProcess.name}</span>) requires stopping the current one.
                 </p>
               </div>
             </div>
-            <div className="p-4 bg-slate-50 flex gap-3 justify-end">
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 flex gap-3 justify-end">
               <button
                 onClick={cancelStartProcess}
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
                 Cancel
               </button>

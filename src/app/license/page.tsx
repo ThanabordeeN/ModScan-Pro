@@ -72,22 +72,22 @@ export default function LicensePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-cyan-600 animate-spin" />
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-cyan-600 dark:text-cyan-400 animate-spin" />
       </div>
     );
   }
 
   if (status === 'valid') {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center animate-in fade-in zoom-in duration-300">
-          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <ShieldCheck className="w-8 h-8 text-emerald-600" />
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-8 text-center animate-in fade-in zoom-in duration-300">
+          <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <ShieldCheck className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">License Activated</h1>
-          <p className="text-slate-500 mb-6">Redirecting to application...</p>
-          <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">License Activated</h1>
+          <p className="text-slate-500 dark:text-slate-400 mb-6">Redirecting to application...</p>
+          <div className="h-1 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
             <div className="h-full bg-emerald-500 animate-[loading_1.5s_ease-in-out_infinite]" style={{ width: '100%' }} />
           </div>
         </div>
@@ -96,61 +96,61 @@ export default function LicensePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex p-3 rounded-2xl bg-cyan-100 mb-4">
-            <Lock className="w-8 h-8 text-cyan-700" />
+          <div className="inline-flex p-3 rounded-2xl bg-cyan-100 dark:bg-cyan-900/30 mb-4">
+            <Lock className="w-8 h-8 text-cyan-700 dark:text-cyan-400" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Software Activation</h1>
-          <p className="text-slate-600 mt-2">Please enter your license key to continue</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Software Activation</h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-2">Please enter your license key to continue</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
           <div className="p-6 space-y-6">
             
             {/* Machine ID Display */}
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                 Your Machine ID
               </label>
               <div className="flex items-center gap-2">
-                <code className="flex-1 font-mono text-sm text-slate-700 bg-white px-3 py-2 rounded-lg border border-slate-200 break-all">
+                <code className="flex-1 font-mono text-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 break-all">
                   {machineId || 'Loading...'}
                 </code>
                 <button
                   onClick={handleCopy}
-                  className="p-2 rounded-lg hover:bg-white hover:shadow-sm hover:border-slate-300 border border-transparent transition-all text-slate-500 hover:text-cyan-600"
+                  className="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm hover:border-slate-300 dark:hover:border-slate-600 border border-transparent transition-all text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400"
                   title="Copy Machine ID"
                 >
                   {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                 </button>
               </div>
-              <p className="text-xs text-slate-400 mt-2">
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
                 Send this ID to the vendor to receive your license key.
               </p>
             </div>
 
             {/* License Input */}
             <div className="space-y-3">
-              <label className="block text-sm font-medium text-slate-700">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 License Key
               </label>
               <textarea
                 value={licenseKey}
                 onChange={(e) => setLicenseKey(e.target.value)}
                 placeholder="Paste your license key here..."
-                className="w-full h-32 px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none font-mono text-xs"
+                className="w-full h-32 px-4 py-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none font-mono text-xs"
               />
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <span className="text-sm text-red-600">{error}</span>
+              <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-start gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                <span className="text-sm text-red-600 dark:text-red-400">{error}</span>
               </div>
             )}
 
@@ -158,7 +158,7 @@ export default function LicensePage() {
             <button
               onClick={handleActivate}
               disabled={activating || !licenseKey.trim()}
-              className="w-full py-3.5 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium shadow-md hover:shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium shadow-md hover:shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
             >
               {activating ? (
                 <>
@@ -174,7 +174,7 @@ export default function LicensePage() {
             </button>
           </div>
           
-          <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <span>ModScan Pro</span>
             <span>v1.0.0</span>
           </div>

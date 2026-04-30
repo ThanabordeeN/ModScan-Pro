@@ -20,12 +20,12 @@ export interface ModbusDeviceNodeData {
  */
 export function getSignalColor(responseTime: number): { bg: string; border: string; text: string; dot: string } {
   if (responseTime < 100) {
-    return { bg: 'bg-emerald-50', border: 'border-emerald-400', text: 'text-emerald-700', dot: 'bg-emerald-500' };
+    return { bg: 'bg-emerald-50 dark:bg-emerald-900/30', border: 'border-emerald-400 dark:border-emerald-700', text: 'text-emerald-700 dark:text-emerald-300', dot: 'bg-emerald-500 dark:bg-emerald-400' };
   }
   if (responseTime < 300) {
-    return { bg: 'bg-amber-50', border: 'border-amber-400', text: 'text-amber-700', dot: 'bg-amber-500' };
+    return { bg: 'bg-amber-50 dark:bg-amber-900/30', border: 'border-amber-400 dark:border-amber-700', text: 'text-amber-700 dark:text-amber-300', dot: 'bg-amber-500 dark:bg-amber-400' };
   }
-  return { bg: 'bg-red-50', border: 'border-red-400', text: 'text-red-700', dot: 'bg-red-500' };
+  return { bg: 'bg-red-50 dark:bg-red-900/30', border: 'border-red-400 dark:border-red-700', text: 'text-red-700 dark:text-red-300', dot: 'bg-red-500 dark:bg-red-400' };
 }
 
 function ModbusDeviceNode({ data }: NodeProps<ModbusDeviceNodeData>) {
@@ -34,7 +34,7 @@ function ModbusDeviceNode({ data }: NodeProps<ModbusDeviceNodeData>) {
   
   const displayLabel = isMaster ? label : (address ? getDeviceDisplayName(address) : label);
   const colors = isMaster
-    ? { bg: 'bg-slate-100', border: 'border-slate-400', text: 'text-slate-700', dot: 'bg-slate-500' }
+    ? { bg: 'bg-slate-100 dark:bg-slate-700', border: 'border-slate-400 dark:border-slate-500', text: 'text-slate-700 dark:text-slate-300', dot: 'bg-slate-500 dark:bg-slate-400' }
     : getSignalColor(responseTime);
 
   return (
@@ -45,7 +45,7 @@ function ModbusDeviceNode({ data }: NodeProps<ModbusDeviceNodeData>) {
       <Handle
         type="target"
         position={Position.Left}
-        className="!w-3 !h-3 !bg-slate-400 !border-2 !border-white"
+        className="!w-3 !h-3 !bg-slate-400 dark:!bg-slate-500 !border-2 !border-white dark:!border-slate-600"
       />
 
       <div className="flex items-center gap-2 mb-1">
@@ -70,7 +70,7 @@ function ModbusDeviceNode({ data }: NodeProps<ModbusDeviceNodeData>) {
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-3 !h-3 !bg-slate-400 !border-2 !border-white"
+        className="!w-3 !h-3 !bg-slate-400 dark:!bg-slate-500 !border-2 !border-white dark:!border-slate-600"
       />
     </div>
   );

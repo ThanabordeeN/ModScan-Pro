@@ -32,12 +32,12 @@ export default function ScanPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-700">
+        <div className="p-2 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 text-cyan-700 dark:text-cyan-400">
           <Search className="w-6 h-6" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('scan_title')}</h1>
-          <p className="text-sm text-slate-600">{t('scan_subtitle')}</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t('scan_title')}</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-400">{t('scan_subtitle')}</p>
         </div>
       </div>
 
@@ -45,38 +45,38 @@ export default function ScanPage() {
       <ConnectionSettings disabled={isScanning} />
 
       {/* Scan Settings */}
-      <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('scan_range_settings')}</h2>
+      <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">{t('scan_range_settings')}</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">{t('scan_start_address')}</label>
+            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">{t('scan_start_address')}</label>
             <input
               type="number"
               min={1}
               max={247}
               value={scanStartAddr}
               onChange={(e) => setScanStartAddr(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+              className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-900"
               disabled={isScanning}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">{t('scan_end_address')}</label>
+            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">{t('scan_end_address')}</label>
             <input
               type="number"
               min={1}
               max={247}
               value={scanEndAddr}
               onChange={(e) => setScanEndAddr(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+              className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-900"
               disabled={isScanning}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">{t('scan_timeout')}</label>
+            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">{t('scan_timeout')}</label>
             <input
               type="number"
               min={100}
@@ -84,7 +84,7 @@ export default function ScanPage() {
               step={100}
               value={scanTimeout}
               onChange={(e) => setScanTimeout(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+              className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-900"
               disabled={isScanning}
             />
           </div>
@@ -94,7 +94,7 @@ export default function ScanPage() {
           <button
             onClick={startScan}
             disabled={isScanning || !isConnectionReady}
-            className="flex-1 py-3 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
+            className="flex-1 py-3 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
           >
             {isScanning ? (
               <>
@@ -121,11 +121,11 @@ export default function ScanPage() {
 
         {isScanning && (
           <div className="mt-4">
-            <div className="flex justify-between text-xs text-slate-500 mb-1">
+            <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                <span>Progress</span>
                <span>{scanProgress}%</span>
             </div>
-            <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+            <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-slate-900 transition-all duration-300 ease-out" 
                 style={{ width: `${scanProgress}%` }} 
@@ -135,9 +135,9 @@ export default function ScanPage() {
         )}
 
         {scanError && (
-          <div className="mt-4 p-4 rounded-lg bg-red-50 border border-red-200 flex items-center gap-2">
-            <XCircle className="w-5 h-5 text-red-600" />
-            <span className="text-red-600">{scanError}</span>
+          <div className="mt-4 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-center gap-2">
+            <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+            <span className="text-red-600 dark:text-red-400">{scanError}</span>
           </div>
         )}
       </div>
@@ -151,22 +151,22 @@ export default function ScanPage() {
         const allDevices = [...scannedDevices, ...removedDevices].sort((a, b) => a.address - b.address);
 
         return (
-        <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">{t('scan_results')}</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t('scan_results')}</h2>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-500">
+              <span className="text-sm text-slate-500 dark:text-slate-400">
                 {t('scan_found_count').replace('{found}', scannedDevices.length.toString()).replace('{scanned}', scannedCount.toString())}
               </span>
               {!isScanning && scanDiff && (scanDiff.added.length > 0 || scanDiff.removed.length > 0) && (
                 <div className="flex items-center gap-1.5 ml-2">
                   {scanDiff.added.length > 0 && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
                       <Plus className="w-3 h-3" />+{scanDiff.added.length}
                     </span>
                   )}
                   {scanDiff.removed.length > 0 && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-bold">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-bold">
                       <Minus className="w-3 h-3" />-{scanDiff.removed.length}
                     </span>
                   )}
@@ -176,32 +176,32 @@ export default function ScanPage() {
           </div>
 
           {allDevices.length === 0 && !isScanning ? (
-            <div className="p-8 rounded-lg bg-slate-50 border border-slate-200 text-center">
-              <XCircle className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-              <p className="text-slate-500">{t('scan_no_devices')}</p>
+            <div className="p-8 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-center">
+              <XCircle className="w-12 h-12 text-slate-400 dark:text-slate-500 mx-auto mb-3" />
+              <p className="text-slate-500 dark:text-slate-400">{t('scan_no_devices')}</p>
             </div>
           ) : allDevices.length > 0 && (
-            <div className="overflow-hidden rounded-lg border border-slate-200">
+            <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
               <table className="w-full">
-                <thead className="bg-slate-50">
+                <thead className="bg-slate-50 dark:bg-slate-800/50">
                   <tr>
-                    {scanDiff && <th className="px-3 py-3 text-left text-sm font-medium text-slate-500 w-10">{t('scan_diff_title')}</th>}
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">{t('scan_header_address')}</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">{t('scan_header_response')}</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">{t('scan_header_status')}</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">{t('scan_header_register')}</th>
+                    {scanDiff && <th className="px-3 py-3 text-left text-sm font-medium text-slate-500 dark:text-slate-400 w-10">{t('scan_diff_title')}</th>}
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500 dark:text-slate-400">{t('scan_header_address')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500 dark:text-slate-400">{t('scan_header_response')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500 dark:text-slate-400">{t('scan_header_status')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-500 dark:text-slate-400">{t('scan_header_register')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                   {allDevices.map((device) => {
                     const isAdded = addedAddrs.has(device.address);
                     const isRemoved = removedAddrs.has(device.address);
 
                     const rowBg = isAdded
-                      ? 'bg-emerald-50 hover:bg-emerald-100'
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30'
                       : isRemoved
-                        ? 'bg-red-50 hover:bg-red-100 opacity-60'
-                        : 'bg-white hover:bg-slate-50';
+                        ? 'bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 opacity-60'
+                        : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700';
 
                     return (
                     <tr key={device.address} className={rowBg}>
@@ -217,7 +217,7 @@ export default function ScanPage() {
                       )}
                       <td className="px-4 py-3 flex items-center gap-3">
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-lg font-mono font-bold min-w-[3.5rem] justify-center ${
-                          isAdded ? 'bg-emerald-200 text-emerald-800' : isRemoved ? 'bg-red-200 text-red-800 line-through' : 'bg-slate-100 text-slate-700'
+                          isAdded ? 'bg-emerald-200 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200' : isRemoved ? 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200 line-through' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
                         }`}>
                           {device.address}
                         </span>
@@ -230,28 +230,28 @@ export default function ScanPage() {
                             setAlias(device.address, e.target.value, existing?.description, existing?.remark);
                           }}
                           placeholder={t('project_alias') + '...'}
-                          className="flex-1 max-w-xs px-2.5 py-1.5 rounded-md bg-white border border-slate-200 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 hover:bg-slate-50 transition-colors"
+                          className="flex-1 max-w-xs px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                         />
                         )}
                         {isRemoved && deviceAliases.find(d => d.slaveId === device.address)?.alias && (
-                          <span className="text-red-400 text-sm line-through">{deviceAliases.find(d => d.slaveId === device.address)?.alias}</span>
+                          <span className="text-red-400 dark:text-red-500 text-sm line-through">{deviceAliases.find(d => d.slaveId === device.address)?.alias}</span>
                         )}
-                      </td>
-                      <td className={`px-4 py-3 ${isRemoved ? 'text-red-400 line-through' : 'text-slate-700'}`}>{device.responseTime}ms</td>
+                        </td>
+                      <td className={`px-4 py-3 ${isRemoved ? 'text-red-400 dark:text-red-500 line-through' : 'text-slate-700 dark:text-slate-300'}`}>{device.responseTime}ms</td>
                       <td className="px-4 py-3">
                         {isRemoved ? (
-                          <span className="inline-flex items-center gap-1.5 text-red-500">
+                          <span className="inline-flex items-center gap-1.5 text-red-500 dark:text-red-400">
                             <XCircle className="w-4 h-4" />
                             {t('scan_diff_removed')}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 text-emerald-600">
+                          <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
                             <CheckCircle2 className="w-4 h-4" />
                             {t('scan_status_online')}
                           </span>
                         )}
                       </td>
-                      <td className={`px-4 py-3 font-mono ${isRemoved ? 'text-red-400 line-through' : 'text-slate-700'}`}>
+                      <td className={`px-4 py-3 font-mono ${isRemoved ? 'text-red-400 dark:text-red-500 line-through' : 'text-slate-700 dark:text-slate-300'}`}>
                         {device.holdingRegisters?.[0] ?? '-'}
                       </td>
                     </tr>
@@ -267,12 +267,12 @@ export default function ScanPage() {
 
       {/* Scan History Panel */}
       {scanHistory.length > 0 && !isScanning && (
-        <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <History className="w-5 h-5 text-slate-600" />
-              <h2 className="text-lg font-semibold text-slate-900">{t('scan_history_title')}</h2>
-              <span className="text-sm text-slate-400">({scanHistory.length})</span>
+              <History className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t('scan_history_title')}</h2>
+              <span className="text-sm text-slate-400 dark:text-slate-500">({scanHistory.length})</span>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -284,7 +284,7 @@ export default function ScanPage() {
               </button>
               <button
                 onClick={clearScanHistory}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
                 {t('scan_history_clear')}
@@ -294,8 +294,8 @@ export default function ScanPage() {
 
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {scanHistory.map((entry, idx) => (
-              <div key={entry.id} className="flex items-center justify-between px-4 py-2.5 rounded-lg bg-slate-50 border border-slate-100 text-sm">
-                <span className="text-slate-700">
+              <div key={entry.id} className="flex items-center justify-between px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 text-sm">
+                <span className="text-slate-700 dark:text-slate-300">
                   {t('scan_history_entry')
                     .replace('{n}', String(scanHistory.length - idx))
                     .replace('{time}', entry.timestamp.toLocaleTimeString())
@@ -303,7 +303,7 @@ export default function ScanPage() {
                     .replace('{start}', String(entry.startAddr))
                     .replace('{end}', String(entry.endAddr))}
                 </span>
-                <span className="text-slate-400 text-xs">
+                <span className="text-slate-400 dark:text-slate-500 text-xs">
                   {entry.scannedCount} addr
                 </span>
               </div>

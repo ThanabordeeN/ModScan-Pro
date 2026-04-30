@@ -8,9 +8,15 @@
   --background-end-rgb: 248, 250, 252;
 }
 
+.dark {
+  --foreground-rgb: 226, 232, 240;
+  --background-start-rgb: 15, 23, 42;
+  --background-end-rgb: 15, 23, 42;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
-  background: white;
+  background: rgb(var(--background-start-rgb));
   min-height: 100vh;
 }
 
@@ -24,12 +30,24 @@ body {
   background: rgba(241, 245, 249, 1);
 }
 
+.dark ::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 1);
+}
+
 ::-webkit-scrollbar-thumb {
   background: rgba(148, 163, 184, 0.8);
   border-radius: 4px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.8);
+}
+
 ::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 1);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 1);
 }
 
@@ -61,6 +79,11 @@ input[type="number"]::-webkit-outer-spin-button {
   border: 1px solid rgba(226, 232, 240, 1);
 }
 
+.dark .glass {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(51, 65, 85, 1);
+}
+
 /* Focus states */
 select:focus,
 input:focus {
@@ -72,11 +95,36 @@ table {
   border-collapse: collapse;
 }
 
-/* Transitions */
-* {
+/* Smooth theme transitions on interactive elements */
+button, a, input, select, textarea {
   transition-property:
     color, background-color, border-color, text-decoration-color, fill, stroke,
     opacity, box-shadow, transform, filter, backdrop-filter;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
+}
+
+/* ReactFlow dark mode overrides */
+.dark .react-flow__controls-button {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+  fill: #e2e8f0;
+}
+
+.dark .react-flow__controls-button:hover {
+  background: #334155;
+}
+
+.dark .react-flow__minimap {
+  background: #1e293b;
+}
+
+.dark .react-flow__minimap-mask {
+  fill: rgba(15, 23, 42, 0.7);
+}
+
+.dark .react-flow__attribution {
+  background: rgba(15, 23, 42, 0.8);
+  color: #94a3b8;
 }

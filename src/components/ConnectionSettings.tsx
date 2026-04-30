@@ -44,9 +44,9 @@ export default function ConnectionSettings({ disabled }: ConnectionSettingsProps
     }, [connection.type]);
 
     return (
-        <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                     {connection.type === 'serial' ? (
                         <Usb className="w-5 h-5 text-emerald-700" />
                     ) : (
@@ -56,13 +56,13 @@ export default function ConnectionSettings({ disabled }: ConnectionSettingsProps
                 </h2>
                 
                 <div className="flex items-center gap-2">
-                     <div className="flex rounded-lg border border-slate-300 overflow-hidden">
+                     <div className="flex rounded-lg border border-slate-300 dark:border-slate-600 overflow-hidden">
                         <button
                             onClick={() => setConnection({ ...connection, type: 'serial' })}
                             className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                                 connection.type === 'serial'
                                     ? 'bg-emerald-600 text-white'
-                                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                                    : 'bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
                             }`}
                             disabled={disabled}
                         >
@@ -73,7 +73,7 @@ export default function ConnectionSettings({ disabled }: ConnectionSettingsProps
                             className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                                 connection.type === 'tcp'
                                     ? 'bg-emerald-600 text-white'
-                                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                                    : 'bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
                             }`}
                             disabled={disabled}
                         >
@@ -85,17 +85,17 @@ export default function ConnectionSettings({ disabled }: ConnectionSettingsProps
                         <button
                             onClick={fetchPorts}
                             disabled={loadingPorts || disabled}
-                            className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-50"
+                            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-50"
                             title="Refresh ports"
                         >
-                            <RefreshCw className={`w-4 h-4 text-slate-600 ${loadingPorts ? 'animate-spin' : ''}`} />
+                            <RefreshCw className={`w-4 h-4 text-slate-600 dark:text-slate-400 ${loadingPorts ? 'animate-spin' : ''}`} />
                         </button>
                     )}
                 </div>
             </div>
 
             {portError && connection.type === 'serial' && (
-                <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 flex items-center gap-2">
+                <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 text-red-600" />
                     <span className="text-sm text-red-600">{portError}</span>
                 </div>
@@ -104,12 +104,12 @@ export default function ConnectionSettings({ disabled }: ConnectionSettingsProps
             {connection.type === 'serial' ? (
                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     <div className="col-span-2 md:col-span-1">
-                        <label className="block text-sm font-medium text-slate-600 mb-2">Serial Port</label>
+                        <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Serial Port</label>
                         <select
                             value={connection.port}
                             onChange={(e) => setConnection({ ...connection, port: e.target.value })}
                             disabled={disabled}
-                            className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 disabled:text-slate-500"
+                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500"
                         >
                             <option value="">Select Port</option>
                             {ports.map((port) => (
@@ -121,12 +121,12 @@ export default function ConnectionSettings({ disabled }: ConnectionSettingsProps
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-600 mb-2">Baud Rate</label>
+                        <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Baud Rate</label>
                         <select
                             value={connection.baudRate}
                             onChange={(e) => setConnection({ ...connection, baudRate: Number(e.target.value) })}
                             disabled={disabled}
-                            className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 disabled:text-slate-500"
+                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500"
                         >
                             {BAUD_RATES.map((rate) => (
                                 <option key={rate} value={rate}>{rate}</option>
@@ -135,12 +135,12 @@ export default function ConnectionSettings({ disabled }: ConnectionSettingsProps
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-600 mb-2">Data Bits</label>
+                        <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Data Bits</label>
                         <select
                             value={connection.dataBits}
                             onChange={(e) => setConnection({ ...connection, dataBits: Number(e.target.value) as 7 | 8 })}
                             disabled={disabled}
-                            className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 disabled:text-slate-500"
+                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500"
                         >
                             {DATA_BITS_OPTIONS.map((bits) => (
                                 <option key={bits} value={bits}>{bits}</option>
@@ -149,12 +149,12 @@ export default function ConnectionSettings({ disabled }: ConnectionSettingsProps
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-600 mb-2">Parity</label>
+                        <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Parity</label>
                         <select
                             value={connection.parity}
                             onChange={(e) => setConnection({ ...connection, parity: e.target.value as 'none' | 'even' | 'odd' })}
                             disabled={disabled}
-                            className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 disabled:text-slate-500"
+                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500"
                         >
                             {PARITY_OPTIONS.map((p) => (
                                 <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
@@ -163,12 +163,12 @@ export default function ConnectionSettings({ disabled }: ConnectionSettingsProps
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-600 mb-2">Stop Bits</label>
+                        <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Stop Bits</label>
                         <select
                             value={connection.stopBits}
                             onChange={(e) => setConnection({ ...connection, stopBits: Number(e.target.value) as 1 | 2 })}
                             disabled={disabled}
-                            className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 disabled:text-slate-500"
+                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500"
                         >
                             {STOP_BITS_OPTIONS.map((bits) => (
                                 <option key={bits} value={bits}>{bits}</option>
@@ -179,18 +179,18 @@ export default function ConnectionSettings({ disabled }: ConnectionSettingsProps
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="col-span-2">
-                        <label className="block text-sm font-medium text-slate-600 mb-2">IP Address / Host</label>
+                        <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">IP Address / Host</label>
                          <input
                             type="text"
                             value={connection.tcpIp || ''}
                             onChange={(e) => setConnection({ ...connection, tcpIp: e.target.value })}
                             placeholder="192.168.1.10"
                             disabled={disabled}
-                            className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 disabled:text-slate-500 font-mono"
+className="bg-white dark:bg-slate-800 w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 font-mono"
                         />
                     </div>
-                     <div>
-                        <label className="block text-sm font-medium text-slate-600 mb-2">Port</label>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Port</label>
                          <input
                             type="number"
                             min={1}
@@ -199,7 +199,7 @@ export default function ConnectionSettings({ disabled }: ConnectionSettingsProps
                             onChange={(e) => setConnection({ ...connection, tcpPort: Number(e.target.value) })}
                             placeholder="502"
                             disabled={disabled}
-                            className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 disabled:text-slate-500 font-mono"
+                            className="bg-white dark:bg-slate-800 w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 font-mono"
                         />
                     </div>
                 </div>

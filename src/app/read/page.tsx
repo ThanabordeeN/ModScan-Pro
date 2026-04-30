@@ -9,6 +9,7 @@ import ConnectionSettings from '@/components/ConnectionSettings';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useProject } from '@/context/ProjectContext';
+import { useTheme } from '@/context/ThemeContext';
 import { dashboardAPI, DashboardCardConfig, DashboardStatus } from '@/lib/electron-api';
 import { getWindowItem, setWindowItem, removeWindowItem } from '@/lib/window-storage';
 import {
@@ -51,6 +52,8 @@ export default function ReadPage() {
   const { connection, isConnectionReady, scannedDevices, requestStartProcess } = useModbus();
   const { t } = useLanguage();
   const { getDeviceDisplayName } = useProject();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   const [cards, setCards] = useState<DashboardCard[]>(() => {
     if (typeof window !== 'undefined') {
@@ -345,27 +348,27 @@ export default function ReadPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-3">
           <LayoutGrid className="w-8 h-8" />
           {t('nav_read')}
         </h1>
-        <p className="text-slate-500 mt-1">{t('dashboard_subtitle')}</p>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">{t('dashboard_subtitle')}</p>
       </div>
 
       {/* Connection Settings */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
         <ConnectionSettings />
       </div>
 
       {/* Scanned Devices Tags */}
       {scannedDevices.length > 0 && !polling && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
-             <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-               <Search className="w-5 h-5 text-emerald-600" />
+             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+               <Search className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                {t('nav_scan') || 'Scanned Devices'}
              </h2>
-             <span className="text-sm text-slate-500">
+             <span className="text-sm text-slate-500 dark:text-slate-400">
                Click to add as monitoring card
              </span>
           </div>
@@ -381,29 +384,29 @@ export default function ReadPage() {
                   disabled={deviceExists}
                   className={`flex flex-col items-start p-4 rounded-xl border transition-all text-left w-full relative overflow-hidden ${
                     deviceExists 
-                      ? 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed' 
-                      : 'bg-white border-slate-200 hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 group'
+                      ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-60 cursor-not-allowed' 
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-500 hover:shadow-md hover:-translate-y-0.5 group'
                   }`}
                   title={deviceExists ? 'Card already exists for this ID' : `Add card for Slave ${device.address}`}
                 >
                   {deviceExists && (
-                     <div className="absolute top-0 right-0 p-1.5 bg-slate-200 text-slate-500 rounded-bl-lg">
-                       <CheckCircle2 className="w-3.5 h-3.5" />
-                     </div>
+<div className="absolute top-0 right-0 p-1.5 bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-bl-lg">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      </div>
                   )}
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 ${
-                    deviceExists ? 'bg-slate-200 text-slate-500' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'
+                    deviceExists ? 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400' : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/30'
                   }`}>
                     <span className="font-mono font-bold text-sm">{device.address}</span>
                   </div>
                   
                   <h3 className={`font-semibold text-sm truncate w-full ${
-                    deviceExists ? 'text-slate-500' : 'text-slate-900 group-hover:text-emerald-700'
+                    deviceExists ? 'text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400'
                   }`}>
                     {getDeviceDisplayName(device.address)}
                   </h3>
                   
-                  <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1">
                      <Clock className="w-3 h-3" /> {device.responseTime}ms
                   </p>
                 </button>
@@ -414,16 +417,16 @@ export default function ReadPage() {
       )}
 
       {/* Controls */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
         <div className="flex flex-wrap items-center gap-4">
           {/* Interval selector */}
           <div className="flex items-center gap-2">
-            <Timer className="w-4 h-4 text-slate-500" />
-            <label className="text-sm font-medium text-slate-700">{t('dashboard_interval')}:</label>
+            <Timer className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('dashboard_interval')}:</label>
             <select
               value={pollInterval}
               onChange={(e) => setPollInterval(Number(e.target.value))}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-slate-400"
+              className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-slate-400"
             >
               {INTERVAL_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -433,18 +436,18 @@ export default function ReadPage() {
 
           {/* Timeout */}
           <div className="flex items-center gap-2">
-            <Settings2 className="w-4 h-4 text-slate-500" />
-            <label className="text-sm font-medium text-slate-700">{t('dashboard_timeout')}:</label>
+            <Settings2 className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('dashboard_timeout')}:</label>
             <input
               type="number"
               value={pollTimeout}
               onChange={(e) => setPollTimeout(e.target.value === '' ? '' as any : Number(e.target.value))}
               onBlur={() => setPollTimeout(prev => Math.max(100, Number(prev) || 100))}
-              className="w-24 px-3 py-1.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-slate-400"
+              className="w-24 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-slate-400"
               min={100}
               step={100}
             />
-            <span className="text-xs text-slate-400">ms</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">ms</span>
           </div>
 
           <div className="flex-1" />
@@ -453,7 +456,7 @@ export default function ReadPage() {
           <button
             onClick={() => addCard()}
             disabled={polling}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors text-sm font-medium disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm font-medium disabled:opacity-50"
           >
             <Plus className="w-4 h-4" />
             {t('dashboard_add_card')}
@@ -464,7 +467,7 @@ export default function ReadPage() {
             <button
               onClick={startPolling}
               disabled={!isConnectionReady || cards.length === 0}
-              className="flex items-center gap-2 px-5 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors text-sm font-medium disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors text-sm font-medium disabled:opacity-50"
             >
               <Play className="w-4 h-4" />
               {t('dashboard_start_polling')}
@@ -472,7 +475,7 @@ export default function ReadPage() {
           ) : (
             <button
               onClick={stopPolling}
-              className="flex items-center gap-2 px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 transition-colors text-sm font-medium"
             >
               <Square className="w-4 h-4" />
               {t('dashboard_stop_polling')}
@@ -482,14 +485,14 @@ export default function ReadPage() {
 
         {/* Status indicator */}
         {polling && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600">
+          <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
             <Loader2 className="w-4 h-4 animate-spin" />
             {t('dashboard_polling_active')}
           </div>
         )}
 
         {error && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-red-600">
+          <div className="mt-3 flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
             <AlertCircle className="w-4 h-4" />
             {error}
           </div>
@@ -498,9 +501,9 @@ export default function ReadPage() {
 
       {/* Card Grid */}
       {cards.length === 0 ? (
-        <div className="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center">
-          <LayoutGrid className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-400 text-sm">{t('dashboard_no_cards')}</p>
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 p-12 text-center">
+          <LayoutGrid className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+          <p className="text-slate-400 dark:text-slate-500 text-sm">{t('dashboard_no_cards')}</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
@@ -510,33 +513,33 @@ export default function ReadPage() {
             return (
               <div
                 key={card.cardId}
-                className="bg-white rounded-xl border border-slate-200 overflow-hidden"
+                className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden"
               >
                 {/* Card Header */}
-                <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     {result?.success ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
                     ) : result?.error ? (
-                      <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                      <AlertCircle className="w-4 h-4 text-red-500 dark:text-red-400 shrink-0" />
                     ) : (
-                      <div className="w-4 h-4 rounded-full bg-slate-200 shrink-0" />
+                      <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
                     )}
                     {polling ? (
-                      <span className="text-sm font-semibold text-slate-800 truncate">{card.name}</span>
+                      <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{card.name}</span>
                     ) : (
                       <input
                         type="text"
                         value={card.name}
                         onChange={(e) => updateCard(card.cardId, 'name', e.target.value)}
-                        className="text-sm font-semibold text-slate-800 bg-transparent border-none outline-none focus:ring-0 p-0 w-full min-w-0"
+                        className="text-sm font-semibold text-slate-800 dark:text-slate-100 bg-transparent border-none outline-none focus:ring-0 p-0 w-full min-w-0"
                         placeholder={t('dashboard_card_name')}
                       />
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {result?.lastUpdated && (
-                      <span className="text-xs text-slate-400 flex items-center gap-1">
+                      <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {formatTime(result.lastUpdated)}
                       </span>
@@ -544,7 +547,7 @@ export default function ReadPage() {
                     {!polling && (
                       <button
                         onClick={() => removeCard(card.cardId)}
-                        className="p-1 rounded hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"
+                        className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                         title={t('dashboard_remove_card')}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -555,24 +558,24 @@ export default function ReadPage() {
 
                 {/* Card Config (editable when not polling) */}
                 {!polling && (
-                  <div className="px-4 py-3 border-b border-slate-100 grid grid-cols-2 gap-3 text-sm">
+                  <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700 grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <label className="text-xs text-slate-500 font-medium">{t('dashboard_slave_id')}</label>
+                      <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('dashboard_slave_id')}</label>
                       <input
                         type="number"
                         value={card.slaveAddress}
                         onChange={(e) => updateCard(card.cardId, 'slaveAddress', e.target.value === '' ? '' as any : Number(e.target.value))}
-                        className="w-full mt-1 px-2 py-1 rounded border border-slate-200 text-sm focus:ring-1 focus:ring-slate-400"
+                        className="w-full mt-1 px-2 py-1 rounded border border-slate-200 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-slate-400"
                         min={1}
                         max={247}
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-500 font-medium">{t('dashboard_function_code')}</label>
+                      <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('dashboard_function_code')}</label>
                       <select
                         value={card.functionCode}
                         onChange={(e) => updateCard(card.cardId, 'functionCode', Number(e.target.value) as 1 | 2 | 3 | 4)}
-                        className="w-full mt-1 px-2 py-1 rounded border border-slate-200 text-sm focus:ring-1 focus:ring-slate-400 bg-white"
+                        className="w-full mt-1 px-2 py-1 rounded border border-slate-200 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-slate-400"
                       >
                         {Object.entries(FC_LABELS).map(([val, label]) => (
                           <option key={val} value={val}>{label}</option>
@@ -580,23 +583,23 @@ export default function ReadPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs text-slate-500 font-medium">{t('dashboard_start_address')}</label>
+                      <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('dashboard_start_address')}</label>
                       <input
                         type="number"
                         value={card.registerAddress}
                         onChange={(e) => updateCard(card.cardId, 'registerAddress', e.target.value === '' ? '' as any : Number(e.target.value))}
-                        className="w-full mt-1 px-2 py-1 rounded border border-slate-200 text-sm focus:ring-1 focus:ring-slate-400"
+                        className="w-full mt-1 px-2 py-1 rounded border border-slate-200 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-slate-400"
                         min={0}
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-500 font-medium">{t('dashboard_quantity')}</label>
+                      <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('dashboard_quantity')}</label>
                       <input
                         type="number"
                         value={card.quantity}
                         onChange={(e) => updateCard(card.cardId, 'quantity', e.target.value === '' ? '' as any : Number(e.target.value))}
                         onBlur={(e) => updateCard(card.cardId, 'quantity', Math.max(1, Number(e.target.value) || 1))}
-                        className="w-full mt-1 px-2 py-1 rounded border border-slate-200 text-sm focus:ring-1 focus:ring-slate-400"
+                        className="w-full mt-1 px-2 py-1 rounded border border-slate-200 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-slate-400"
                         min={1}
                         max={125}
                       />
@@ -607,13 +610,13 @@ export default function ReadPage() {
 
                 {/* Card Info (shown when polling) */}
                 {polling && (
-                  <div className="px-4 py-2 border-b border-slate-100 text-xs text-slate-500 flex flex-wrap gap-3">
+                  <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 flex flex-wrap gap-3">
                     <span className="flex items-center gap-1"><Hash className="w-3 h-3" /> {getDeviceDisplayName(card.slaveAddress)}</span>
                     <span>{FC_LABELS[card.functionCode]}</span>
                     <span>Addr: {card.registerAddress}</span>
                     <span>Qty: {card.quantity}</span>
                     {(selectedRegisters[card.cardId]?.size ?? 0) > 0 && (
-                      <span className="text-emerald-600 font-medium">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">
                         Plotting {selectedRegisters[card.cardId]?.size} reg(s)
                       </span>
                     )}
@@ -623,7 +626,7 @@ export default function ReadPage() {
                 {/* Card Data */}
                 <div className="px-4 py-3">
                   {result?.error && (
-                    <div className="text-xs text-red-500 flex items-center gap-1 mb-2">
+                    <div className="text-xs text-red-500 dark:text-red-400 flex items-center gap-1 mb-2">
                       <AlertCircle className="w-3 h-3" />
                       {result.error}
                     </div>
@@ -647,8 +650,8 @@ export default function ReadPage() {
                           <div key={idx} className="relative">
                             {isEditing ? (
                               // Edit mode
-                              <div className="text-center p-1.5 rounded border bg-white shadow-sm">
-                                <div className="text-[10px] text-slate-400 leading-none mb-1 truncate">
+                              <div className="text-center p-1.5 rounded border bg-white dark:bg-slate-800 shadow-sm">
+                                <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-none mb-1 truncate">
                                   Reg {regAddr}
                                 </div>
                                 <input
@@ -659,20 +662,20 @@ export default function ReadPage() {
                                     if (e.key === 'Enter') saveAlias();
                                     if (e.key === 'Escape') cancelEditAlias();
                                   }}
-                                  className="w-full px-1 py-0.5 text-xs rounded border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                  className="w-full px-1 py-0.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                   placeholder="Alias..."
                                   autoFocus
                                 />
                                 <div className="flex justify-center gap-1 mt-1">
                                   <button
                                     onClick={saveAlias}
-                                    className="p-0.5 rounded text-emerald-600 hover:bg-emerald-50"
+                                    className="p-0.5 rounded text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
                                   >
                                     <Check className="w-3 h-3" />
                                   </button>
                                   <button
                                     onClick={cancelEditAlias}
-                                    className="p-0.5 rounded text-slate-400 hover:bg-slate-50"
+                                    className="p-0.5 rounded text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700"
                                   >
                                     <X className="w-3 h-3" />
                                   </button>
@@ -690,19 +693,19 @@ export default function ReadPage() {
                                 }}
                                 className={`w-full text-center p-1.5 rounded border transition-all cursor-pointer ${
                                   isSelected
-                                    ? 'bg-emerald-50 ring-2 shadow-sm'
-                                    : 'bg-slate-50 border-slate-100 hover:border-slate-300 hover:bg-slate-100'
+                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 ring-2 shadow-sm'
+                                    : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
                                 }`}
                                 style={isSelected ? { borderColor, boxShadow: `0 0 0 2px ${borderColor}33` } : {}}
                                 title={polling
                                   ? (isSelected ? `Click to remove Reg ${regAddr} from plot` : `Click to plot Reg ${regAddr}`)
                                   : `Click to set alias for Reg ${regAddr}`}
                               >
-                                <div className={`text-[10px] leading-none mb-0.5 truncate ${regAlias ? 'text-emerald-600 font-medium' : 'text-slate-400'}`}>
+                                <div className={`text-[10px] leading-none mb-0.5 truncate ${regAlias ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-slate-400 dark:text-slate-500'}`}>
                                   {labelText}
                                 </div>
                                 <div className={`text-sm font-mono font-medium ${
-                                  isSelected ? 'text-emerald-700' : 'text-slate-800'
+                                  isSelected ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-800 dark:text-slate-100'
                                 }`}>
                                   {val}
                                 </div>
@@ -716,12 +719,12 @@ export default function ReadPage() {
                       })}
                     </div>
                   ) : !result?.error ? (
-                    <p className="text-xs text-slate-400 text-center py-2">{t('dashboard_no_data')}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-2">{t('dashboard_no_data')}</p>
                   ) : null}
                   
                   {/* Plot Container - shows when any register is selected */}
                   {(selectedRegisters[card.cardId]?.size ?? 0) > 0 && plotData[card.cardId] && plotData[card.cardId].length > 0 && (
-                     <div className="mt-4 pt-4 border-t border-slate-100 h-48">
+                     <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 h-48">
                        <ResponsiveContainer width="100%" height="100%">
                          <LineChart data={plotData[card.cardId]} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
@@ -730,15 +733,20 @@ export default function ReadPage() {
                              tick={{ fill: '#64748B', fontSize: 10 }}
                              minTickGap={20}
                            />
-                           <YAxis 
-                             tick={{ fill: '#64748B', fontSize: 10 }} 
-                             width={40}
-                             domain={['auto', 'auto']}
-                           />
-                           <RechartsTooltip 
-                             contentStyle={{ borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                             labelStyle={{ fontSize: '12px', fontWeight: 600, color: '#0F172A', marginBottom: '4px' }}
-                           />
+                            <YAxis 
+                              tick={{ fill: isDark ? '#94a3b8' : '#64748B', fontSize: 10 }} 
+                              width={40}
+                              domain={['auto', 'auto']}
+                            />
+                            <RechartsTooltip 
+                              contentStyle={{ 
+                                borderRadius: '8px', 
+                                border: `1px solid ${isDark ? '#334155' : '#E2E8F0'}`, 
+                                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                                backgroundColor: isDark ? '#1e293b' : '#ffffff'
+                              }}
+                              labelStyle={{ fontSize: '12px', fontWeight: 600, color: isDark ? '#e2e8f0' : '#0F172A', marginBottom: '4px' }}
+                            />
                             {[...(selectedRegisters[card.cardId] || [])].sort().map((regIdx, i) => {
                               const regKey = getRegKey(card.slaveAddress, card.functionCode, card.registerAddress, regIdx);
                               const regAlias = registerAliases[regKey];

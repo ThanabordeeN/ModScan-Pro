@@ -23,6 +23,7 @@ import * as dagre from 'dagre';
 import { useModbus } from '@/context/ModbusContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useProject } from '@/context/ProjectContext';
+import { useTheme } from '@/context/ThemeContext';
 import ModbusDeviceNode from '@/components/ModbusDeviceNode';
 import { modbusAPI } from '@/lib/electron-api';
 import { getWindowItem, setWindowItem, removeWindowItem } from '@/lib/window-storage';
@@ -69,7 +70,9 @@ function TopologyCanvas() {
   const { scannedDevices, connection, isConnectionReady, isLiveMonitoring, setIsLiveMonitoring, requestStartProcess } = useModbus();
   const { t } = useLanguage();
   const { getDeviceDisplayName } = useProject();
+  const { theme } = useTheme();
   const { fitView } = useReactFlow();
+  const isDark = theme === 'dark';
 
   const masterTxt = t('topo_master');
 
@@ -118,8 +121,8 @@ function TopologyCanvas() {
     source: 'master',
     target: `device-${address}`,
     animated: true,
-    style: { stroke: '#94a3b8', strokeWidth: 2 },
-  }), []);
+    style: { stroke: isDark ? '#64748b' : '#94a3b8', strokeWidth: 2 },
+  }), [isDark]);
 
   // --- Load saved layout OR initialize from scanned devices on mount ---
   useEffect(() => {
@@ -207,9 +210,9 @@ function TopologyCanvas() {
   // --- Connection handler ---
   const onConnect = useCallback(
     (params: Connection | Edge) => {
-      setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: '#94a3b8', strokeWidth: 2 } }, eds));
+      setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: isDark ? '#64748b' : '#94a3b8', strokeWidth: 2 } }, eds));
     },
-    [setEdges]
+    [setEdges, isDark]
   );
 
   // --- Auto Layout ---
@@ -349,12 +352,12 @@ function TopologyCanvas() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-cyan-50 rounded-xl flex items-center justify-center">
-            <Network className="w-5 h-5 text-cyan-600" />
+          <div className="w-10 h-10 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl flex items-center justify-center">
+            <Network className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">{t('topo_title')}</h2>
-            <p className="text-sm text-slate-500">{t('topo_subtitle')}</p>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t('topo_title')}</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{t('topo_subtitle')}</p>
           </div>
         </div>
 
@@ -362,7 +365,7 @@ function TopologyCanvas() {
           {/* Add Node */}
           <button
             onClick={() => setShowAddPanel(!showAddPanel)}
-            className="flex items-center gap-2 px-4 py-2 bg-cyan-50 text-cyan-700 rounded-lg text-sm font-medium hover:bg-cyan-100 transition-colors border border-cyan-200"
+            className="flex items-center gap-2 px-4 py-2 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-400 rounded-lg text-sm font-medium hover:bg-cyan-100 dark:hover:bg-cyan-900/30 transition-colors border border-cyan-200 dark:border-cyan-800"
           >
             <Plus className="w-4 h-4" />
             Add Node
@@ -372,7 +375,7 @@ function TopologyCanvas() {
           {/* Auto Layout */}
           <button
             onClick={onAutoLayout}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 rounded-lg text-sm font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
             title="Automatically arrange nodes left-to-right"
           >
             <LayoutGrid className="w-4 h-4" />
@@ -382,7 +385,7 @@ function TopologyCanvas() {
           {/* Reset */}
           <button
             onClick={onResetLayout}
-            className="flex items-center gap-2 px-3 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
             title="Reset layout to scanned devices"
           >
             Reset
@@ -399,9 +402,9 @@ function TopologyCanvas() {
                 }
               }}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isLiveMonitoring
-                  ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                  : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+isLiveMonitoring
+                      ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/40'
+                      : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/40'
               }`}
             >
               {isLiveMonitoring ? (
@@ -422,13 +425,13 @@ function TopologyCanvas() {
 
       {/* Add Node Panel */}
       {showAddPanel && (
-        <div className="bg-white border border-cyan-200 rounded-xl p-5 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 border border-cyan-200 dark:border-cyan-800 rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
-              <Plus className="w-4 h-4 text-cyan-600" />
+            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <Plus className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
               Add Node to Topology
             </h3>
-            <button onClick={() => setShowAddPanel(false)} className="p-1 rounded hover:bg-slate-100 text-slate-400">
+            <button onClick={() => setShowAddPanel(false)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -436,7 +439,7 @@ function TopologyCanvas() {
           <div className="grid md:grid-cols-2 gap-6">
             {/* From Scanned Devices */}
             <div>
-              <h4 className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">
+              <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
                 Scanned Devices ({availableScannedDevices.length} available)
               </h4>
               {availableScannedDevices.length > 0 ? (
@@ -445,16 +448,16 @@ function TopologyCanvas() {
                     <button
                       key={device.address}
                       onClick={() => handleAddScannedNode(device.address)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors"
                     >
                       <Hash className="w-3 h-3" />
                       {getDeviceDisplayName(device.address)}
-                      <span className="text-emerald-400 ml-1">{device.responseTime}ms</span>
+                      <span className="text-emerald-400 dark:text-emerald-500 ml-1">{device.responseTime}ms</span>
                     </button>
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   {scannedDevices.length === 0
                     ? 'No scanned devices. Go to Scan tab first.'
                     : 'All scanned devices are already on the topology.'}
@@ -464,12 +467,12 @@ function TopologyCanvas() {
 
             {/* Custom Node */}
             <div>
-              <h4 className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">
+              <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
                 Custom Node
               </h4>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-2 flex-1">
-                  <Cpu className="w-4 h-4 text-slate-400" />
+                  <Cpu className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <input
                     type="number"
                     min={1}
@@ -478,7 +481,7 @@ function TopologyCanvas() {
                     onChange={(e) => setCustomAddress(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddCustomNode()}
                     placeholder="Slave Address (1-247)"
-                    className="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400 outline-none"
+                    className="bg-white dark:bg-slate-800 flex-1 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400 outline-none"
                   />
                 </div>
                 <button
@@ -490,7 +493,7 @@ function TopologyCanvas() {
                   Add
                 </button>
               </div>
-              <p className="text-xs text-slate-400 mt-2">
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
                 Add any Modbus Slave ID (1–247) to the topology, even if not scanned.
               </p>
             </div>
@@ -500,23 +503,23 @@ function TopologyCanvas() {
 
       {/* Legend */}
       {hasNodes && (
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
           <div className="flex flex-wrap items-center gap-6">
-            <span className="text-sm font-semibold text-slate-700">{t('topo_legend')}:</span>
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t('topo_legend')}:</span>
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-emerald-500" />
-              <span className="text-xs text-slate-600">&lt; 100ms — {t('topo_legend_good')}</span>
+              <span className="text-xs text-slate-600 dark:text-slate-400">&lt; 100ms — {t('topo_legend_good')}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-amber-500" />
-              <span className="text-xs text-slate-600">100–300ms — {t('topo_legend_medium')}</span>
+              <span className="text-xs text-slate-600 dark:text-slate-400">100–300ms — {t('topo_legend_medium')}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-red-500" />
-              <span className="text-xs text-slate-600">&gt; 300ms — {t('topo_legend_poor')}</span>
+              <span className="text-xs text-slate-600 dark:text-slate-400">&gt; 300ms — {t('topo_legend_poor')}</span>
             </div>
           </div>
-          <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 flex items-center gap-1">
             <Info className="w-3 h-3" />
             {t('topo_drag_hint')}. Select nodes/edges and press Backspace to delete. Layout is saved automatically.
           </p>
@@ -524,7 +527,7 @@ function TopologyCanvas() {
       )}
 
       {/* React Flow Canvas */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden" style={{ height: 520 }}>
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden" style={{ height: 520 }}>
         {nodes.length > 0 ? (
           <ReactFlow
             nodes={nodes}
@@ -538,28 +541,29 @@ function TopologyCanvas() {
             fitViewOptions={{ padding: 0.3 }}
             proOptions={{ hideAttribution: false }}
           >
-            <Background gap={20} size={1} color="#e2e8f0" />
+            <Background gap={20} size={1} color={isDark ? '#334155' : '#e2e8f0'} />
             <Controls showInteractive={false} />
             <MiniMap
               nodeColor={(node) => {
-                if (node.data?.isMaster) return '#94a3b8';
+                if (node.data?.isMaster) return isDark ? '#64748b' : '#94a3b8';
                 const rt = node.data?.responseTime ?? 0;
-                if (rt < 100) return '#10b981';
-                if (rt < 300) return '#f59e0b';
-                return '#ef4444';
+                if (rt < 100) return isDark ? '#34d399' : '#10b981';
+                if (rt < 300) return isDark ? '#fbbf24' : '#f59e0b';
+                return isDark ? '#f87171' : '#ef4444';
               }}
-              maskColor="rgba(241, 245, 249, 0.7)"
-              style={{ border: '1px solid #e2e8f0', borderRadius: 8 }}
+              maskColor={isDark ? 'rgba(15, 23, 42, 0.7)' : 'rgba(241, 245, 249, 0.7)'}
+              className="border border-slate-200 dark:border-slate-700 rounded-lg"
+              style={{ borderRadius: 8 }}
             />
           </ReactFlow>
         ) : (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-slate-400" />
+              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Search className="w-8 h-8 text-slate-400 dark:text-slate-500" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-700 mb-2">{t('topo_no_devices')}</h3>
-              <p className="text-sm text-slate-500 mb-4">{t('topo_scan_hint')}</p>
+              <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('topo_no_devices')}</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">{t('topo_scan_hint')}</p>
               <div className="flex items-center justify-center gap-3">
                 <Link
                   href="/scan"
@@ -570,7 +574,7 @@ function TopologyCanvas() {
                 </Link>
                 <button
                   onClick={() => setShowAddPanel(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-lg text-sm font-medium hover:bg-cyan-100 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800 rounded-lg text-sm font-medium hover:bg-cyan-100 dark:hover:bg-cyan-900/30 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   Add Custom Node

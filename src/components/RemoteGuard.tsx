@@ -62,10 +62,10 @@ export default function RemoteGuard({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-800/50">
         <div className="animate-pulse flex flex-col items-center">
-          <div className="h-12 w-12 bg-slate-200 rounded-full mb-4"></div>
-          <div className="h-4 w-32 bg-slate-200 rounded"></div>
+          <div className="h-12 w-12 bg-slate-200 dark:bg-slate-600 rounded-full mb-4"></div>
+          <div className="h-4 w-32 bg-slate-200 dark:bg-slate-600 rounded"></div>
         </div>
       </div>
     );
@@ -123,7 +123,7 @@ export default function RemoteGuard({ children }: { children: ReactNode }) {
             </button>
           </form>
 
-          <p className="text-center text-xs text-slate-600 mt-6">
+          <p className="text-center text-xs text-slate-600 dark:text-slate-400 mt-6">
             Protected by RemoteGuard™ • Secure Tunneling
           </p>
         </div>

@@ -35,3 +35,5 @@ jobs:
 
       - name: Packaging Test (Electron Dry-Run)
         run: npx electron-builder --linux --dir
+        env:
+          GH_TOKEN: dummy_token_for_ci

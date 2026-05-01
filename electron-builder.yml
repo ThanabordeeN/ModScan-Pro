@@ -10,7 +10,7 @@ files:
   - electron/**/*
   - out/**/*
   - package.json
-  - !**/node_modules
+  - "!**/node_modules"
   - "!src"
   - "!bin"
   - "!dist"

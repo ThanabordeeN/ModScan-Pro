@@ -55,14 +55,5 @@
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
-  },
-  "build": {
-    "appId": "com.2edge.modscan-pro",
-    "productName": "ModScan Pro",
-    "publish": {
-      "provider": "github",
-      "owner": "ThanabordeeN",
-      "repo": "ModScan-Pro"
-    }
   }
 }

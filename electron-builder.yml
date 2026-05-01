@@ -43,6 +43,8 @@ mac:
     - dmg
   icon: public/icon.icns
   extraResources:
+    - from: src/lib/public_key.pem
+      to: public_key.pem
     - from: bin/cloudflared-darwin-amd64
       to: bin/cloudflared-darwin-amd64
     - from: bin/cloudflared-darwin-arm64
@@ -54,6 +56,8 @@ win:
     - portable
   icon: public/icon.ico
   extraResources:
+    - from: src/lib/public_key.pem
+      to: public_key.pem
     - from: bin/cloudflared.exe
       to: bin/cloudflared.exe
 
@@ -63,6 +67,8 @@ linux:
   category: Utility
   icon: public/icon.png
   extraResources:
+    - from: src/lib/public_key.pem
+      to: public_key.pem
     - from: bin/cloudflared-linux-amd64
       to: bin/cloudflared-linux-amd64
 

@@ -68,7 +68,7 @@ jobs:
           elif [ "$RUNNER_OS" == "macOS" ]; then
             npx electron-builder --mac --publish always
           else
-            npx electron-builder --linux --publish always
+            npx electron-builder --linux AppImage --publish always
           fi
         shell: bash
         env:

@@ -33,7 +33,7 @@ extraResources:
 
 publish:
   provider: github
-  owner: 2Edge
+  owner: ThanabordeeN
   repo: ModScan-Pro
   token: ${GH_TOKEN}
 

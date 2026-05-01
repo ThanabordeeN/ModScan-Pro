@@ -606,7 +606,9 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
         tcpPort: connection.tcpPort,
         ...config,
       };
-      return await modbusAPI.write(fullConfig);
+      return await modbusAPI.write(
+        fullConfig as import("@/lib/electron-api").WriteConfig,
+      );
     },
     [connection, isConnectionReady],
   );

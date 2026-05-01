@@ -1,7 +1,7 @@
-import { changeModbusAddress } from './modbus';
+import { changeModbusAddress } from "./modbus";
 
 // Mock modbus-serial
-jest.mock('modbus-serial', () => {
+jest.mock("modbus-serial", () => {
   return jest.fn().mockImplementation(() => {
     return {
       connectRTUBuffered: jest.fn().mockResolvedValue(undefined),
@@ -17,46 +17,46 @@ jest.mock('modbus-serial', () => {
 });
 
 // Mock serialport
-jest.mock('serialport', () => ({
+jest.mock("serialport", () => ({
   SerialPort: {
     list: jest.fn().mockResolvedValue([]),
   },
 }));
 
-describe('changeModbusAddress', () => {
+describe("changeModbusAddress", () => {
   const mockConfig = {
-    type: 'serial' as const,
-    port: '/dev/ttyUSB0',
+    type: "serial" as const,
+    port: "/dev/ttyUSB0",
     baudRate: 9600,
-    dataBits: 8,
-    stopBits: 1,
-    parity: 'none' as const,
+    dataBits: 8 as const,
+    stopBits: 1 as const,
+    parity: "none" as const,
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should return error when new address is less than 1', async () => {
+  it("should return error when new address is less than 1", async () => {
     const result = await changeModbusAddress(mockConfig, 1, 0);
     expect(result).toEqual({
       success: false,
-      error: 'New address must be between 1 and 247',
+      error: "New address must be between 1 and 247",
     });
   });
 
-  it('should return error when new address is greater than 247', async () => {
+  it("should return error when new address is greater than 247", async () => {
     const result = await changeModbusAddress(mockConfig, 1, 248);
     expect(result).toEqual({
       success: false,
-      error: 'New address must be between 1 and 247',
+      error: "New address must be between 1 and 247",
     });
   });
 
-  it('should return success when new address is valid', async () => {
-      const result = await changeModbusAddress(mockConfig, 1, 2);
-      expect(result).toEqual({
-          success: true
-      });
+  it("should return success when new address is valid", async () => {
+    const result = await changeModbusAddress(mockConfig, 1, 2);
+    expect(result).toEqual({
+      success: true,
+    });
   });
 });

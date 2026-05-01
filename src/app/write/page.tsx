@@ -148,22 +148,22 @@ export default function WritePage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 rounded-xl bg-purple-50 border border-purple-200 text-purple-700">
+        <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-500/30 text-purple-700 dark:text-purple-400">
           <PenLine className="w-6 h-6" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('write_title')}</h1>
-          <p className="text-sm text-slate-600">{t('write_subtitle')}</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t('write_title')}</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-400">{t('write_subtitle')}</p>
         </div>
       </div>
 
       {/* Warning */}
-      <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
+      <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
         <div className="flex items-start gap-2">
-          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-amber-800 font-medium">{t('write_warning_title')}</p>
-            <p className="text-sm text-amber-600 mt-1">{t('write_warning_desc')}</p>
+            <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">{t('write_warning_title')}</p>
+            <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">{t('write_warning_desc')}</p>
           </div>
         </div>
       </div>
@@ -173,10 +173,10 @@ export default function WritePage() {
 
       {/* Scanned Devices Quick Select */}
       {scannedDevices.length > 0 && (
-        <div className="bg-white rounded-xl p-4 border border-purple-500/30 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-purple-500/30 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
-            <CheckCircle2 className="w-5 h-5 text-purple-600" />
-            <span className="text-sm font-medium text-slate-900">{t('write_select_scanned')}</span>
+            <CheckCircle2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{t('write_select_scanned')}</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {scannedDevices.map((device) => (
@@ -186,7 +186,7 @@ export default function WritePage() {
                 className={`px-3 py-1.5 rounded-lg font-mono text-sm transition-all ${
                   slaveAddress === device.address
                     ? 'bg-purple-600 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
                 }`}
               >
                 ID: {device.address}
@@ -200,12 +200,12 @@ export default function WritePage() {
       )}
 
       {/* Write Settings */}
-      <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('write_settings')}</h2>
+      <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">{t('write_settings')}</h2>
         
         {/* Function Code Selection */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-600 mb-2">{t('write_function_code')}</label>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">{t('write_function_code')}</label>
           <select
             value={functionCode.toString()}
             onChange={(e) => {
@@ -214,7 +214,7 @@ export default function WritePage() {
                 setFunctionCode(val as 5 | 6 | 15 | 16);
               }
             }}
-            className="w-full px-4 py-3 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+            className="w-full px-4 py-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
           >
             {WRITE_FUNCTION_CODES.map((fc) => (
               <option key={fc.value} value={fc.value.toString()}>
@@ -227,19 +227,19 @@ export default function WritePage() {
         {/* Common Fields */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">{t('write_slave_address')}</label>
+            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">{t('write_slave_address')}</label>
             <input
               type="number"
               min={1}
               max={247}
               value={slaveAddress}
               onChange={(e) => setSlaveAddress(Math.min(247, Math.max(1, Number(e.target.value))))}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+              className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">
+            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">
               {functionCode === 5 || functionCode === 15 ? t('write_coil_address') : t('write_register_address')}
             </label>
             <input
@@ -248,12 +248,12 @@ export default function WritePage() {
               max={65535}
               value={address}
               onChange={(e) => setAddress(Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+              className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">{t('write_timeout')}</label>
+            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">{t('write_timeout')}</label>
             <input
               type="number"
               min={100}
@@ -261,7 +261,7 @@ export default function WritePage() {
               step={100}
               value={timeout}
               onChange={(e) => setTimeout(Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+              className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
             />
           </div>
         </div>
@@ -269,22 +269,22 @@ export default function WritePage() {
         {/* Dynamic Value Input based on FC */}
         <div 
           key={functionCode} 
-          className="p-4 rounded-lg bg-slate-50 border border-slate-200 mb-6 transition-all duration-300"
+          className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 mb-6 transition-all duration-300"
         >
-          <h3 className="text-sm font-medium text-purple-700 mb-4">
+          <h3 className="text-sm font-medium text-purple-700 dark:text-purple-300 mb-4">
             {currentFCInfo?.description}
           </h3>
 
           {/* FC05 - Single Coil */}
           {functionCode === 5 && (
             <div className="flex items-center gap-4">
-              <span className="text-slate-600">{t('write_value_coil')}</span>
+              <span className="text-slate-600 dark:text-slate-400">{t('write_value_coil')}</span>
               <button
                 onClick={() => setSingleCoilValue(!singleCoilValue)}
                 className={`px-6 py-3 rounded-lg font-medium transition-all ${
                   singleCoilValue
                     ? 'bg-emerald-500 text-white shadow-sm'
-                    : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                    : 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-500'
                 }`}
               >
                 {singleCoilValue ? 'ON (1)' : 'OFF (0)'}
@@ -296,25 +296,25 @@ export default function WritePage() {
           {functionCode === 6 && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-600 mb-2">{t('write_value_dec')}</label>
+                <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">{t('write_value_dec')}</label>
                 <input
                   type="number"
                   min={0}
                   max={65535}
                   value={singleRegisterValue}
                   onChange={(e) => setSingleRegisterValue(Math.min(65535, Math.max(0, Number(e.target.value))))}
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-600 mb-2">{t('write_value_hex')}</label>
-                <div className="px-3 py-2 rounded-lg bg-slate-100 border border-slate-300 text-slate-600 font-mono">
+                <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">{t('write_value_hex')}</label>
+                <div className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 font-mono">
                   0x{singleRegisterValue.toString(16).toUpperCase().padStart(4, '0')}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-600 mb-2">{t('write_value_bin')}</label>
-                <div className="px-3 py-2 rounded-lg bg-slate-100 border border-slate-300 text-slate-600 font-mono text-xs overflow-hidden">
+                <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">{t('write_value_bin')}</label>
+                <div className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 font-mono text-xs overflow-hidden">
                   {singleRegisterValue.toString(2).padStart(16, '0')}
                 </div>
               </div>
@@ -325,10 +325,10 @@ export default function WritePage() {
           {functionCode === 15 && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-slate-600">Coils ({multipleCoilValues.length} ค่า)</span>
+                <span className="text-slate-600 dark:text-slate-400">Coils ({multipleCoilValues.length} ค่า)</span>
                 <button
                   onClick={addMultipleValue}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors border border-purple-200"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-800/50 transition-colors border border-purple-200 dark:border-purple-700"
                 >
                   <Plus className="w-4 h-4" />
                   เพิ่ม
@@ -344,7 +344,7 @@ export default function WritePage() {
                         setMultipleCoilValues(newVals);
                       }}
                       className={`flex-1 px-3 py-2 rounded-lg font-mono text-sm transition-all ${
-                        val ? 'bg-emerald-500 text-white shadow-sm' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                        val ? 'bg-emerald-500 text-white shadow-sm' : 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-500'
                       }`}
                     >
                       [{address + idx}] {val ? 'ON' : 'OFF'}
@@ -352,7 +352,7 @@ export default function WritePage() {
                     {multipleCoilValues.length > 1 && (
                       <button
                         onClick={() => removeMultipleValue(idx)}
-                        className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 border border-red-100"
+                        className="p-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-800/50 border border-red-100 dark:border-red-700"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -367,10 +367,10 @@ export default function WritePage() {
           {functionCode === 16 && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-slate-600">Registers ({multipleRegisterValues.length} ค่า)</span>
+                <span className="text-slate-600 dark:text-slate-400">Registers ({multipleRegisterValues.length} ค่า)</span>
                 <button
                   onClick={addMultipleValue}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors border border-purple-200"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-800/50 transition-colors border border-purple-200 dark:border-purple-700"
                 >
                   <Plus className="w-4 h-4" />
                   เพิ่ม
@@ -379,7 +379,7 @@ export default function WritePage() {
               <div className="space-y-2">
                 {multipleRegisterValues.map((val, idx) => (
                   <div key={idx} className="flex items-center gap-2">
-                    <span className="text-slate-500 font-mono text-sm w-16">[{address + idx}]</span>
+                    <span className="text-slate-500 dark:text-slate-400 font-mono text-sm w-16">[{address + idx}]</span>
                     <input
                       type="number"
                       min={0}
@@ -390,15 +390,15 @@ export default function WritePage() {
                         newVals[idx] = Math.min(65535, Math.max(0, Number(e.target.value)));
                         setMultipleRegisterValues(newVals);
                       }}
-                      className="flex-1 px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/50 font-mono"
+                      className="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 font-mono"
                     />
-                    <span className="text-slate-500 font-mono text-xs w-16">
+                    <span className="text-slate-500 dark:text-slate-400 font-mono text-xs w-16">
                       0x{val.toString(16).toUpperCase().padStart(4, '0')}
                     </span>
                     {multipleRegisterValues.length > 1 && (
                       <button
                         onClick={() => removeMultipleValue(idx)}
-                        className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 border border-red-100"
+                        className="p-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-800/50 border border-red-100 dark:border-red-700"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -413,7 +413,7 @@ export default function WritePage() {
         <button
           onClick={handleWrite}
           disabled={writing || !isConnectionReady}
-          className="w-full py-3 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
+          className="w-full py-3 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
         >
           {writing ? (
             <>
@@ -429,16 +429,16 @@ export default function WritePage() {
         </button>
 
         {error && (
-          <div className="mt-4 p-4 rounded-lg bg-red-50 border border-red-200 flex items-center gap-2">
-            <XCircle className="w-5 h-5 text-red-600" />
-            <span className="text-red-600">{error}</span>
+          <div className="mt-4 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-center gap-2">
+            <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+            <span className="text-red-600 dark:text-red-400">{error}</span>
           </div>
         )}
 
         {success && (
-          <div className="mt-4 p-4 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-            <span className="text-emerald-600">{success}</span>
+          <div className="mt-4 p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <span className="text-emerald-600 dark:text-emerald-400">{success}</span>
           </div>
         )}
       </div>

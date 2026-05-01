@@ -64,16 +64,16 @@ export default function Home() {
     <div className="py-12">
       {/* Hero Section */}
       <div className="text-center mb-12">
-        <div className="inline-block p-6 rounded-3xl bg-white border border-slate-100 shadow-xl shadow-slate-200/50 mb-8 animate-in zoom-in duration-500">
+        <div className="inline-block p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 mb-8 animate-in zoom-in duration-500">
           <img src="/logo.svg" alt="ModScan Pro" className="w-24 h-24" />
         </div>
-        <h1 className="text-5xl font-bold text-slate-900 mb-4 tracking-tight">
+        <h1 className="text-5xl font-bold text-slate-900 dark:text-slate-100 mb-4 tracking-tight">
           {t('home_title')}
         </h1>
-        <p className="text-lg text-slate-600 max-w-xl mx-auto">
+        <p className="text-lg text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
           Experience the most advanced Modbus management suite with real-time monitoring and control.
         </p>
-        <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-xs font-medium text-slate-600">
+        <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-xs font-medium text-slate-600 dark:text-slate-400">
           <span>By 2EDGE Technology Co.,Ltd</span>
         </div>
       </div>
@@ -88,23 +88,23 @@ export default function Home() {
             <Link
               key={feature.href}
               href={feature.href}
-              className={`group block p-5 rounded-xl bg-white border border-slate-200 hover:border-slate-400 transition-all duration-300 hover:shadow-lg`}
+              className={`group block p-5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-all duration-300 hover:shadow-lg`}
             >
               <div className="flex items-start gap-4">
                 <div className={`p-3 rounded-xl ${colors.bg} ${colors.text} group-hover:scale-110 transition-transform`}>
                   <Icon className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-semibold text-slate-900 mb-1 flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-2">
                     {feature.title}
                     <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400" />
                   </h2>
-                  <p className="text-slate-600 text-sm mb-2">
+                  <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
                     {feature.description}
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {feature.tags.map((tag) => (
-                      <span key={tag} className="px-2 py-0.5 rounded bg-slate-100 text-xs text-slate-600 border border-slate-200">
+                      <span key={tag} className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-xs text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                         {tag}
                       </span>
                     ))}
@@ -117,12 +117,12 @@ export default function Home() {
       </div>
 
       {/* Quick Info */}
-      <div className="mt-10 p-5 rounded-xl bg-white border border-slate-200 shadow-sm max-w-4xl mx-auto">
+      <div className="mt-10 p-5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm max-w-4xl mx-auto">
         <div className="flex items-start gap-3">
-          <Zap className="w-5 h-5 text-slate-900 mt-0.5" />
+          <Zap className="w-5 h-5 text-slate-900 dark:text-slate-100 mt-0.5" />
           <div>
-            <h3 className="text-sm font-medium text-slate-900 mb-1">Persistent Workspace</h3>
-            <p className="text-sm text-slate-600">
+            <h3 className="text-sm font-medium text-slate-900 dark:text-slate-100 mb-1">Persistent Workspace</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Your settings, read ranges, and dashboard layout are automatically saved. Switching between pages no longer loses your configurations.
             </p>
           </div>

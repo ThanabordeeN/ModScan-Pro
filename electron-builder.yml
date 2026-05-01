@@ -35,7 +35,6 @@ publish:
   provider: github
   owner: ThanabordeeN
   repo: ModScan-Pro
-  token: ${GH_TOKEN}
 
 mac:
   category: public.app-category.utilities

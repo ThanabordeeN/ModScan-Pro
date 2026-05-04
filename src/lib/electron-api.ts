@@ -1,4 +1,4 @@
-import type { ProjectData, RecentProject } from '@/types/project';
+import type { ProjectData, RecentProject } from "@/types/project";
 
 /**
  * Electron API wrapper for frontend components
@@ -22,12 +22,12 @@ export interface ModbusDevice {
 }
 
 export interface ConnectionConfig {
-  type?: 'serial' | 'tcp';
+  type?: "serial" | "tcp";
   port?: string;
   baudRate?: number;
   dataBits?: 7 | 8;
   stopBits?: 1 | 2;
-  parity?: 'none' | 'even' | 'odd';
+  parity?: "none" | "even" | "odd";
   tcpIp?: string;
   tcpPort?: number;
 }
@@ -121,7 +121,13 @@ export interface DashboardStatus {
   results: Record<string, DashboardCardResult>;
 }
 
-export type UpdateStatus = 'checking' | 'available' | 'not-available' | 'downloading' | 'ready' | 'error';
+export type UpdateStatus =
+  | "checking"
+  | "available"
+  | "not-available"
+  | "downloading"
+  | "ready"
+  | "error";
 
 export interface UpdateInfo {
   status: UpdateStatus;
@@ -139,9 +145,11 @@ export interface UpdateProgress {
 
 // Check if running in Electron
 export function isElectron(): boolean {
-  return typeof window !== 'undefined' &&
-    'electronAPI' in window &&
-    (window as ElectronWindow).electronAPI?.isElectron === true;
+  return (
+    typeof window !== "undefined" &&
+    "electronAPI" in window &&
+    (window as ElectronWindow).electronAPI?.isElectron === true
+  );
 }
 
 // Type for window with electronAPI
@@ -150,48 +158,137 @@ interface ElectronWindow extends Window {
     isElectron: boolean;
     windowId: string;
     window: {
-      openNew: (projectFilePath?: string) => Promise<{ success: boolean; windowId?: string }>;
+      openNew: (
+        projectFilePath?: string,
+      ) => Promise<{ success: boolean; windowId?: string }>;
       setTitle: (title: string) => Promise<{ success: boolean }>;
     };
     serial: {
-      listPorts: () => Promise<{ success: boolean; ports?: SerialPortInfo[]; error?: string }>;
+      listPorts: () => Promise<{
+        success: boolean;
+        ports?: SerialPortInfo[];
+        error?: string;
+      }>;
     };
     modbus: {
-      scan: (config: ScanConfig) => Promise<{ success: boolean; devices?: ModbusDevice[]; scannedCount?: number; error?: string }>;
+      scan: (
+        config: ScanConfig,
+      ) => Promise<{
+        success: boolean;
+        devices?: ModbusDevice[];
+        scannedCount?: number;
+        error?: string;
+      }>;
       scanCancel: () => Promise<{ success: boolean }>;
       onScanProgress: (callback: (progress: number) => void) => void;
       removeScanProgress: () => void;
       onScanFound: (callback: (device: ModbusDevice) => void) => void;
       removeScanFound: () => void;
-      read: (config: ReadConfig) => Promise<{ success: boolean; data?: number[]; error?: string }>;
-      write: (config: WriteConfig) => Promise<{ success: boolean; error?: string }>;
-      readBatch: (config: BatchReadConfig) => Promise<{ results: Array<{ success: boolean; data?: number[]; error?: string }>; error?: string }>;
-      changeAddress: (config: ChangeAddressConfig) => Promise<{ success: boolean; message?: string; warning?: string; error?: string }>;
-      dashboardStart: (config: DashboardStartConfig) => Promise<{ success: boolean; error?: string }>;
+      read: (
+        config: ReadConfig,
+      ) => Promise<{ success: boolean; data?: number[]; error?: string }>;
+      write: (
+        config: WriteConfig,
+      ) => Promise<{ success: boolean; error?: string }>;
+      readBatch: (
+        config: BatchReadConfig,
+      ) => Promise<{
+        results: Array<{ success: boolean; data?: number[]; error?: string }>;
+        error?: string;
+      }>;
+      changeAddress: (
+        config: ChangeAddressConfig,
+      ) => Promise<{
+        success: boolean;
+        message?: string;
+        warning?: string;
+        error?: string;
+      }>;
+      dashboardStart: (
+        config: DashboardStartConfig,
+      ) => Promise<{ success: boolean; error?: string }>;
       dashboardStop: () => Promise<{ success: boolean }>;
-      dashboardUpdate: (config: DashboardUpdateConfig) => Promise<{ success: boolean }>;
+      dashboardUpdate: (
+        config: DashboardUpdateConfig,
+      ) => Promise<{ success: boolean }>;
       dashboardStatus: () => Promise<DashboardStatus>;
     };
     license: {
-      getMachineId: () => Promise<{ success: boolean; machineId?: string; error?: string }>;
-      activate: (serialKey: string) => Promise<{ success: boolean; valid?: boolean; machineId?: string; error?: string }>;
-      check: () => Promise<{ success: boolean; valid?: boolean; machineId?: string; error?: string }>;
+      getMachineId: () => Promise<{
+        success: boolean;
+        machineId?: string;
+        error?: string;
+      }>;
+      activate: (
+        serialKey: string,
+      ) => Promise<{
+        success: boolean;
+        valid?: boolean;
+        machineId?: string;
+        error?: string;
+      }>;
+      check: () => Promise<{
+        success: boolean;
+        valid?: boolean;
+        machineId?: string;
+        error?: string;
+      }>;
     };
     tunnel: {
-      control: (data: { action: 'start' | 'stop'; password?: string }) => Promise<{ success: boolean; url?: string; error?: string }>;
+      control: (data: {
+        action: "start" | "stop";
+        password?: string;
+      }) => Promise<{ success: boolean; url?: string; error?: string }>;
       status: () => Promise<{ isActive: boolean; url: string | null }>;
-      login: (data: { password: string }) => Promise<{ success: boolean; error?: string }>;
+      login: (data: {
+        password: string;
+      }) => Promise<{ success: boolean; error?: string }>;
     };
     logger: {
-      start: () => Promise<{ success: boolean; filePath?: string; cancelled?: boolean; error?: string }>;
-      log: (entries: LogEntry[]) => Promise<{ success: boolean; error?: string }>;
-      stop: () => Promise<{ success: boolean; filePath?: string; error?: string }>;
+      start: () => Promise<{
+        success: boolean;
+        filePath?: string;
+        cancelled?: boolean;
+        error?: string;
+      }>;
+      log: (
+        entries: LogEntry[],
+      ) => Promise<{ success: boolean; error?: string }>;
+      stop: () => Promise<{
+        success: boolean;
+        filePath?: string;
+        error?: string;
+      }>;
     };
     project: {
-      save: (data: Omit<ProjectData, 'version'>) => Promise<{ success: boolean; filePath?: string; cancelled?: boolean; error?: string }>;
-      load: () => Promise<{ success: boolean; data?: ProjectData; filePath?: string; cancelled?: boolean; error?: string }>;
-      loadPath: (filePath: string) => Promise<{ success: boolean; data?: ProjectData; filePath?: string; error?: string }>;
-      recent: () => Promise<{ success: boolean; projects?: RecentProject[]; error?: string }>;
+      save: (
+        data: Omit<ProjectData, "version">,
+      ) => Promise<{
+        success: boolean;
+        filePath?: string;
+        cancelled?: boolean;
+        error?: string;
+      }>;
+      load: () => Promise<{
+        success: boolean;
+        data?: ProjectData;
+        filePath?: string;
+        cancelled?: boolean;
+        error?: string;
+      }>;
+      loadPath: (
+        filePath: string,
+      ) => Promise<{
+        success: boolean;
+        data?: ProjectData;
+        filePath?: string;
+        error?: string;
+      }>;
+      recent: () => Promise<{
+        success: boolean;
+        projects?: RecentProject[];
+        error?: string;
+      }>;
     };
     update: {
       check: () => Promise<{ success: boolean; error?: string }>;
@@ -205,7 +302,7 @@ interface ElectronWindow extends Window {
 }
 
 // Helper to get the electron API
-function getElectronAPI(): ElectronWindow['electronAPI'] | null {
+function getElectronAPI(): ElectronWindow["electronAPI"] | null {
   if (isElectron()) {
     return (window as ElectronWindow).electronAPI || null;
   }
@@ -214,27 +311,38 @@ function getElectronAPI(): ElectronWindow['electronAPI'] | null {
 
 // Serial API
 export const serialAPI = {
-  async listPorts(): Promise<{ success: boolean; ports?: SerialPortInfo[]; error?: string }> {
+  async listPorts(): Promise<{
+    success: boolean;
+    ports?: SerialPortInfo[];
+    error?: string;
+  }> {
     const api = getElectronAPI();
     if (api) {
       return api.serial.listPorts();
     }
     // Fallback to HTTP API
-    const res = await fetch('/api/serial');
+    const res = await fetch("/api/serial");
     return res.json();
   },
 };
 
 // Modbus API
 export const modbusAPI = {
-  async scan(config: ScanConfig): Promise<{ success: boolean; devices?: ModbusDevice[]; scannedCount?: number; error?: string }> {
+  async scan(
+    config: ScanConfig,
+  ): Promise<{
+    success: boolean;
+    devices?: ModbusDevice[];
+    scannedCount?: number;
+    error?: string;
+  }> {
     const api = getElectronAPI();
     if (api) {
       return api.modbus.scan(config);
     }
-    const res = await fetch('/api/modbus/scan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/modbus/scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(config),
     });
     return res.json();
@@ -276,53 +384,69 @@ export const modbusAPI = {
     return { success: false };
   },
 
-  async read(config: ReadConfig): Promise<{ success: boolean; data?: number[]; error?: string }> {
+  async read(
+    config: ReadConfig,
+  ): Promise<{ success: boolean; data?: number[]; error?: string }> {
     const api = getElectronAPI();
     if (api) {
       return api.modbus.read(config);
     }
-    const res = await fetch('/api/modbus/read', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/modbus/read", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(config),
     });
     return res.json();
   },
 
-  async write(config: WriteConfig): Promise<{ success: boolean; error?: string }> {
+  async write(
+    config: WriteConfig,
+  ): Promise<{ success: boolean; error?: string }> {
     const api = getElectronAPI();
     if (api) {
       return api.modbus.write(config);
     }
-    const res = await fetch('/api/modbus/write', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/modbus/write", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(config),
     });
     return res.json();
   },
 
-  async readBatch(config: BatchReadConfig): Promise<{ results: Array<{ success: boolean; data?: number[]; error?: string }>; error?: string }> {
+  async readBatch(
+    config: BatchReadConfig,
+  ): Promise<{
+    results: Array<{ success: boolean; data?: number[]; error?: string }>;
+    error?: string;
+  }> {
     const api = getElectronAPI();
     if (api) {
       return api.modbus.readBatch(config);
     }
-    const res = await fetch('/api/modbus/read-batch', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/modbus/read-batch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(config),
     });
     return res.json();
   },
 
-  async changeAddress(config: ChangeAddressConfig): Promise<{ success: boolean; message?: string; warning?: string; error?: string }> {
+  async changeAddress(
+    config: ChangeAddressConfig,
+  ): Promise<{
+    success: boolean;
+    message?: string;
+    warning?: string;
+    error?: string;
+  }> {
     const api = getElectronAPI();
     if (api) {
       return api.modbus.changeAddress(config);
     }
-    const res = await fetch('/api/modbus/change-address', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/modbus/change-address", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(config),
     });
     return res.json();
@@ -331,34 +455,50 @@ export const modbusAPI = {
 
 // License API
 export const licenseAPI = {
-  async getMachineId(): Promise<{ success: boolean; machineId?: string; error?: string }> {
+  async getMachineId(): Promise<{
+    success: boolean;
+    machineId?: string;
+    error?: string;
+  }> {
     const api = getElectronAPI();
     if (api) {
       return api.license.getMachineId();
     }
     // Fallback - get from license check
-    const res = await fetch('/api/license');
+    const res = await fetch("/api/license");
     const data = await res.json();
     return { success: true, machineId: data.machineId };
   },
 
-  async check(): Promise<{ success: boolean; valid?: boolean; machineId?: string; error?: string }> {
+  async check(): Promise<{
+    success: boolean;
+    valid?: boolean;
+    machineId?: string;
+    error?: string;
+  }> {
     const api = getElectronAPI();
     if (api) {
       return api.license.check();
     }
-    const res = await fetch('/api/license');
+    const res = await fetch("/api/license");
     return res.json();
   },
 
-  async activate(licenseKey: string): Promise<{ success: boolean; valid?: boolean; machineId?: string; error?: string }> {
+  async activate(
+    licenseKey: string,
+  ): Promise<{
+    success: boolean;
+    valid?: boolean;
+    machineId?: string;
+    error?: string;
+  }> {
     const api = getElectronAPI();
     if (api) {
       return api.license.activate(licenseKey);
     }
-    const res = await fetch('/api/license', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/license", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ licenseKey }),
     });
     return res.json();
@@ -367,14 +507,17 @@ export const licenseAPI = {
 
 // Tunnel API
 export const tunnelAPI = {
-  async control(action: 'start' | 'stop', password?: string): Promise<{ success: boolean; url?: string; error?: string }> {
+  async control(
+    action: "start" | "stop",
+    password?: string,
+  ): Promise<{ success: boolean; url?: string; error?: string }> {
     const api = getElectronAPI();
     if (api) {
       return api.tunnel.control({ action, password });
     }
-    const res = await fetch('/api/tunnel/control', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/tunnel/control", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action, password }),
     });
     return res.json();
@@ -385,7 +528,7 @@ export const tunnelAPI = {
     if (api) {
       return api.tunnel.status();
     }
-    const res = await fetch('/api/tunnel/control');
+    const res = await fetch("/api/tunnel/control");
     return res.json();
   },
 
@@ -394,26 +537,27 @@ export const tunnelAPI = {
     if (api) {
       return api.tunnel.login({ password });
     }
-    const res = await fetch('/api/tunnel/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/tunnel/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password }),
     });
     return res.json();
   },
-
 };
 
 // Dashboard Polling API
 export const dashboardAPI = {
-  async start(config: DashboardStartConfig): Promise<{ success: boolean; error?: string }> {
+  async start(
+    config: DashboardStartConfig,
+  ): Promise<{ success: boolean; error?: string }> {
     const api = getElectronAPI();
     if (api) {
       return api.modbus.dashboardStart(config);
     }
-    const res = await fetch('/api/modbus/dashboard-start', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/modbus/dashboard-start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(config),
     });
     return res.json();
@@ -424,9 +568,9 @@ export const dashboardAPI = {
     if (api) {
       return api.modbus.dashboardStop();
     }
-    const res = await fetch('/api/modbus/dashboard-stop', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/modbus/dashboard-stop", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
     });
     return res.json();
   },
@@ -436,9 +580,9 @@ export const dashboardAPI = {
     if (api) {
       return api.modbus.dashboardUpdate(config);
     }
-    const res = await fetch('/api/modbus/dashboard-update', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/modbus/dashboard-update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(config),
     });
     return res.json();
@@ -449,41 +593,59 @@ export const dashboardAPI = {
     if (api) {
       return api.modbus.dashboardStatus();
     }
-    const res = await fetch('/api/modbus/dashboard-status');
+    const res = await fetch("/api/modbus/dashboard-status");
     return res.json();
   },
 };
 
 // Logger API
 export const loggerAPI = {
-  async start(): Promise<{ success: boolean; filePath?: string; cancelled?: boolean; error?: string }> {
+  async start(): Promise<{
+    success: boolean;
+    filePath?: string;
+    cancelled?: boolean;
+    error?: string;
+  }> {
     const api = getElectronAPI();
     if (api) {
       return api.logger.start();
     }
-    return { success: false, error: 'Logger not available in web mode' };
+    return { success: false, error: "Logger not available in web mode" };
   },
 
-  async log(entries: LogEntry[]): Promise<{ success: boolean; error?: string }> {
+  async log(
+    entries: LogEntry[],
+  ): Promise<{ success: boolean; error?: string }> {
     const api = getElectronAPI();
     if (api) {
       return api.logger.log(entries);
     }
-    return { success: false, error: 'Logger not available in web mode' };
+    return { success: false, error: "Logger not available in web mode" };
   },
 
-  async stop(): Promise<{ success: boolean; filePath?: string; error?: string }> {
+  async stop(): Promise<{
+    success: boolean;
+    filePath?: string;
+    error?: string;
+  }> {
     const api = getElectronAPI();
     if (api) {
       return api.logger.stop();
     }
-    return { success: false, error: 'Logger not available in web mode' };
+    return { success: false, error: "Logger not available in web mode" };
   },
 };
 
 // Project API
 export const projectAPI = {
-  async save(data: Omit<ProjectData, 'version'>): Promise<{ success: boolean; filePath?: string; cancelled?: boolean; error?: string }> {
+  async save(
+    data: Omit<ProjectData, "version">,
+  ): Promise<{
+    success: boolean;
+    filePath?: string;
+    cancelled?: boolean;
+    error?: string;
+  }> {
     const api = getElectronAPI();
     if (api) {
       return api.project.save(data);
@@ -492,22 +654,24 @@ export const projectAPI = {
     try {
       const projectData: ProjectData = { version: 1, ...data };
       // Save to localStorage for recent projects tracking
-      const projects: ProjectData[] = JSON.parse(localStorage.getItem('modscan_projects') || '[]');
+      const projects: ProjectData[] = JSON.parse(
+        localStorage.getItem("modscan_projects") || "[]",
+      );
       const existing = projects.findIndex((p) => p.name === data.name);
       if (existing >= 0) {
         projects[existing] = projectData;
       } else {
         projects.push(projectData);
       }
-      localStorage.setItem('modscan_projects', JSON.stringify(projects));
+      localStorage.setItem("modscan_projects", JSON.stringify(projects));
 
       // Trigger browser file download
       const json = JSON.stringify(projectData, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
+      const blob = new Blob([json], { type: "application/json" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `${data.name.replace(/[^a-zA-Z0-9_\-\s]/g, '')}.json`;
+      a.download = `${data.name.replace(/[^a-zA-Z0-9_\-\s]/g, "")}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -515,20 +679,26 @@ export const projectAPI = {
 
       return { success: true, filePath: a.download };
     } catch (e: any) {
-      return { success: false, error: e.message || 'Failed to save project' };
+      return { success: false, error: e.message || "Failed to save project" };
     }
   },
 
-  async load(): Promise<{ success: boolean; data?: ProjectData; filePath?: string; cancelled?: boolean; error?: string }> {
+  async load(): Promise<{
+    success: boolean;
+    data?: ProjectData;
+    filePath?: string;
+    cancelled?: boolean;
+    error?: string;
+  }> {
     const api = getElectronAPI();
     if (api) {
       return api.project.load();
     }
     // Web fallback: use a hidden file input to let user pick a .json file
     return new Promise((resolve) => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json";
       input.onchange = async () => {
         const file = input.files?.[0];
         if (!file) {
@@ -538,22 +708,31 @@ export const projectAPI = {
         try {
           const text = await file.text();
           const data = JSON.parse(text) as ProjectData;
-          if (!data.version || !data.name || !data.connection || !Array.isArray(data.devices) || !Array.isArray(data.readRanges) || !data.settings) {
-            resolve({ success: false, error: 'Invalid project file format' });
+          if (
+            !data.version ||
+            !data.name ||
+            !data.connection ||
+            !Array.isArray(data.devices) ||
+            !Array.isArray(data.readRanges) ||
+            !data.settings
+          ) {
+            resolve({ success: false, error: "Invalid project file format" });
             return;
           }
           // Save to localStorage recent list
-          const projects: ProjectData[] = JSON.parse(localStorage.getItem('modscan_projects') || '[]');
+          const projects: ProjectData[] = JSON.parse(
+            localStorage.getItem("modscan_projects") || "[]",
+          );
           const existing = projects.findIndex((p) => p.name === data.name);
           if (existing >= 0) {
             projects[existing] = data;
           } else {
             projects.push(data);
           }
-          localStorage.setItem('modscan_projects', JSON.stringify(projects));
+          localStorage.setItem("modscan_projects", JSON.stringify(projects));
           resolve({ success: true, data, filePath: file.name });
         } catch {
-          resolve({ success: false, error: 'Failed to read project file' });
+          resolve({ success: false, error: "Failed to read project file" });
         }
       };
       input.oncancel = () => {
@@ -563,32 +742,47 @@ export const projectAPI = {
     });
   },
 
-  async loadPath(filePath: string): Promise<{ success: boolean; data?: ProjectData; filePath?: string; error?: string }> {
+  async loadPath(
+    filePath: string,
+  ): Promise<{
+    success: boolean;
+    data?: ProjectData;
+    filePath?: string;
+    error?: string;
+  }> {
     const api = getElectronAPI();
     if (api) {
       return api.project.loadPath(filePath);
     }
     // Web fallback: load from localStorage by name (filePath is used as name)
     try {
-      const projects: ProjectData[] = JSON.parse(localStorage.getItem('modscan_projects') || '[]');
+      const projects: ProjectData[] = JSON.parse(
+        localStorage.getItem("modscan_projects") || "[]",
+      );
       const project = projects.find((p) => p.name === filePath);
       if (project) {
         return { success: true, data: project, filePath };
       }
-      return { success: false, error: 'Project not found' };
+      return { success: false, error: "Project not found" };
     } catch {
-      return { success: false, error: 'Failed to load project' };
+      return { success: false, error: "Failed to load project" };
     }
   },
 
-  async recent(): Promise<{ success: boolean; projects?: RecentProject[]; error?: string }> {
+  async recent(): Promise<{
+    success: boolean;
+    projects?: RecentProject[];
+    error?: string;
+  }> {
     const api = getElectronAPI();
     if (api) {
       return api.project.recent();
     }
     // Fallback: list from localStorage
     try {
-      const projects: ProjectData[] = JSON.parse(localStorage.getItem('modscan_projects') || '[]');
+      const projects: ProjectData[] = JSON.parse(
+        localStorage.getItem("modscan_projects") || "[]",
+      );
       const recentList: RecentProject[] = projects.map((p) => ({
         name: p.name,
         filePath: p.name, // In web mode, name acts as the key
@@ -606,19 +800,19 @@ export const updateAPI = {
   async check(): Promise<{ success: boolean; error?: string }> {
     const api = getElectronAPI();
     if (api) return api.update.check();
-    return { success: false, error: 'Update not available in web mode' };
+    return { success: false, error: "Update not available in web mode" };
   },
 
   async download(): Promise<{ success: boolean; error?: string }> {
     const api = getElectronAPI();
     if (api) return api.update.download();
-    return { success: false, error: 'Update not available in web mode' };
+    return { success: false, error: "Update not available in web mode" };
   },
 
   async install(): Promise<{ success: boolean; error?: string }> {
     const api = getElectronAPI();
     if (api) return api.update.install();
-    return { success: false, error: 'Update not available in web mode' };
+    return { success: false, error: "Update not available in web mode" };
   },
 
   onStatus(callback: (info: UpdateInfo) => void) {
@@ -639,14 +833,18 @@ export const updateAPI = {
 
 // Window management API
 export const windowAPI = {
-  async openNew(projectFilePath?: string): Promise<{ success: boolean; windowId?: string }> {
+  async openNew(
+    projectFilePath?: string,
+  ): Promise<{ success: boolean; windowId?: string }> {
     const api = getElectronAPI();
     if (api) {
       return api.window.openNew(projectFilePath);
     }
     // Web fallback: open in new tab
-    const url = projectFilePath ? `/?project=${encodeURIComponent(projectFilePath)}` : '/';
-    window.open(url, '_blank');
+    const url = projectFilePath
+      ? `/?project=${encodeURIComponent(projectFilePath)}`
+      : "/";
+    window.open(url, "_blank");
     return { success: true };
   },
 
@@ -656,12 +854,14 @@ export const windowAPI = {
       return api.window.setTitle(title);
     }
     // Web fallback
-    document.title = title ? `${title} — ModScan Pro` : 'ModScan Pro';
+    document.title = title
+      ? `${title} — ModScan Pro Community`
+      : "ModScan Pro Community";
     return { success: true };
   },
 
   getWindowId(): string {
     const api = getElectronAPI();
-    return api?.windowId || 'default';
+    return api?.windowId || "default";
   },
 };

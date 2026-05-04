@@ -430,28 +430,28 @@ export default function ReadPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-3">
-          <LayoutGrid className="w-8 h-8" />
-          {t("nav_read")}
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">
-          {t("dashboard_subtitle")}
-        </p>
+      {/* Page Header */}
+      <div className="flex items-center gap-3 mb-8">
+        <div className="p-2 instrument-panel bg-instrument-accent/5 border-instrument-accent/20 text-instrument-accent flex items-center justify-center">
+          <LayoutGrid className="w-6 h-6" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-app-text">{t("nav_read")}</h1>
+          <p className="text-sm text-app-muted">{t("dashboard_subtitle")}</p>
+        </div>
       </div>
 
       {/* Connection Settings */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
-        <ConnectionSettings />
-      </div>
+      <ConnectionSettings />
 
       {/* Scanned Devices Tags */}
       {scannedDevices.length > 0 && !polling && (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+        <div className="instrument-panel p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Search className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-lg font-semibold text-app-text flex items-center gap-2">
+              <div className="p-1 instrument-panel bg-instrument-accent/5 border-instrument-accent/20 text-instrument-accent">
+                <Search className="w-4 h-4" />
+              </div>
               {t("nav_scan") || "Scanned Devices"}
             </h2>
             <span className="text-sm text-slate-500 dark:text-slate-400">
@@ -470,10 +470,10 @@ export default function ReadPage() {
                   key={device.address}
                   onClick={() => addCard(device.address)}
                   disabled={deviceExists}
-                  className={`flex flex-col items-start p-4 rounded-xl border transition-all text-left w-full relative overflow-hidden ${
+                  className={`flex flex-col items-start p-4 instrument-panel border transition-all text-left w-full relative overflow-hidden ${
                     deviceExists
                       ? "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-60 cursor-not-allowed"
-                      : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-500 hover:shadow-md hover:-translate-y-0.5 group"
+                      : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:instrument-accent dark:hover:instrument-accent hover:shadow-md hover:-translate-y-0.5 group"
                   }`}
                   title={
                     deviceExists
@@ -482,15 +482,15 @@ export default function ReadPage() {
                   }
                 >
                   {deviceExists && (
-                    <div className="absolute top-0 right-0 p-1.5 bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-bl-lg">
+                    <div className="absolute top-0 right-0 p-1.5 bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-instrument-bl-lg">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                     </div>
                   )}
                   <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 ${
+                    className={`w-8 h-8 instrument-panel border-instrument-accent/20 flex items-center justify-center mb-3 ${
                       deviceExists
-                        ? "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
-                        : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/30"
+                        ? "bg-app-muted/10 text-app-muted"
+                        : "bg-instrument-accent/5 text-instrument-accent group-hover:bg-instrument-accent/10"
                     }`}
                   >
                     <span className="font-mono font-bold text-sm">
@@ -502,7 +502,7 @@ export default function ReadPage() {
                     className={`font-semibold text-sm truncate w-full ${
                       deviceExists
                         ? "text-slate-500 dark:text-slate-400"
-                        : "text-slate-900 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400"
+                        : "text-slate-900 dark:text-slate-100 group-hover:instrument-accent dark:group-hover:instrument-accent"
                     }`}
                   >
                     {getDeviceDisplayName(device.address)}
@@ -519,7 +519,7 @@ export default function ReadPage() {
       )}
 
       {/* Controls */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+      <div className="instrument-panel border border-slate-200 dark:border-slate-700 p-5">
         <div className="flex flex-wrap items-center gap-4">
           {/* Interval selector */}
           <div className="flex items-center gap-2">
@@ -530,7 +530,7 @@ export default function ReadPage() {
             <select
               value={pollInterval}
               onChange={(e) => setPollInterval(Number(e.target.value))}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-slate-400"
+              className="px-3 py-1.5 instrument-input border border-slate-300 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-slate-400"
             >
               {INTERVAL_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -559,7 +559,7 @@ export default function ReadPage() {
               onBlur={() =>
                 setPollTimeout((prev) => Math.max(100, Number(prev) || 100))
               }
-              className="w-24 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-slate-400"
+              className="w-24 px-3 py-1.5 instrument-input border border-slate-300 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-slate-400"
               min={100}
               step={100}
             />
@@ -574,7 +574,7 @@ export default function ReadPage() {
           <button
             onClick={() => addCard()}
             disabled={polling}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm font-medium disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 instrument-input bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm font-medium disabled:opacity-50"
           >
             <Plus className="w-4 h-4" />
             {t("dashboard_add_card")}
@@ -585,7 +585,7 @@ export default function ReadPage() {
             <button
               onClick={startPolling}
               disabled={!isConnectionReady || cards.length === 0}
-              className="flex items-center gap-2 px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors text-sm font-medium disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2 instrument-input instrument-accent hover:instrument-accent transition-colors text-sm font-medium disabled:opacity-50"
             >
               <Play className="w-4 h-4" />
               {t("dashboard_start_polling")}
@@ -593,7 +593,7 @@ export default function ReadPage() {
           ) : (
             <button
               onClick={stopPolling}
-              className="flex items-center gap-2 px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-5 py-2 instrument-input bg-red-600 hover:bg-red-700 transition-colors text-sm font-medium"
             >
               <Square className="w-4 h-4" />
               {t("dashboard_stop_polling")}
@@ -603,7 +603,7 @@ export default function ReadPage() {
 
         {/* Status indicator */}
         {polling && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+          <div className="mt-3 flex items-center gap-2 text-sm instrument-accent dark:instrument-accent">
             <Loader2 className="w-4 h-4 animate-spin" />
             {t("dashboard_polling_active")}
           </div>
@@ -619,7 +619,7 @@ export default function ReadPage() {
 
       {/* Card Grid */}
       {cards.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 p-12 text-center">
+        <div className="instrument-panel border border-dashed border-slate-300 dark:border-slate-600 p-12 text-center">
           <LayoutGrid className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
           <p className="text-slate-400 dark:text-slate-500 text-sm">
             {t("dashboard_no_cards")}
@@ -634,17 +634,17 @@ export default function ReadPage() {
             return (
               <div
                 key={card.cardId}
-                className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+                className="instrument-panel border border-slate-200 dark:border-slate-700 overflow-hidden"
               >
                 {/* Card Header */}
-                <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+                <div className="instrument-header">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     {result?.success ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 instrument-accent dark:instrument-accent shrink-0" />
                     ) : result?.error ? (
                       <AlertCircle className="w-4 h-4 text-red-500 dark:text-red-400 shrink-0" />
                     ) : (
-                      <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
+                      <div className="w-4 h-4 rounded-instrument-full bg-slate-200 dark:bg-slate-700 shrink-0" />
                     )}
                     {polling ? (
                       <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
@@ -672,7 +672,7 @@ export default function ReadPage() {
                     {!polling && (
                       <button
                         onClick={() => removeCard(card.cardId)}
-                        className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                        className="p-1 rounded-instrument hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                         title={t("dashboard_remove_card")}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -700,7 +700,7 @@ export default function ReadPage() {
                               : Number(e.target.value),
                           )
                         }
-                        className="w-full mt-1 px-2 py-1 rounded border border-slate-200 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-slate-400"
+                        className="w-full mt-1 px-2 py-1 rounded-instrument border border-slate-200 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-slate-400"
                         min={1}
                         max={247}
                       />
@@ -718,7 +718,7 @@ export default function ReadPage() {
                             Number(e.target.value) as 1 | 2 | 3 | 4,
                           )
                         }
-                        className="w-full mt-1 px-2 py-1 rounded border border-slate-200 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-slate-400"
+                        className="w-full mt-1 px-2 py-1 rounded-instrument border border-slate-200 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-slate-400"
                       >
                         {Object.entries(FC_LABELS).map(([val, label]) => (
                           <option key={val} value={val}>
@@ -743,7 +743,7 @@ export default function ReadPage() {
                               : Number(e.target.value),
                           )
                         }
-                        className="w-full mt-1 px-2 py-1 rounded border border-slate-200 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-slate-400"
+                        className="w-full mt-1 px-2 py-1 rounded-instrument border border-slate-200 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-slate-400"
                         min={0}
                       />
                     </div>
@@ -770,7 +770,7 @@ export default function ReadPage() {
                             Math.max(1, Number(e.target.value) || 1),
                           )
                         }
-                        className="w-full mt-1 px-2 py-1 rounded border border-slate-200 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-slate-400"
+                        className="w-full mt-1 px-2 py-1 rounded-instrument border border-slate-200 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-slate-400"
                         min={1}
                         max={125}
                       />
@@ -789,7 +789,7 @@ export default function ReadPage() {
                     <span>Addr: {card.registerAddress}</span>
                     <span>Qty: {card.quantity}</span>
                     {(selectedRegisters[card.cardId]?.size ?? 0) > 0 && (
-                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                      <span className="instrument-accent dark:instrument-accent font-medium">
                         Plotting {selectedRegisters[card.cardId]?.size} reg(s)
                       </span>
                     )}
@@ -835,7 +835,7 @@ export default function ReadPage() {
                           <div key={idx} className="relative">
                             {isEditing ? (
                               // Edit mode
-                              <div className="text-center p-1.5 rounded border bg-white dark:bg-slate-800 shadow-sm">
+                              <div className="text-center p-1.5 rounded-instrument border bg-white dark:bg-slate-800 shadow-sm">
                                 <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-none mb-1 truncate">
                                   Reg {regAddr}
                                 </div>
@@ -849,20 +849,20 @@ export default function ReadPage() {
                                     if (e.key === "Enter") saveAlias();
                                     if (e.key === "Escape") cancelEditAlias();
                                   }}
-                                  className="w-full px-1 py-0.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                  className="w-full px-1 py-0.5 text-xs rounded-instrument border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                   placeholder="Alias..."
                                   autoFocus
                                 />
                                 <div className="flex justify-center gap-1 mt-1">
                                   <button
                                     onClick={saveAlias}
-                                    className="p-0.5 rounded text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                                    className="p-0.5 rounded-instrument instrument-accent dark:instrument-accent hover:bg-emerald-50 dark:hover:instrument-accent/20"
                                   >
                                     <Check className="w-3 h-3" />
                                   </button>
                                   <button
                                     onClick={cancelEditAlias}
-                                    className="p-0.5 rounded text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700"
+                                    className="p-0.5 rounded-instrument text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700"
                                   >
                                     <X className="w-3 h-3" />
                                   </button>
@@ -883,9 +883,9 @@ export default function ReadPage() {
                                     toggleRegisterPlot(card.cardId, idx);
                                   }
                                 }}
-                                className={`w-full text-center p-1.5 rounded border transition-all cursor-pointer ${
+                                className={`w-full text-center p-1.5 rounded-instrument border transition-all cursor-pointer ${
                                   isSelected
-                                    ? "bg-emerald-50 dark:bg-emerald-900/20 ring-2 shadow-sm"
+                                    ? "bg-emerald-50 dark:instrument-accent/20 ring-2 shadow-sm"
                                     : "bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
                                 }`}
                                 style={
@@ -905,14 +905,14 @@ export default function ReadPage() {
                                 }
                               >
                                 <div
-                                  className={`text-[10px] leading-none mb-0.5 truncate ${regAlias ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-slate-400 dark:text-slate-500"}`}
+                                  className={`text-[10px] leading-none mb-0.5 truncate ${regAlias ? "instrument-accent dark:instrument-accent font-medium" : "text-slate-400 dark:text-slate-500"}`}
                                 >
                                   {labelText}
                                 </div>
                                 <div
                                   className={`text-sm font-mono font-medium ${
                                     isSelected
-                                      ? "text-emerald-700 dark:text-emerald-300"
+                                      ? "instrument-accent dark:instrument-accent"
                                       : "text-slate-800 dark:text-slate-100"
                                   }`}
                                 >
@@ -920,7 +920,7 @@ export default function ReadPage() {
                                 </div>
                                 {isSelected && (
                                   <div
-                                    className="w-2 h-2 rounded-full mx-auto mt-1"
+                                    className="w-2 h-2 rounded-instrument-full mx-auto mt-1"
                                     style={{ backgroundColor: borderColor }}
                                   />
                                 )}

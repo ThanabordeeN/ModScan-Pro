@@ -1,37 +1,37 @@
-const { machineIdSync } = require('node-machine-id');
-const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
+const { machineIdSync } = require("node-machine-id");
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 
 // In Electron, we use app.getPath('userData') for license storage
-const { app } = require('electron');
+const { app } = require("electron");
 
 function logError(message, error) {
-  if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
-    console.error(`[License] ${message}`, error || '');
+  if (process.env.NODE_ENV === "development" || !app.isPackaged) {
+    console.error(`[License] ${message}`, error || "");
   }
 }
 
 function getLicenseFilePath() {
   // In production, store in app data directory
   // In development, store in project root
-  if (process.env.NODE_ENV === 'development') {
-    return path.join(process.cwd(), 'license.dat');
+  if (process.env.NODE_ENV === "development") {
+    return path.join(process.cwd(), "license.dat");
   }
-  return path.join(app.getPath('userData'), 'license.dat');
+  return path.join(app.getPath("userData"), "license.dat");
 }
 
 function getPublicKeyPath() {
   // In development, look in src/lib
   if (!app.isPackaged) {
-    return path.join(process.cwd(), 'src', 'lib', 'public_key.pem');
+    return path.join(process.cwd(), "src", "lib", "public_key.pem");
   }
-  
+
   // In production, try multiple locations where extraResources might land
   const paths = [
-    path.join(process.resourcesPath, 'public_key.pem'),
-    path.join(process.resourcesPath, 'app.asar.unpacked', 'public_key.pem'),
-    path.join(path.dirname(process.execPath), 'resources', 'public_key.pem')
+    path.join(process.resourcesPath, "public_key.pem"),
+    path.join(process.resourcesPath, "app.asar.unpacked", "public_key.pem"),
+    path.join(path.dirname(process.execPath), "resources", "public_key.pem"),
   ];
 
   for (const p of paths) {
@@ -45,13 +45,18 @@ function getMachineId() {
   try {
     return machineIdSync();
   } catch (error) {
-    logError('Error getting machine ID:', error);
-    return 'UNKNOWN_MACHINE_ID';
+    logError("Error getting machine ID:", error);
+    return "UNKNOWN_MACHINE_ID";
   }
 }
 
 function verifyLicense(inputKey) {
   const currentMachineId = getMachineId();
+
+  if (process.env.NEXT_PUBLIC_EDITION === "community") {
+    return { valid: true, machineId: currentMachineId, error: undefined };
+  }
+
   let licenseKey = inputKey;
   const licenseFilePath = getLicenseFilePath();
   const publicKeyPath = getPublicKeyPath();
@@ -60,38 +65,50 @@ function verifyLicense(inputKey) {
   if (!licenseKey) {
     try {
       if (fs.existsSync(licenseFilePath)) {
-        licenseKey = fs.readFileSync(licenseFilePath, 'utf8').trim();
+        licenseKey = fs.readFileSync(licenseFilePath, "utf8").trim();
       }
     } catch (e) {
-      logError('Error reading license file:', e);
+      logError("Error reading license file:", e);
     }
   }
 
   if (!licenseKey) {
-    return { valid: false, machineId: currentMachineId, error: 'No license key found' };
+    return {
+      valid: false,
+      machineId: currentMachineId,
+      error: "No license key found",
+    };
   }
 
   try {
     if (!fs.existsSync(publicKeyPath)) {
-      logError('Public key not found at:', publicKeyPath);
-      return { valid: false, machineId: currentMachineId, error: 'System configuration error: Public key missing' };
+      logError("Public key not found at:", publicKeyPath);
+      return {
+        valid: false,
+        machineId: currentMachineId,
+        error: "System configuration error: Public key missing",
+      };
     }
 
-    const publicKey = fs.readFileSync(publicKeyPath, 'utf8');
-    const verifier = crypto.createVerify('SHA256');
+    const publicKey = fs.readFileSync(publicKeyPath, "utf8");
+    const verifier = crypto.createVerify("SHA256");
     verifier.update(currentMachineId);
     verifier.end();
 
-    const isValid = verifier.verify(publicKey, licenseKey, 'base64');
+    const isValid = verifier.verify(publicKey, licenseKey, "base64");
 
     return {
       valid: isValid,
       machineId: currentMachineId,
-      error: isValid ? undefined : 'Invalid license key for this machine'
+      error: isValid ? undefined : "Invalid license key for this machine",
     };
   } catch (error) {
-    logError('License verification error:', error);
-    return { valid: false, machineId: currentMachineId, error: 'Verification failed' };
+    logError("License verification error:", error);
+    return {
+      valid: false,
+      machineId: currentMachineId,
+      error: "Verification failed",
+    };
   }
 }
 
@@ -106,7 +123,7 @@ function saveLicense(key) {
     fs.writeFileSync(licenseFilePath, key.trim());
     return true;
   } catch (error) {
-    logError('Error saving license:', error);
+    logError("Error saving license:", error);
     return false;
   }
 }
@@ -115,8 +132,7 @@ function saveLicense(key) {
  * Register license IPC handlers
  */
 function registerLicenseHandlers(ipcMain) {
-
-  ipcMain.handle('license:get-machine-id', async () => {
+  ipcMain.handle("license:get-machine-id", async () => {
     try {
       const machineId = getMachineId();
       return { success: true, machineId };
@@ -125,19 +141,19 @@ function registerLicenseHandlers(ipcMain) {
     }
   });
 
-  ipcMain.handle('license:check', async () => {
+  ipcMain.handle("license:check", async () => {
     try {
       const status = verifyLicense();
       return { success: true, ...status };
     } catch {
-      return { success: false, error: 'Internal error checking license' };
+      return { success: false, error: "Internal error checking license" };
     }
   });
 
-  ipcMain.handle('license:activate', async (event, licenseKey) => {
+  ipcMain.handle("license:activate", async (event, licenseKey) => {
     try {
       if (!licenseKey) {
-        return { success: false, error: 'License key is required' };
+        return { success: false, error: "License key is required" };
       }
 
       const status = verifyLicense(licenseKey);
@@ -149,21 +165,21 @@ function registerLicenseHandlers(ipcMain) {
             success: true,
             valid: true,
             machineId: status.machineId,
-            message: 'License activated successfully'
+            message: "License activated successfully",
           };
         } else {
-          return { success: false, error: 'Failed to save license file' };
+          return { success: false, error: "Failed to save license file" };
         }
       } else {
         return {
           success: false,
           valid: false,
           machineId: status.machineId,
-          error: status.error || 'Invalid license key'
+          error: status.error || "Invalid license key",
         };
       }
     } catch {
-      return { success: false, error: 'Internal error processing license' };
+      return { success: false, error: "Internal error processing license" };
     }
   });
 }
@@ -172,5 +188,5 @@ module.exports = {
   registerLicenseHandlers,
   getMachineId,
   verifyLicense,
-  saveLicense
+  saveLicense,
 };

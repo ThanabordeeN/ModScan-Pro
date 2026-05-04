@@ -3,145 +3,293 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 248, 250, 252;
+    --app-bg: #f6f8fb;
+    --surface-1: #ffffff;
+    --surface-2: #f8fafc;
+    --surface-3: #eef2f7;
+
+    --border-subtle: #e2e8f0;
+    --border-strong: #cbd5e1;
+
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+
+    --accent: #0891b2;
+    --accent-soft: #ecfeff;
+
+    --ok: #059669;
+    --warn: #d97706;
+    --danger: #dc2626;
+    --offline: #64748b;
+
+    --radius-sm: 0px;
+    --radius-md: 0px;
+    --radius-lg: 0px;
+
+    --shadow-instrument: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --shadow-panel: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .dark {
-  --foreground-rgb: 226, 232, 240;
-  --background-start-rgb: 15, 23, 42;
-  --background-end-rgb: 15, 23, 42;
+    --app-bg: #0a0e1a;
+    --surface-1: #111827;
+    --surface-2: #1f2937;
+    --surface-3: #374151;
+
+    --border-subtle: #1f2937;
+    --border-strong: #374151;
+
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-soft: rgba(56, 189, 248, 0.1);
+
+    --shadow-instrument: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-panel: 0 10px 28px rgba(0, 0, 0, 0.4);
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-start-rgb));
-  min-height: 100vh;
+    color: var(--text-primary);
+    background: var(--app-bg);
+    min-height: 100vh;
+    font-family:
+        "IBM Plex Sans Thai", "IBM Plex Sans", Inter, "Noto Sans Thai",
+        ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+.font-instrument,
+.font-mono,
+code,
+pre,
+kbd {
+    font-family:
+        "IBM Plex Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
+        Monaco, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(241, 245, 249, 1);
-}
-
-.dark ::-webkit-scrollbar-track {
-  background: rgba(30, 41, 59, 1);
+    background: var(--surface-2);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.8);
-  border-radius: 4px;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(71, 85, 105, 0.8);
+    background: var(--border-strong);
+    border-radius: var(--radius-sm);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 1);
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 1);
+    background: var(--text-muted);
 }
 
 /* Form elements */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
-  opacity: 1;
+    opacity: 1;
 }
 
 /* Animations */
 @keyframes pulse-slow {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
 }
 
 .animate-pulse-slow {
-  animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Glass morphism */
+/* Glass morphism - deprecated in favor of Instrument UI */
 .glass {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(226, 232, 240, 1);
-}
-
-.dark .glass {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(51, 65, 85, 1);
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
 }
 
 /* Focus states */
 select:focus,
 input:focus {
-  outline: none;
+    outline: none;
 }
 
 /* Table styles */
 table {
-  border-collapse: collapse;
+    border-collapse: collapse;
 }
 
-/* Smooth theme transitions on interactive elements */
-button, a, input, select, textarea {
-  transition-property:
-    color, background-color, border-color, text-decoration-color, fill, stroke,
-    opacity, box-shadow, transform, filter, backdrop-filter;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+/* Instrument UI Utility Classes */
+.instrument-panel {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-instrument);
+}
+
+.instrument-panel-strong {
+    background: var(--surface-1);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-panel);
+}
+
+.instrument-header {
+    min-height: 42px;
+    padding: 0.625rem 0.875rem;
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.instrument-label {
+    font-size: 0.72rem;
+    line-height: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.instrument-value {
+    font-family: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+}
+
+.instrument-input {
+    background: var(--surface-1);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    height: 36px;
+    padding: 0 0.65rem;
+    font-size: 0.875rem;
+}
+
+.instrument-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.instrument-button {
+    height: 36px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--surface-1);
+    color: var(--text-primary);
+    padding: 0 0.8rem;
+    font-weight: 600;
+    font-size: 0.8125rem;
+}
+
+.instrument-button:hover {
+    background: var(--surface-2);
+}
+
+.instrument-button-primary {
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: white;
+    padding: 0 0.9rem;
+    font-weight: 700;
+    font-size: 0.8125rem;
+}
+
+.instrument-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.instrument-table th {
+    height: 34px;
+    padding: 0 0.75rem;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-align: left;
+}
+
+.instrument-table td {
+    height: 36px;
+    padding: 0 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+}
+
+.instrument-table td[data-kind="value"],
+.instrument-table td[data-kind="address"],
+.instrument-table td[data-kind="fc"] {
+    font-family: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
 }
 
 /* ReactFlow dark mode overrides */
 .dark .react-flow__controls-button {
-  background: #1e293b !important;
-  border-bottom: 1px solid #334155 !important;
-  color: #e2e8f0;
-  fill: #e2e8f0;
+    background: var(--surface-3) !important;
+    border-bottom: 1px solid var(--border-strong) !important;
+    color: var(--text-primary);
+    fill: var(--text-primary);
 }
 
 .dark .react-flow__controls-button:hover {
-  background: #334155 !important;
+    background: var(--border-strong) !important;
 }
 
 .dark .react-flow__minimap {
-  background-color: #1e293b !important;
+    background-color: var(--surface-3) !important;
 }
 
 .dark .react-flow__minimap-mask {
-  fill: rgba(15, 23, 42, 0.7);
+    fill: rgba(15, 23, 42, 0.7);
 }
 
 .dark .react-flow__attribution {
-  background: rgba(15, 23, 42, 0.8);
-  color: #94a3b8;
+    background: rgba(15, 23, 42, 0.8);
+    color: var(--text-muted);
 }
 
 .dark .react-flow__node-default,
 .dark .react-flow__node-input,
 .dark .react-flow__node-output,
 .dark .react-flow__node-group {
-  background-color: #1e293b !important;
-  color: #e2e8f0 !important;
-  border-color: #334155 !important;
+    background-color: var(--surface-3) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-strong) !important;
 }
 
 .dark .react-flow__handle {
-  border-color: #475569 !important;
+    border-color: var(--text-secondary) !important;
 }
 
 .dark .react-flow__edge-path {
-  stroke: #64748b;
+    stroke: var(--text-muted);
+    opacity: 0.6;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+    stroke: var(--accent) !important;
+    stroke-width: 3 !important;
+    opacity: 1 !important;
+    filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.5));
+}
+
+.react-flow__edge.selected .react-flow__edge-text {
+    fill: var(--accent) !important;
 }

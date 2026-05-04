@@ -47,10 +47,10 @@ export default function UpdateNotification() {
 
   return (
     <div className="fixed bottom-6 right-6 z-[9999] w-96 animate-in slide-in-from-bottom-4 duration-300">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 instrument-panel-strong shadow-2xl overflow-hidden overflow-hidden">
         <div className="p-5">
           <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400">
+            <div className="flex items-center gap-3 instrument-accent dark:instrument-accent">
               {updateInfo.status === 'available' && <Download className="w-5 h-5" />}
               {updateInfo.status === 'downloading' && <Loader2 className="w-5 h-5 animate-spin" />}
               {updateInfo.status === 'ready' && <CheckCircle2 className="w-5 h-5" />}
@@ -76,9 +76,9 @@ export default function UpdateNotification() {
             </p>
 
             {updateInfo.status === 'downloading' && (
-              <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-instrument-full overflow-hidden">
                 <div 
-                  className="h-full bg-emerald-500 transition-all duration-300"
+                  className="h-full instrument-accent transition-all duration-300"
                   style={{ width: `${progress?.percent || 0}%` }}
                 />
               </div>
@@ -88,7 +88,7 @@ export default function UpdateNotification() {
               {updateInfo.status === 'available' && (
                 <button
                   onClick={handleDownload}
-                  className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl transition-all shadow-lg shadow-emerald-500/20 text-sm"
+                  className="flex-1 instrument-accent hover:instrument-accent text-white font-bold py-2.5 instrument-panel transition-all shadow-lg instrument-accent/20 text-sm"
                 >
                   {t('update_btn_download')}
                 </button>
@@ -96,7 +96,7 @@ export default function UpdateNotification() {
               {updateInfo.status === 'ready' && (
                 <button
                   onClick={handleInstall}
-                  className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl transition-all shadow-lg shadow-emerald-500/20 text-sm flex items-center justify-center gap-2"
+                  className="flex-1 instrument-accent hover:instrument-accent text-white font-bold py-2.5 instrument-panel transition-all shadow-lg instrument-accent/20 text-sm flex items-center justify-center gap-2"
                 >
                   <RefreshCw className="w-4 h-4" />
                   {t('update_btn_install')}
@@ -105,7 +105,7 @@ export default function UpdateNotification() {
               {updateInfo.status === 'error' && (
                 <button
                   onClick={() => updateAPI.check()}
-                  className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl transition-all text-sm"
+                  className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 instrument-panel transition-all text-sm"
                 >
                   Retry
                 </button>

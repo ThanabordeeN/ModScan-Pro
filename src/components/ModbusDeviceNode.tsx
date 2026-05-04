@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { Handle, Position, type NodeProps } from 'reactflow';
-import { Cpu, Radio } from 'lucide-react';
-import { useProject } from '@/context/ProjectContext';
+import { memo } from "react";
+import { Handle, Position, type NodeProps } from "reactflow";
+import { Cpu, Radio } from "lucide-react";
+import { useProject } from "@/context/ProjectContext";
 
 export interface ModbusDeviceNodeData {
   address: number;
@@ -18,50 +18,102 @@ export interface ModbusDeviceNodeData {
  * - Yellow/Orange: Medium signal (100–300ms)
  * - Red: Poor signal (> 300ms)
  */
-export function getSignalColor(responseTime: number): { bg: string; border: string; text: string; dot: string } {
+export function getSignalColor(responseTime: number): {
+  bg: string;
+  border: string;
+  text: string;
+  dot: string;
+} {
+  // Ultra high contrast for industrial feel
   if (responseTime < 100) {
-    return { bg: 'bg-emerald-50 dark:bg-emerald-900/30', border: 'border-emerald-400 dark:border-emerald-700', text: 'text-emerald-700 dark:text-emerald-300', dot: 'bg-emerald-500 dark:bg-emerald-400' };
+    return {
+      bg: "bg-app-surface",
+      border: "border-instrument-accent",
+      text: "text-app-text",
+      dot: "bg-instrument-accent",
+    };
   }
   if (responseTime < 300) {
-    return { bg: 'bg-amber-50 dark:bg-amber-900/30', border: 'border-amber-400 dark:border-amber-700', text: 'text-amber-700 dark:text-amber-300', dot: 'bg-amber-500 dark:bg-amber-400' };
+    return {
+      bg: "bg-app-surface",
+      border: "border-app-border",
+      text: "text-app-muted",
+      dot: "bg-app-muted",
+    };
   }
-  return { bg: 'bg-red-50 dark:bg-red-900/30', border: 'border-red-400 dark:border-red-700', text: 'text-red-700 dark:text-red-300', dot: 'bg-red-500 dark:bg-red-400' };
+  return {
+    bg: "bg-instrument-danger/10",
+    border: "border-instrument-danger",
+    text: "text-instrument-danger",
+    dot: "bg-instrument-danger",
+  };
 }
 
 function ModbusDeviceNode({ data }: NodeProps<ModbusDeviceNodeData>) {
   const { responseTime, label, isMaster, address } = data;
   const { getDeviceDisplayName } = useProject();
-  
-  const displayLabel = isMaster ? label : (address ? getDeviceDisplayName(address) : label);
+
+  const displayLabel = isMaster
+    ? label
+    : address
+      ? getDeviceDisplayName(address)
+      : label;
+
+  // Style for Master node that adapts to theme
   const colors = isMaster
-    ? { bg: 'bg-slate-100 dark:bg-slate-700', border: 'border-slate-400 dark:border-slate-500', text: 'text-slate-700 dark:text-slate-300', dot: 'bg-slate-500 dark:bg-slate-400' }
+    ? {
+        bg: "bg-app-surface",
+        border: "border-instrument-accent",
+        text: "text-app-text",
+        dot: "bg-instrument-accent",
+      }
     : getSignalColor(responseTime);
 
   return (
     <div
-      className={`px-4 py-3 rounded-xl border-2 shadow-md ${colors.bg} ${colors.border} min-w-[140px] transition-shadow hover:shadow-lg`}
+      className={`px-4 py-3 instrument-panel border-[3px] ${colors.bg} ${colors.border} min-w-[160px] shadow-panel transition-all hover:scale-105 active:scale-95`}
     >
       {/* Input handle (left) */}
       <Handle
         type="target"
         position={Position.Left}
-        className="!w-3 !h-3 !bg-slate-400 dark:!bg-slate-500 !border-2 !border-white dark:!border-slate-600"
+        className="!w-3 !h-3 !bg-app-bg !border-[2px] !border-instrument-accent !rounded-none"
       />
 
       <div className="flex items-center gap-2 mb-1">
         {isMaster ? (
-          <Radio className={`w-4 h-4 ${colors.text}`} />
+          <div className="p-1 instrument-panel bg-instrument-accent/10 border border-instrument-accent/30 text-instrument-accent">
+            <Radio className="w-4 h-4" />
+          </div>
         ) : (
-          <Cpu className={`w-4 h-4 ${colors.text}`} />
+          <div
+            className={`p-1 instrument-panel border border-current opacity-70 ${colors.text}`}
+          >
+            <Cpu className="w-4 h-4" />
+          </div>
         )}
-        <span className={`text-sm font-bold ${colors.text}`}>{displayLabel}</span>
+        <span className={`text-sm font-bold tracking-tight ${colors.text}`}>
+          {displayLabel}
+        </span>
       </div>
 
       {!isMaster && (
-        <div className="flex items-center gap-2 mt-1">
-          <span className={`inline-block w-2 h-2 rounded-full ${colors.dot}`} />
-          <span className={`text-xs ${colors.text}`} aria-label={`Response time: ${responseTime} milliseconds`}>
-            {responseTime}ms
+        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-app-border/40">
+          <span
+            className={`inline-block w-2 h-2 ${colors.dot} animate-pulse`}
+          />
+          <span
+            className={`text-[10px] font-mono font-bold uppercase tracking-wider ${colors.text}`}
+          >
+            {responseTime} ms
+          </span>
+        </div>
+      )}
+
+      {isMaster && (
+        <div className="mt-1">
+          <span className="text-[9px] font-bold text-instrument-accent uppercase tracking-widest opacity-80">
+            Network Controller
           </span>
         </div>
       )}
@@ -70,7 +122,7 @@ function ModbusDeviceNode({ data }: NodeProps<ModbusDeviceNodeData>) {
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-3 !h-3 !bg-slate-400 dark:!bg-slate-500 !border-2 !border-white dark:!border-slate-600"
+        className="!w-3 !h-3 !bg-app-bg !border-[2px] !border-instrument-accent !rounded-none"
       />
     </div>
   );

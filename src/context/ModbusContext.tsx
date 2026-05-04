@@ -839,8 +839,8 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
               }}
             >
               <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                <div className="w-12 h-12 rounded-instrument-full bg-amber-100 dark:instrument-accent/30 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-6 h-6 instrument-accent dark:instrument-accent" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">
@@ -862,13 +862,13 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
               <div className="p-4 bg-slate-50 dark:bg-slate-800/50 flex gap-3 justify-end">
                 <button
                   onClick={cancelStartProcess}
-                  className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 instrument-input hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmStartProcess}
-                  className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-white bg-slate-900 instrument-input hover:bg-slate-800 transition-colors"
                 >
                   Stop & Switch Process
                 </button>

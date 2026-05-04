@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import {
+  IBM_Plex_Sans_Thai,
+  IBM_Plex_Sans,
+  IBM_Plex_Mono,
+} from "next/font/google";
 import "./globals.css";
 import { ModbusProvider } from "@/context/ModbusContext";
 import { LanguageProvider } from "@/context/LanguageContext";
@@ -10,13 +14,26 @@ import LicenseGuard from "@/components/LicenseGuard";
 import RemoteGuard from "@/components/RemoteGuard";
 import UpdateNotification from "@/components/UpdateNotification";
 
-const inter = Inter({ 
+const ibmPlexSansThai = IBM_Plex_Sans_Thai({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["thai", "latin"],
+  variable: "--font-ibm-plex-sans-thai",
+});
+
+const ibmPlexSans = IBM_Plex_Sans({
+  weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-ibm-plex-sans",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  weight: ["400", "500", "600"],
+  subsets: ["latin"],
+  variable: "--font-ibm-plex-mono",
 });
 
 export const metadata: Metadata = {
-  title: "ModScan Pro - Address Scanner & Configuration Tool",
+  title: "ModScan Pro Community - Address Scanner & Configuration Tool",
   description: "Scan Modbus RTU devices and change their addresses",
 };
 
@@ -27,7 +44,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th">
-      <body className={`${inter.variable} font-sans antialiased min-h-screen bg-slate-50 dark:bg-slate-900`}>
+      <body
+        className={`${ibmPlexSansThai.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable} font-sans antialiased min-h-screen bg-app-bg text-app-text`}
+      >
         <ThemeProvider>
           <ModbusProvider>
             <LanguageProvider>
@@ -43,15 +62,23 @@ export default function RootLayout({
                           {children}
                         </main>
                         <UpdateNotification />
-                        <footer className="border-t border-gray-200 dark:border-slate-700 mt-auto bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm">
+                        <footer className="border-t border-app-border mt-auto bg-app-surface backdrop-blur-sm">
                           <div className="max-w-5xl mx-auto px-4 py-6">
                             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                               <div className="flex items-center gap-2">
-                                <img src="/logo.svg" alt="Logo" className="w-6 h-6 opacity-50" />
-                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">ModScan Pro</span>
+                                <img
+                                  src="/logo.png"
+                                  alt="Logo"
+                                  className="w-6 h-6 opacity-50"
+                                />
+                                <span className="text-sm font-bold text-app-text">
+                                  ModScan Pro Community
+                                </span>
                               </div>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">
-                                © {new Date().getFullYear()} 2EDGE Technology Co.,Ltd. All rights reserved.
+                              <p className="text-xs text-app-muted text-center md:text-right">
+                                Open Source Edition <br className="md:hidden" />
+                                © {new Date().getFullYear()} 2EDGE Technology
+                                Co.,Ltd.
                               </p>
                             </div>
                           </div>

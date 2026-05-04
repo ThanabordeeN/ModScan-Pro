@@ -1,11 +1,15 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
-import { licenseAPI } from '@/lib/electron-api';
+import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { licenseAPI } from "@/lib/electron-api";
 
-export default function LicenseGuard({ children }: { children: React.ReactNode }) {
+export default function LicenseGuard({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const [authorized, setAuthorized] = useState(false);
@@ -13,24 +17,34 @@ export default function LicenseGuard({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     const checkLicense = async () => {
+      if (process.env.NEXT_PUBLIC_EDITION === "community") {
+        if (pathname === "/license") {
+          router.replace("/scan");
+        } else {
+          setAuthorized(true);
+        }
+        setChecking(false);
+        return;
+      }
+
       try {
         const data = await licenseAPI.check();
         const isValid = data.success && data.valid;
 
-        if (!isValid && pathname !== '/license') {
-          router.replace('/license');
-        } else if (isValid && pathname === '/license') {
-          router.replace('/scan');
+        if (!isValid && pathname !== "/license") {
+          router.replace("/license");
+        } else if (isValid && pathname === "/license") {
+          router.replace("/scan");
           setAuthorized(true);
         } else {
           setAuthorized(true);
         }
       } catch (error) {
-        console.error('License check failed', error);
+        console.error("License check failed", error);
         // On error, fail safe to blocking if we want to be strict, or allow if we want to be lenient.
         // For security, strict is better, redirect to license page to try again.
-        if (pathname !== '/license') {
-          router.replace('/license');
+        if (pathname !== "/license") {
+          router.replace("/license");
         } else {
           setAuthorized(true);
         }
@@ -53,7 +67,7 @@ export default function LicenseGuard({ children }: { children: React.ReactNode }
   // If we're on the license page, we always render children (which is the license page content)
   // If we're authorized, we render children
   // Otherwise, we render nothing while redirecting
-  if (pathname === '/license' || authorized) {
+  if (pathname === "/license" || authorized) {
     return <>{children}</>;
   }
 

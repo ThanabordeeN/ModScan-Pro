@@ -1,12 +1,13 @@
 {
   "name": "modbus-scanner",
   "version": "1.0.3",
-  "description": "ModScan Pro - Professional Modbus Scanner and Diagnostic Tool",
+  "description": "ModScan Pro Community - Open Source Modbus Scanner and Diagnostic Tool",
   "author": {
     "name": "2Edge",
     "email": "thanabordee.n@2edge.co"
   },
   "private": true,
+  "license": "AGPL-3.0-only",
   "main": "electron/main.js",
   "scripts": {
     "dev": "next dev",

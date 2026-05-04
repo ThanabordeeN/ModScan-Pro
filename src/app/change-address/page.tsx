@@ -41,6 +41,9 @@ export default function ChangeAddressPage() {
     connection,
     scannedDevices,
     isConnectionReady,
+    demoMode,
+    selectedSlaveId,
+    setSelectedSlaveId,
     changeAddrState,
     setChangeAddrState,
   } = useModbus();
@@ -49,7 +52,8 @@ export default function ChangeAddressPage() {
   const { currentAddress } = changeAddrState;
 
   // ─── Global inputs ───
-  const [slaveId, setSlaveId] = useState<number>(1);
+  const slaveId = selectedSlaveId;
+  const setSlaveId = setSelectedSlaveId;
   const [startAddrRaw, setStartAddrRaw] = useState<string>("0");
   const [quantity, setQuantity] = useState<number>(4);
 
@@ -94,10 +98,14 @@ export default function ChangeAddressPage() {
 
   // Sync slaveId from global currentAddress
   useEffect(() => {
-    if (currentAddress !== "" && currentAddress !== undefined) {
-      setSlaveId(Number(currentAddress));
+    if (
+      currentAddress !== "" &&
+      currentAddress !== undefined &&
+      Number(currentAddress) !== selectedSlaveId
+    ) {
+      setSelectedSlaveId(Number(currentAddress));
     }
-  }, [currentAddress]);
+  }, [currentAddress, selectedSlaveId, setSelectedSlaveId]);
 
   // Check connection status
   useEffect(() => {
@@ -107,6 +115,14 @@ export default function ChangeAddressPage() {
     }
     let cancelled = false;
     const check = async () => {
+      if (demoMode) {
+        const online = scannedDevices.some(
+          (device) => device.address === slaveId,
+        );
+        if (!cancelled) setConnectionStatus(online ? "online" : "offline");
+        return;
+      }
+
       try {
         const res = await modbusAPI.read({
           type: connection.type,
@@ -132,7 +148,7 @@ export default function ChangeAddressPage() {
     return () => {
       cancelled = true;
     };
-  }, [slaveId, isConnectionReady, connection]);
+  }, [slaveId, isConnectionReady, connection, demoMode, scannedDevices]);
 
   // Rebuild multi arrays when quantity changes
   useEffect(() => {
@@ -294,7 +310,13 @@ export default function ChangeAddressPage() {
     if (fc === "fc16") reqBody.values = regArr;
 
     try {
-      const data = await modbusAPI.write(reqBody);
+      const data = demoMode
+        ? {
+            success: scannedDevices.some((device) => device.address === slave),
+            error: "Demo device not found",
+            message: "Demo write completed",
+          }
+        : await modbusAPI.write(reqBody);
 
       const entry: LogEntry = {
         id: Date.now(),
@@ -346,6 +368,8 @@ export default function ChangeAddressPage() {
     regArr,
     connection,
     isConnectionReady,
+    demoMode,
+    scannedDevices,
     t,
   ]);
 
@@ -423,7 +447,7 @@ export default function ChangeAddressPage() {
                 }}
                 className={`px-3 py-1.5 instrument-input font-mono text-sm transition-all ${
                   slaveId === device.address
-                    ? "instrument-accent text-white shadow-sm"
+                    ? "bg-instrument-accent text-white shadow-sm"
                     : "instrument-button"
                 }`}
               >

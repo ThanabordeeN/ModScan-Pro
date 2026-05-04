@@ -208,7 +208,7 @@ export default function RemotePage() {
                 <button
                   onClick={toggleTunnel}
                   disabled={loading || !password}
-                  className="w-full py-3 px-4 instrument-input instrument-accent hover:instrument-accent disabled:bg-slate-200 dark:disabled:bg-slate-600 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white font-medium transition-all flex items-center justify-center gap-2 shadow-sm shadow-indigo-200"
+                  className="w-full py-3 px-4 instrument-input bg-instrument-accent hover:bg-instrument-accent/90 disabled:bg-slate-200 dark:disabled:bg-slate-600 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white font-medium transition-all flex items-center justify-center gap-2 shadow-sm shadow-indigo-200"
                 >
                   <Power className="w-5 h-5" />
                   {loading ? "Starting Tunnel..." : "Start Remote Access"}

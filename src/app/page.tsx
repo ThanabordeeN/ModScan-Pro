@@ -80,7 +80,7 @@ export default function Home() {
           real-time monitoring and control.
         </p>
         <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-instrument-full bg-app-muted/10 text-xs font-medium text-app-muted">
-          <span>By 2EDGE Technology Co.,Ltd</span>
+          <span>2edge.co</span>
         </div>
       </div>
 

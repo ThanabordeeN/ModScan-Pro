@@ -44,10 +44,17 @@ export interface ScanHistoryEntry {
 }
 
 interface ModbusContextType {
+  // Demo Mode
+  demoMode: boolean;
+  setDemoMode: (enabled: boolean) => void;
+  toggleDemoMode: () => void;
+
   // Connection settings
   connection: ConnectionSettings;
   setConnection: (settings: ConnectionSettings) => void;
   isConnectionReady: boolean;
+  selectedSlaveId: number;
+  setSelectedSlaveId: (slaveId: number) => void;
 
   // Scanned devices & Scan State
   scannedDevices: ModbusDevice[];
@@ -169,22 +176,80 @@ const defaultConnection: ConnectionSettings = {
   tcpPort: 502,
 };
 
+const demoDevices: ModbusDevice[] = [
+  { address: 1, responseTime: 18, holdingRegisters: [230, 501, 1200, 60] },
+  { address: 2, responseTime: 24, holdingRegisters: [118, 342, 850, 1] },
+  { address: 5, responseTime: 31, holdingRegisters: [400, 125, 240, 0] },
+  { address: 8, responseTime: 27, holdingRegisters: [75, 220, 16, 95] },
+  { address: 12, responseTime: 36, holdingRegisters: [101, 202, 303, 404] },
+];
+
+const buildDemoDevice = (address: number): ModbusDevice => ({
+  address,
+  responseTime: 12 + Math.floor(Math.random() * 68),
+  holdingRegisters: Array.from({ length: 4 }, () =>
+    Math.floor(Math.random() * 1000),
+  ),
+});
+
+const buildRandomDemoScan = (startAddr: number, endAddr: number) => {
+  const min = Math.min(startAddr, endAddr);
+  const max = Math.max(startAddr, endAddr);
+  const addresses: number[] = [];
+
+  for (let address = min; address <= max; address += 1) {
+    const rangeSize = max - min + 1;
+    const discoveryRate = rangeSize <= 10 ? 0.42 : 0.18;
+    if (Math.random() < discoveryRate) addresses.push(address);
+  }
+
+  if (addresses.length === 0 && max >= min) {
+    addresses.push(min + Math.floor(Math.random() * (max - min + 1)));
+  }
+
+  return addresses
+    .slice(0, 24)
+    .sort((a, b) => a - b)
+    .map((address) => buildDemoDevice(address));
+};
+
+const buildDemoReadValues = (
+  slaveAddress: number,
+  registerAddress: number,
+  quantity: number,
+  functionCode: number,
+) => {
+  const tick = Math.floor(Date.now() / 1000);
+  return Array.from({ length: quantity }, (_, idx) => {
+    const seed = slaveAddress * 97 + registerAddress + idx * 13 + tick;
+    if (functionCode === 1 || functionCode === 2) return seed % 2;
+    return seed % 1000;
+  });
+};
+
 const ModbusContext = createContext<ModbusContextType | undefined>(undefined);
 
 export function ModbusProvider({ children }: { children: ReactNode }) {
+  // --- Demo Mode ---
+  const [demoMode, setDemoModeState] = useState(false);
+  const [demoScannedDevices, setDemoScannedDevices] =
+    useState<ModbusDevice[]>(demoDevices);
+
   // --- Connection ---
   const [connection, setConnection] =
     useState<ConnectionSettings>(defaultConnection);
   const isConnectionReady =
-    connection.type === "serial"
+    demoMode ||
+    (connection.type === "serial"
       ? !!connection.port
-      : !!connection.tcpIp && !!connection.tcpPort;
+      : !!connection.tcpIp && !!connection.tcpPort);
 
   // --- Scan State ---
-  const [scannedDevices, setScannedDevices] = useState<ModbusDevice[]>([]);
+  const [realScannedDevices, setScannedDevices] = useState<ModbusDevice[]>([]);
   const [previousScannedDevices, setPreviousScannedDevices] = useState<
     ModbusDevice[]
   >([]);
+  const scannedDevices = demoMode ? demoScannedDevices : realScannedDevices;
   const [scanStartAddr, setScanStartAddr] = useState<number | "">(1);
   const [scanEndAddr, setScanEndAddr] = useState<number | "">(10);
   const [scanTimeout, setScanTimeout] = useState<number | "">(500);
@@ -254,6 +319,16 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
     functionCode: 6 as 5 | 6 | 15 | 16,
     useScannedDevice: false,
   });
+  const [selectedSlaveId, setSelectedSlaveIdState] = useState(1);
+
+  const setSelectedSlaveId = useCallback((slaveId: number) => {
+    const next = Math.max(1, Math.min(247, Number(slaveId) || 1));
+    setSelectedSlaveIdState(next);
+    setChangeAddrState((prev) => ({
+      ...prev,
+      currentAddress: next,
+    }));
+  }, []);
 
   // --- Process Conflict Manager ---
   const [activeProcess, setActiveProcess] = useState<ActiveProcess>("none");
@@ -309,6 +384,25 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
       const savedConnection = getWindowItem("modbus_connection");
       if (savedConnection) setConnection(JSON.parse(savedConnection));
 
+      const savedDemoMode = getWindowItem("modbus_demo_mode");
+      if (savedDemoMode) setDemoModeState(savedDemoMode === "true");
+
+      const savedDemoDevices = getWindowItem("modbus_demo_scanned_devices");
+      if (savedDemoDevices) {
+        try {
+          const parsed = JSON.parse(savedDemoDevices);
+          if (Array.isArray(parsed)) setDemoScannedDevices(parsed);
+        } catch {
+          // ignore invalid saved demo state
+        }
+      }
+
+      const savedSelectedSlaveId = getWindowItem("modbus_selected_slave_id");
+      if (savedSelectedSlaveId) {
+        const parsed = Number(savedSelectedSlaveId);
+        if (!Number.isNaN(parsed)) setSelectedSlaveId(parsed);
+      }
+
       const savedRanges = getWindowItem("modbus_read_ranges");
       if (savedRanges) setReadRanges(JSON.parse(savedRanges));
 
@@ -320,13 +414,34 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
 
       hasLoaded.current = true;
     }
-  }, []);
+  }, [setSelectedSlaveId]);
 
   useEffect(() => {
     if (hasLoaded.current) {
       setWindowItem("modbus_connection", JSON.stringify(connection));
     }
   }, [connection]);
+
+  useEffect(() => {
+    if (hasLoaded.current) {
+      setWindowItem("modbus_demo_mode", demoMode ? "true" : "false");
+    }
+  }, [demoMode]);
+
+  useEffect(() => {
+    if (hasLoaded.current) {
+      setWindowItem("modbus_selected_slave_id", selectedSlaveId.toString());
+    }
+  }, [selectedSlaveId]);
+
+  useEffect(() => {
+    if (hasLoaded.current) {
+      setWindowItem(
+        "modbus_demo_scanned_devices",
+        JSON.stringify(demoScannedDevices),
+      );
+    }
+  }, [demoScannedDevices]);
 
   useEffect(() => {
     if (hasLoaded.current) {
@@ -348,10 +463,35 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
 
   // --- Actions ---
 
+  const setDemoMode = useCallback((enabled: boolean) => {
+    if (enabled && demoScannedDevices.length > 0) {
+      setSelectedSlaveId(demoScannedDevices[0].address);
+      setScannedCount(demoScannedDevices.length);
+      setHasScanned(true);
+      setScanProgress(100);
+      setScanError(null);
+    }
+    setDemoModeState(enabled);
+  }, [demoScannedDevices, setSelectedSlaveId]);
+
+  const toggleDemoMode = useCallback(() => {
+    setDemoModeState((prev) => {
+      const next = !prev;
+      if (next && demoScannedDevices.length > 0) {
+        setSelectedSlaveId(demoScannedDevices[0].address);
+        setScannedCount(demoScannedDevices.length);
+        setHasScanned(true);
+        setScanProgress(100);
+        setScanError(null);
+      }
+      return next;
+    });
+  }, [demoScannedDevices, setSelectedSlaveId]);
+
   // Scan Action
   const startScan = useCallback(async () => {
     requestStartProcess("scan", async () => {
-      if (!isConnectionReady) {
+      if (!demoMode && !isConnectionReady) {
         setScanError("Connection not configured");
         return;
       }
@@ -360,10 +500,67 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
       setIsScanning(true);
       isScanningRef.current = true;
       setScanError(null);
-      setPreviousScannedDevices(scannedDevices);
+      setPreviousScannedDevices(demoMode ? demoScannedDevices : realScannedDevices);
       setScannedDevices([]);
       setHasScanned(true);
       setScanProgress(0);
+
+      if (demoMode) {
+        setDemoScannedDevices([]);
+        setScannedCount(0);
+
+        try {
+          const startAddr = scanStartAddr === "" ? 1 : scanStartAddr;
+          const endAddr = scanEndAddr === "" ? 10 : scanEndAddr;
+          const devicesInRange = buildRandomDemoScan(startAddr, endAddr);
+          const totalAddresses = Math.max(1, endAddr - startAddr + 1);
+          const delay = 120;
+
+          for (
+            let address = Math.min(startAddr, endAddr);
+            address <= Math.max(startAddr, endAddr);
+            address += 1
+          ) {
+            if (!isScanningRef.current) return;
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            if (!isScanningRef.current) return;
+
+            const foundDevice = devicesInRange.find(
+              (device) => device.address === address,
+            );
+            if (foundDevice) {
+              setDemoScannedDevices((prev) => [...prev, foundDevice]);
+            }
+
+            const scanned = address - startAddr + 1;
+            setScannedCount(scanned);
+            setScanProgress(Math.round((scanned / totalAddresses) * 100));
+          }
+
+          setDemoScannedDevices(devicesInRange);
+          if (devicesInRange.length > 0) {
+            setSelectedSlaveId(devicesInRange[0].address);
+          }
+          setScannedCount(totalAddresses);
+          setScanProgress(100);
+          setScanHistory((prev) => [
+            {
+              id: Date.now(),
+              timestamp: new Date(),
+              startAddr,
+              endAddr,
+              devices: devicesInRange,
+              scannedCount: totalAddresses,
+            },
+            ...prev,
+          ]);
+        } finally {
+          setIsScanning(false);
+          isScanningRef.current = false;
+          setActiveProcess("none");
+        }
+        return;
+      }
 
       // Setup progress listener
       modbusAPI.onScanProgress((progress) => {
@@ -393,6 +590,9 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
         if (data.success && data.devices) {
           // Final reconciliation: use the complete list from backend
           setScannedDevices(data.devices);
+          if (data.devices.length > 0) {
+            setSelectedSlaveId(data.devices[0].address);
+          }
           setScannedCount(data.scannedCount || 0);
           // Push to scan history
           setScanHistory((prev) => [
@@ -425,20 +625,29 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
     scanStartAddr,
     scanEndAddr,
     scanTimeout,
-    scannedDevices,
+    realScannedDevices,
+    demoScannedDevices,
+    demoMode,
+    setSelectedSlaveId,
     requestStartProcess,
   ]);
 
   // Cancel Scan Action
   const cancelScan = useCallback(async () => {
     if (!isScanningRef.current) return;
+    if (demoMode) {
+      setIsScanning(false);
+      isScanningRef.current = false;
+      setActiveProcess("none");
+      return;
+    }
     await modbusAPI.scanCancel();
     modbusAPI.removeScanProgress();
     modbusAPI.removeScanFound();
     setIsScanning(false);
     isScanningRef.current = false;
     setActiveProcess("none");
-  }, []);
+  }, [demoMode]);
 
   // Read Action
   const handleRead = useCallback(async () => {
@@ -469,18 +678,39 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
         quantity: range.quantity,
       }));
 
-      const data = await modbusAPI.readBatch({
-        type: connection.type,
-        port: connection.port,
-        baudRate: connection.baudRate,
-        parity: connection.parity,
-        stopBits: connection.stopBits,
-        dataBits: connection.dataBits,
-        tcpIp: connection.tcpIp,
-        tcpPort: connection.tcpPort,
-        requests,
-        timeout: readTimeout,
-      });
+      const data = demoMode
+        ? {
+            results: requests.map((request) => {
+              const online = scannedDevices.some(
+                (device) => device.address === request.slaveAddress,
+              );
+              return {
+                success: online,
+                data: online
+                  ? buildDemoReadValues(
+                      request.slaveAddress,
+                      request.registerAddress,
+                      request.quantity,
+                      request.functionCode,
+                    )
+                  : [],
+                error: online ? undefined : "Demo device not found",
+              };
+            }),
+            error: undefined,
+          }
+        : await modbusAPI.readBatch({
+            type: connection.type,
+            port: connection.port,
+            baudRate: connection.baudRate,
+            parity: connection.parity,
+            stopBits: connection.stopBits,
+            dataBits: connection.dataBits,
+            tcpIp: connection.tcpIp,
+            tcpPort: connection.tcpPort,
+            requests,
+            timeout: readTimeout,
+          });
 
       if (!data.error) {
         const mappedData = data.results.map(
@@ -587,6 +817,8 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
     isLogging,
     selectedRegisters,
     MAX_GRAPH_POINTS,
+    demoMode,
+    scannedDevices,
   ]);
 
   // Write Action
@@ -606,11 +838,21 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
         tcpPort: connection.tcpPort,
         ...config,
       };
+      if (demoMode) {
+        const slaveAddress = Number(config.slaveAddress || 1);
+        const online = scannedDevices.some(
+          (device) => device.address === slaveAddress,
+        );
+        return online
+          ? { success: true, message: "Demo write completed" }
+          : { success: false, error: "Demo device not found" };
+      }
+
       return await modbusAPI.write(
         fullConfig as import("@/lib/electron-api").WriteConfig,
       );
     },
-    [connection, isConnectionReady],
+    [connection, isConnectionReady, demoMode, scannedDevices],
   );
 
   // --- Auto Refresh Effect ---
@@ -685,20 +927,27 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
   const scanDiff = (() => {
     if (previousScannedDevices.length === 0) return null;
     const prevAddrs = new Set(previousScannedDevices.map((d) => d.address));
-    const currAddrs = new Set(scannedDevices.map((d) => d.address));
+    const currentDevices = demoMode ? demoScannedDevices : realScannedDevices;
+    const currAddrs = new Set(currentDevices.map((d) => d.address));
     return {
-      added: scannedDevices.filter((d) => !prevAddrs.has(d.address)),
+      added: currentDevices.filter((d) => !prevAddrs.has(d.address)),
       removed: previousScannedDevices.filter((d) => !currAddrs.has(d.address)),
-      unchanged: scannedDevices.filter((d) => prevAddrs.has(d.address)),
+      unchanged: currentDevices.filter((d) => prevAddrs.has(d.address)),
     };
   })();
 
   return (
     <ModbusContext.Provider
       value={{
+        demoMode,
+        setDemoMode,
+        toggleDemoMode,
+
         connection,
         setConnection,
         isConnectionReady,
+        selectedSlaveId,
+        setSelectedSlaveId,
 
         // Scan
         scannedDevices,
@@ -715,7 +964,7 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
         scanProgress,
         scanError,
         scannedCount,
-        hasScanned,
+        hasScanned: demoMode || hasScanned,
         startScan,
         cancelScan,
 

@@ -188,7 +188,7 @@ export default function LicensePage() {
             <button
               onClick={handleActivate}
               disabled={activating || !licenseKey.trim()}
-              className="w-full py-3.5 px-4 instrument-panel instrument-accent hover:instrument-accent disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium shadow-md hover:shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 instrument-panel bg-instrument-accent hover:bg-instrument-accent/90 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium shadow-md hover:shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
             >
               {activating ? (
                 <>

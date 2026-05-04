@@ -37,6 +37,8 @@ export default function ScanPage() {
     scanHistory,
     exportScanHistoryCSV,
     clearScanHistory,
+    selectedSlaveId,
+    setSelectedSlaveId,
   } = useModbus();
   const { t } = useLanguage();
   const { deviceAliases, setAlias } = useProject();
@@ -228,7 +230,7 @@ export default function ScanPage() {
                 </div>
               ) : (
                 allDevices.length > 0 && (
-                  <div className="overflow-hidden instrument-input border border-app-border">
+                  <div className="overflow-hidden rounded-instrument border border-app-border bg-app-surface">
                     <table className="instrument-table">
                       <thead>
                         <tr>
@@ -246,14 +248,24 @@ export default function ScanPage() {
                           const isAdded = addedAddrs.has(device.address);
                           const isRemoved = removedAddrs.has(device.address);
 
-                          const rowBg = isAdded
+                          const isSelected =
+                            !isRemoved && selectedSlaveId === device.address;
+                          const rowBg = isSelected
+                            ? "bg-instrument-accent/10 hover:bg-instrument-accent/15"
+                            : isAdded
                             ? "bg-instrument-ok/10 hover:bg-instrument-ok/20"
                             : isRemoved
                               ? "bg-instrument-danger/10 hover:bg-instrument-danger/20 opacity-60"
                               : "bg-app-surface hover:bg-app-muted/10";
 
                           return (
-                            <tr key={device.address} className={rowBg}>
+                            <tr
+                              key={device.address}
+                              className={`${rowBg} ${isRemoved ? "" : "cursor-pointer"}`}
+                              onClick={() => {
+                                if (!isRemoved) setSelectedSlaveId(device.address);
+                              }}
+                            >
                               {scanDiff && (
                                 <td className="text-center">
                                   {isAdded && (
@@ -272,7 +284,9 @@ export default function ScanPage() {
                                 <span
                                   data-kind="address"
                                   className={`inline-flex items-center px-2.5 py-1 instrument-input font-bold min-w-[3.5rem] justify-center ${
-                                    isAdded
+                                    isSelected
+                                      ? "bg-instrument-accent text-white"
+                                      : isAdded
                                       ? "bg-instrument-ok/20 text-instrument-ok"
                                       : isRemoved
                                         ? "bg-instrument-danger/20 text-instrument-danger line-through"

@@ -19,6 +19,10 @@ interface ProjectContextType {
   setAlias: (slaveId: number, alias: string, description?: string, remark?: string) => void;
   removeAlias: (slaveId: number) => void;
 
+  // Register aliases (shared across pages, persisted in project)
+  registerAliases: Record<string, string>;
+  setRegisterAliases: (aliases: Record<string, string>) => void;
+
   // Project actions
   saveProject: (projectData: Omit<ProjectData, 'version'>) => Promise<{ success: boolean; error?: string }>;
   loadProject: () => Promise<{ success: boolean; error?: string }>;
@@ -39,6 +43,13 @@ export function ProjectProvider({ children, onProjectLoad }: { children: ReactNo
   const [isProjectDirty, setIsProjectDirty] = useState(false);
   const [deviceAliases, setDeviceAliasesState] = useState<DeviceAlias[]>([]);
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
+  const [registerAliases, setRegisterAliasesState] = useState<Record<string, string>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = getWindowItem('dashboard_register_aliases');
+      if (saved) { try { return JSON.parse(saved); } catch {} }
+    }
+    return {};
+  });
   const hasLoaded = useRef(false);
 
   // Load aliases from storage on mount (window-scoped)
@@ -62,6 +73,15 @@ export function ProjectProvider({ children, onProjectLoad }: { children: ReactNo
       setWindowItem('modscan_device_aliases', JSON.stringify(deviceAliases));
     }
   }, [deviceAliases]);
+
+  // Persist register aliases to storage
+  useEffect(() => {
+    setWindowItem('dashboard_register_aliases', JSON.stringify(registerAliases));
+  }, [registerAliases]);
+
+  const setRegisterAliases = useCallback((aliases: Record<string, string>) => {
+    setRegisterAliasesState(aliases);
+  }, []);
 
   // Load recent projects on mount
   useEffect(() => {
@@ -108,8 +128,9 @@ export function ProjectProvider({ children, onProjectLoad }: { children: ReactNo
     setDeviceAliasesState(data.devices || []);
     setIsProjectDirty(false);
 
-    // Restore register aliases to window storage
+    // Restore register aliases
     if (data.registerAliases) {
+      setRegisterAliasesState(data.registerAliases);
       setWindowItem('dashboard_register_aliases', JSON.stringify(data.registerAliases));
     }
 
@@ -177,6 +198,8 @@ export function ProjectProvider({ children, onProjectLoad }: { children: ReactNo
       getDeviceDisplayName,
       setAlias,
       removeAlias,
+      registerAliases,
+      setRegisterAliases,
       saveProject,
       loadProject,
       loadProjectFromPath,

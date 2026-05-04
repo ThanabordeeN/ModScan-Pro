@@ -27,6 +27,7 @@ export default function ProjectsPage() {
     deviceAliases,
     setAlias,
     removeAlias,
+    registerAliases,
     saveProject,
     loadProject,
     loadProjectFromPath,
@@ -56,6 +57,7 @@ export default function ProjectsPage() {
     setScanTimeout,
     selectedRegisters,
     setSelectedRegisters,
+    setSelectedSlaveId,
   } = useModbus();
 
   const [projectName, setProjectName] = useState("");
@@ -105,12 +107,6 @@ export default function ProjectsPage() {
 
     setIsSaving(true);
     try {
-      // Get register aliases from window storage
-      const savedRegAliases = getWindowItem("dashboard_register_aliases");
-      const registerAliases = savedRegAliases
-        ? JSON.parse(savedRegAliases)
-        : undefined;
-
       const result = await saveProject({
         name: projectName.trim(),
         description: projectDescription.trim(),
@@ -207,6 +203,9 @@ export default function ProjectsPage() {
       }
       if (currentProject.scannedDevices) {
         setScannedDevices(currentProject.scannedDevices);
+        if (currentProject.scannedDevices.length > 0) {
+          setSelectedSlaveId(currentProject.scannedDevices[0].address);
+        }
       }
       if (currentProject.readData) {
         setReadData(currentProject.readData);
@@ -420,51 +419,50 @@ export default function ProjectsPage() {
 
         {/* Aliases List */}
         {deviceAliases.length > 0 && (
-          <div className="space-y-2 mb-4">
-            {deviceAliases.map((device) => (
+          <div className="mb-4 border border-slate-200 dark:border-slate-700 rounded-instrument overflow-hidden">
+            {/* Table Header */}
+            <div className="grid grid-cols-[80px_1fr_1fr_40px] gap-0 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+              <div className="px-3 py-2">{t("project_slave_id")}</div>
+              <div className="px-3 py-2 border-l border-slate-200 dark:border-slate-700">{t("project_alias")}</div>
+              <div className="px-3 py-2 border-l border-slate-200 dark:border-slate-700">Technical Remark</div>
+              <div className="px-3 py-2 border-l border-slate-200 dark:border-slate-700" />
+            </div>
+            {/* Rows */}
+            {deviceAliases.map((device, i) => (
               <div
                 key={device.slaveId}
-                className="p-3 instrument-input bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2"
+                className={`grid grid-cols-[80px_1fr_1fr_40px] gap-0 items-center ${i !== deviceAliases.length - 1 ? "border-b border-slate-200 dark:border-slate-700" : ""}`}
               >
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center px-2.5 py-1 instrument-input bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono font-bold text-sm min-w-[60px] justify-center">
-                    ID: {device.slaveId}
-                  </span>
+                <div className="px-3 py-2 font-mono font-bold text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50">
+                  ID: {device.slaveId}
+                </div>
+                <div className="border-l border-slate-200 dark:border-slate-700">
                   <input
                     type="text"
                     value={device.alias}
-                    onChange={(e) =>
-                      setAlias(
-                        device.slaveId,
-                        e.target.value,
-                        device.description,
-                        device.remark,
-                      )
-                    }
+                    onChange={(e) => setAlias(device.slaveId, e.target.value, device.description, device.remark)}
                     placeholder={t("project_alias") + "..."}
-                    className="bg-white dark:bg-slate-800 flex-1 px-3 py-1.5 instrument-input border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                    className="w-full px-3 py-2 bg-transparent text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:bg-amber-50 dark:focus:bg-amber-900/10"
                   />
+                </div>
+                <div className="border-l border-slate-200 dark:border-slate-700">
+                  <input
+                    type="text"
+                    value={device.remark || ""}
+                    onChange={(e) => setAlias(device.slaveId, device.alias, device.description, e.target.value)}
+                    placeholder="Model, terminal..."
+                    className="w-full px-3 py-2 bg-transparent text-slate-500 dark:text-slate-400 text-xs focus:outline-none focus:bg-slate-50 dark:focus:bg-slate-800/50"
+                  />
+                </div>
+                <div className="border-l border-slate-200 dark:border-slate-700 flex items-center justify-center">
                   <button
                     onClick={() => removeAlias(device.slaveId)}
-                    className="p-1.5 instrument-input text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                    title="Remove"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
-                <input
-                  type="text"
-                  value={device.remark || ""}
-                  onChange={(e) =>
-                    setAlias(
-                      device.slaveId,
-                      device.alias,
-                      device.description,
-                      e.target.value,
-                    )
-                  }
-                  placeholder={t("project_device_remark_placeholder")}
-                  className="bg-white dark:bg-slate-800 w-full px-3 py-1.5 instrument-input border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-slate-400/50"
-                />
               </div>
             ))}
           </div>

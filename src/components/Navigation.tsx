@@ -19,15 +19,18 @@ import {
   Sun,
   Moon,
   Languages,
+  FlaskConical,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useModbus } from "@/context/ModbusContext";
 import { windowAPI, isElectron, updateAPI } from "@/lib/electron-api";
 
 export default function Navigation() {
   const pathname = usePathname();
   const { t, language, toggleLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  const { demoMode, toggleDemoMode } = useModbus();
   const [collapsed, setCollapsed] = useState(false);
 
   const navItems = [
@@ -94,6 +97,31 @@ export default function Navigation() {
                 </Link>
               );
             })}
+
+            <button
+              onClick={toggleDemoMode}
+              className={`mt-3 w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-instrument-sm text-sm font-medium transition-all ${
+                demoMode
+                  ? "bg-instrument-accent text-white shadow-md"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50"
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                <FlaskConical className="w-4 h-4 flex-shrink-0" />
+                Demo
+              </span>
+              <span
+                className={`h-4 w-7 rounded-instrument-full p-0.5 transition-colors ${
+                  demoMode ? "bg-white/30" : "bg-slate-200 dark:bg-slate-700"
+                }`}
+              >
+                <span
+                  className={`block h-3 w-3 rounded-instrument-full bg-white transition-transform ${
+                    demoMode ? "translate-x-3" : "translate-x-0"
+                  }`}
+                />
+              </span>
+            </button>
           </div>
         </div>
       )}
@@ -172,6 +200,18 @@ export default function Navigation() {
                 </button>
               </>
             )}
+            <button
+              onClick={toggleDemoMode}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-instrument-sm transition-all text-xs ${
+                demoMode
+                  ? "bg-instrument-accent text-white shadow-sm"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50"
+              } ${collapsed ? "justify-center" : ""}`}
+              title={demoMode ? "Hide Demo Devices" : "Show Demo Devices"}
+            >
+              <FlaskConical className="w-4 h-4 flex-shrink-0" />
+              {!collapsed && <span>Demo Devices</span>}
+            </button>
             <button
               onClick={toggleTheme}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-instrument-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all text-xs"

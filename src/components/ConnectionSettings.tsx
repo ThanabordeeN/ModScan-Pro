@@ -17,10 +17,18 @@ interface ConnectionSettingsProps {
 export default function ConnectionSettings({
   disabled,
 }: ConnectionSettingsProps) {
-  const { connection, setConnection } = useModbus();
+  const {
+    connection,
+    setConnection,
+    demoMode,
+    selectedSlaveId,
+    setSelectedSlaveId,
+  } = useModbus();
   const [ports, setPorts] = useState<SerialPortInfo[]>([]);
   const [loadingPorts, setLoadingPorts] = useState(false);
   const [portError, setPortError] = useState<string | null>(null);
+  const demoPortValue = "__demo_port__";
+  const demoIp = "127.0.0.1";
 
   const fetchPorts = async () => {
     setLoadingPorts(true);
@@ -65,6 +73,11 @@ export default function ConnectionSettings({
             <Globe className="w-5 h-5 text-instrument-accent" />
           )}
           Connection Settings
+          {demoMode && (
+            <span className="rounded-instrument-full bg-instrument-accent/10 px-2 py-0.5 text-xs font-medium text-instrument-accent">
+              Demo Available
+            </span>
+          )}
         </h2>
 
         <div className="flex items-center gap-2">
@@ -116,26 +129,48 @@ export default function ConnectionSettings({
       )}
 
       {connection.type === "serial" ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="col-span-2 md:col-span-1">
             <label className="block text-sm font-medium text-app-muted mb-2">
               Serial Port
             </label>
             <select
-              value={connection.port}
-              onChange={(e) =>
-                setConnection({ ...connection, port: e.target.value })
-              }
+              value={demoMode ? demoPortValue : connection.port}
+              onChange={(e) => {
+                if (demoMode) return;
+                setConnection({
+                  ...connection,
+                  port: e.target.value === demoPortValue ? "" : e.target.value,
+                });
+              }}
               disabled={disabled}
               className="w-full instrument-input disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="">Select Port</option>
+              {demoMode && (
+                <option value={demoPortValue}>Demo Port (Available)</option>
+              )}
               {ports.map((port) => (
                 <option key={port.path} value={port.path}>
                   {port.path}
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-app-muted mb-2">
+              Active Slave ID
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={247}
+              value={selectedSlaveId}
+              onChange={(e) => setSelectedSlaveId(Number(e.target.value))}
+              disabled={disabled}
+              className="w-full instrument-input font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+            />
           </div>
 
           <div>
@@ -231,21 +266,27 @@ export default function ConnectionSettings({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="col-span-2">
             <label className="block text-sm font-medium text-app-muted mb-2">
               IP Address / Host
             </label>
             <input
               type="text"
-              value={connection.tcpIp || ""}
+              value={demoMode ? demoIp : connection.tcpIp || ""}
               onChange={(e) =>
                 setConnection({ ...connection, tcpIp: e.target.value })
               }
-              placeholder="192.168.1.10"
+              placeholder={demoMode ? "Demo IP Available" : "192.168.1.10"}
+              readOnly={demoMode}
               disabled={disabled}
               className="w-full instrument-input font-mono disabled:opacity-50 disabled:cursor-not-allowed"
             />
+            {demoMode && (
+              <p className="mt-1 text-xs text-instrument-accent">
+                Demo IP available
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-app-muted mb-2">
@@ -263,6 +304,20 @@ export default function ConnectionSettings({
                 })
               }
               placeholder="502"
+              disabled={disabled}
+              className="w-full instrument-input font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-app-muted mb-2">
+              Active Slave ID
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={247}
+              value={selectedSlaveId}
+              onChange={(e) => setSelectedSlaveId(Number(e.target.value))}
               disabled={disabled}
               className="w-full instrument-input font-mono disabled:opacity-50 disabled:cursor-not-allowed"
             />

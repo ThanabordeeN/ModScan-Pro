@@ -17,6 +17,7 @@ import {
   Search,
   Check,
   X,
+  Pencil,
 } from "lucide-react";
 import ConnectionSettings from "@/components/ConnectionSettings";
 import { useModbus } from "@/context/ModbusContext";
@@ -83,11 +84,32 @@ const INTERVAL_OPTIONS = [
   { value: 30000, label: "30s" },
 ];
 
+const buildDemoValues = (
+  slaveAddress: number,
+  registerAddress: number,
+  quantity: number,
+  functionCode: number,
+) => {
+  const tick = Math.floor(Date.now() / 1000);
+  return Array.from({ length: quantity }, (_, idx) => {
+    const seed = slaveAddress * 97 + registerAddress + idx * 13 + tick;
+    if (functionCode === 1 || functionCode === 2) return seed % 2;
+    return seed % 1000;
+  });
+};
+
 export default function ReadPage() {
-  const { connection, isConnectionReady, scannedDevices, requestStartProcess } =
-    useModbus();
+  const {
+    connection,
+    isConnectionReady,
+    scannedDevices,
+    requestStartProcess,
+    demoMode,
+    selectedSlaveId,
+    setSelectedSlaveId,
+  } = useModbus();
   const { t } = useLanguage();
-  const { getDeviceDisplayName } = useProject();
+  const { getDeviceDisplayName, getDeviceAlias, registerAliases, setRegisterAliases } = useProject();
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -130,22 +152,7 @@ export default function ReadPage() {
     Record<string, Set<number>>
   >({});
 
-  // Track register aliases using stable key: "{slaveId}-{functionCode}-{registerAddress}-{regIndex}"
-  const [registerAliases, setRegisterAliases] = useState<
-    Record<string, string>
-  >(() => {
-    if (typeof window !== "undefined") {
-      const saved = getWindowItem("dashboard_register_aliases");
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch {
-          /* ignore */
-        }
-      }
-    }
-    return {};
-  });
+  // Register aliases come from ProjectContext (shared + persisted in project)
 
   // Generate stable key for a register
   const getRegKey = (
@@ -163,15 +170,6 @@ export default function ReadPage() {
   } | null>(null);
   const [editingValue, setEditingValue] = useState("");
 
-  // Persist register aliases
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setWindowItem(
-        "dashboard_register_aliases",
-        JSON.stringify(registerAliases),
-      );
-    }
-  }, [registerAliases]);
 
   const toggleRegisterPlot = (cardId: string, regIndex: number) => {
     setSelectedRegisters((prev) => {
@@ -198,10 +196,7 @@ export default function ReadPage() {
   const saveAlias = () => {
     if (editingAlias) {
       const { regKey } = editingAlias;
-      setRegisterAliases((prev) => ({
-        ...prev,
-        [regKey]: editingValue.trim(),
-      }));
+      setRegisterAliases({ ...registerAliases, [regKey]: editingValue.trim() });
       setEditingAlias(null);
       setEditingValue("");
     }
@@ -241,7 +236,36 @@ export default function ReadPage() {
   useEffect(() => {
     if (polling) {
       statusTimerRef.current = setInterval(async () => {
-        const currentStatus = await dashboardAPI.status();
+        const currentStatus = demoMode
+          ? {
+              running: true,
+              interval: pollInterval,
+              cards,
+              results: Object.fromEntries(
+                cards.map((card) => {
+                  const online = scannedDevices.some(
+                    (device) => device.address === Number(card.slaveAddress),
+                  );
+                  return [
+                    card.cardId,
+                    {
+                      success: online,
+                      data: online
+                        ? buildDemoValues(
+                            Number(card.slaveAddress) || 1,
+                            Number(card.registerAddress) || 0,
+                            Number(card.quantity) || 1,
+                            card.functionCode,
+                          )
+                        : null,
+                      error: online ? null : "Demo device not found",
+                      lastUpdated: new Date().toISOString(),
+                    },
+                  ];
+                }),
+              ),
+            }
+          : await dashboardAPI.status();
         setStatus(currentStatus);
 
         // Update plot data for cards that have selected registers
@@ -290,7 +314,7 @@ export default function ReadPage() {
         clearInterval(statusTimerRef.current);
       }
     };
-  }, [polling, pollInterval, cards, selectedRegisters]);
+  }, [polling, pollInterval, cards, selectedRegisters, demoMode, scannedDevices]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -317,17 +341,24 @@ export default function ReadPage() {
 
   const addCard = useCallback(
     (slaveId?: number) => {
+      const targetId = slaveId ?? selectedSlaveId;
+      const alias = getDeviceAlias(targetId);
+      const name = alias
+        ? `${alias} (ID:${targetId})`
+        : slaveId !== undefined
+          ? `Device ${slaveId}`
+          : `Device ${cards.length + 1}`;
       const newCard: DashboardCard = {
         cardId: Date.now().toString(),
-        name: `Device ${slaveId ?? cards.length + 1}`,
-        slaveAddress: slaveId ?? 1,
+        name,
+        slaveAddress: targetId,
         functionCode: 3,
         registerAddress: 0,
         quantity: 10,
       };
       setCards((prev) => [...prev, newCard]);
     },
-    [cards.length],
+    [cards.length, selectedSlaveId, getDeviceAlias],
   );
 
   const startPolling = useCallback(async () => {
@@ -351,21 +382,23 @@ export default function ReadPage() {
         quantity: Number(c.quantity) || 1,
       }));
 
-      const res = await dashboardAPI.start({
-        cards: cardConfigs,
-        connectionConfig: {
-          type: connection.type,
-          port: connection.port,
-          baudRate: connection.baudRate,
-          parity: connection.parity,
-          stopBits: connection.stopBits,
-          dataBits: connection.dataBits,
-          tcpIp: connection.tcpIp,
-          tcpPort: connection.tcpPort,
-        },
-        interval: pollInterval,
-        timeout: pollTimeout,
-      });
+      const res = demoMode
+        ? { success: true }
+        : await dashboardAPI.start({
+            cards: cardConfigs,
+            connectionConfig: {
+              type: connection.type,
+              port: connection.port,
+              baudRate: connection.baudRate,
+              parity: connection.parity,
+              stopBits: connection.stopBits,
+              dataBits: connection.dataBits,
+              tcpIp: connection.tcpIp,
+              tcpPort: connection.tcpPort,
+            },
+            interval: pollInterval,
+            timeout: pollTimeout,
+          });
 
       if (res.success) {
         setPolling(true);
@@ -380,12 +413,14 @@ export default function ReadPage() {
     pollInterval,
     pollTimeout,
     t,
+    demoMode,
     requestStartProcess,
   ]);
 
   const stopPolling = async () => {
-    await dashboardAPI.stop();
+    if (!demoMode) await dashboardAPI.stop();
     setPolling(false);
+    setStatus(null);
   };
 
   const updatePollingConfig = useCallback(async () => {
@@ -398,6 +433,8 @@ export default function ReadPage() {
       registerAddress: Number(c.registerAddress) || 0,
       quantity: Number(c.quantity) || 1,
     }));
+
+    if (demoMode) return;
 
     await dashboardAPI.update({
       cards: cardConfigs,
@@ -414,7 +451,7 @@ export default function ReadPage() {
         tcpPort: connection.tcpPort,
       },
     });
-  }, [polling, cards, pollInterval, pollTimeout, connection]);
+  }, [polling, cards, pollInterval, pollTimeout, connection, demoMode]);
 
   // When interval changes during active polling, update backend
   useEffect(() => {
@@ -468,7 +505,10 @@ export default function ReadPage() {
               return (
                 <button
                   key={device.address}
-                  onClick={() => addCard(device.address)}
+                  onClick={() => {
+                    setSelectedSlaveId(device.address);
+                    addCard(device.address);
+                  }}
                   disabled={deviceExists}
                   className={`flex flex-col items-start p-4 instrument-panel border transition-all text-left w-full relative overflow-hidden ${
                     deviceExists
@@ -692,13 +732,16 @@ export default function ReadPage() {
                         type="number"
                         value={card.slaveAddress}
                         onChange={(e) =>
-                          updateCard(
-                            card.cardId,
-                            "slaveAddress",
-                            e.target.value === ""
-                              ? ("" as unknown as number)
-                              : Number(e.target.value),
-                          )
+                          {
+                            const next =
+                              e.target.value === ""
+                                ? ("" as unknown as number)
+                                : Number(e.target.value);
+                            updateCard(card.cardId, "slaveAddress", next);
+                            if (typeof next === "number") {
+                              setSelectedSlaveId(next);
+                            }
+                          }
                         }
                         className="w-full mt-1 px-2 py-1 rounded-instrument border border-slate-200 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-slate-400"
                         min={1}
@@ -870,61 +913,64 @@ export default function ReadPage() {
                               </div>
                             ) : (
                               // Display mode
-                              <button
-                                onClick={() => {
-                                  if (!polling) {
-                                    startEditAlias(
-                                      card.cardId,
-                                      idx,
-                                      regKey,
-                                      regAlias,
-                                    );
-                                  } else {
-                                    toggleRegisterPlot(card.cardId, idx);
-                                  }
-                                }}
-                                className={`w-full text-center p-1.5 rounded-instrument border transition-all cursor-pointer ${
+                              <div
+                                className={`relative group w-full text-center p-1.5 rounded-instrument border transition-all ${
                                   isSelected
-                                    ? "bg-emerald-50 dark:instrument-accent/20 ring-2 shadow-sm"
-                                    : "bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+                                    ? "bg-emerald-50 dark:bg-emerald-900/20 ring-2 shadow-sm"
+                                    : "bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700"
                                 }`}
                                 style={
                                   isSelected
-                                    ? {
-                                        borderColor,
-                                        boxShadow: `0 0 0 2px ${borderColor}33`,
-                                      }
+                                    ? { borderColor, boxShadow: `0 0 0 2px ${borderColor}33` }
                                     : {}
                                 }
-                                title={
-                                  polling
-                                    ? isSelected
-                                      ? `Click to remove Reg ${regAddr} from plot`
-                                      : `Click to plot Reg ${regAddr}`
-                                    : `Click to set alias for Reg ${regAddr}`
-                                }
                               >
-                                <div
-                                  className={`text-[10px] leading-none mb-0.5 truncate ${regAlias ? "instrument-accent dark:instrument-accent font-medium" : "text-slate-400 dark:text-slate-500"}`}
+                                {/* Pencil icon — always available for rename */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    startEditAlias(card.cardId, idx, regKey, regAlias);
+                                  }}
+                                  className="absolute top-0.5 right-0.5 p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 z-10"
+                                  title={`Rename Reg ${regAddr}`}
                                 >
-                                  {labelText}
-                                </div>
-                                <div
-                                  className={`text-sm font-mono font-medium ${
-                                    isSelected
-                                      ? "instrument-accent dark:instrument-accent"
-                                      : "text-slate-800 dark:text-slate-100"
-                                  }`}
+                                  <Pencil className="w-2.5 h-2.5" />
+                                </button>
+
+                                {/* Main area — click to toggle plot (always, not just when polling) */}
+                                <button
+                                  onClick={() => {
+                                    if (polling) toggleRegisterPlot(card.cardId, idx);
+                                  }}
+                                  className={`w-full ${polling ? "cursor-pointer" : "cursor-default"}`}
+                                  title={
+                                    polling
+                                      ? isSelected
+                                        ? `Remove Reg ${regAddr} from plot`
+                                        : `Plot Reg ${regAddr}`
+                                      : `Hover and click ✏️ to rename`
+                                  }
                                 >
-                                  {val}
-                                </div>
-                                {isSelected && (
                                   <div
-                                    className="w-2 h-2 rounded-instrument-full mx-auto mt-1"
-                                    style={{ backgroundColor: borderColor }}
+                                    className={`text-[10px] leading-none mb-0.5 truncate ${regAlias ? "instrument-accent dark:instrument-accent font-medium" : "text-slate-500 dark:text-slate-300"}`}
+                                  >
+                                    {labelText}
+                                  </div>
+                                  <div
+                                    className={`text-sm font-mono font-medium ${
+                                      isSelected
+                                        ? "instrument-accent dark:instrument-accent"
+                                        : "text-slate-800 dark:text-slate-100"
+                                    }`}
+                                  >
+                                    {val}
+                                  </div>
+                                  <div
+                                    className={`w-2 h-2 rounded-instrument-full mx-auto mt-1 ${isSelected ? "" : "invisible"}`}
+                                    style={{ backgroundColor: isSelected ? borderColor : undefined }}
                                   />
-                                )}
-                              </button>
+                                </button>
+                              </div>
                             )}
                           </div>
                         );
@@ -949,11 +995,11 @@ export default function ReadPage() {
                             <CartesianGrid
                               strokeDasharray="3 3"
                               vertical={false}
-                              stroke="#E2E8F0"
+                              stroke={isDark ? "#334155" : "#E2E8F0"}
                             />
                             <XAxis
                               dataKey="time"
-                              tick={{ fill: "#64748B", fontSize: 10 }}
+                              tick={{ fill: isDark ? "#94a3b8" : "#64748B", fontSize: 10 }}
                               minTickGap={20}
                             />
                             <YAxis

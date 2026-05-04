@@ -77,8 +77,7 @@ export default function RootLayout({
                               </div>
                               <p className="text-xs text-app-muted text-center md:text-right">
                                 Open Source Edition <br className="md:hidden" />
-                                © {new Date().getFullYear()} 2EDGE Technology
-                                Co.,Ltd.
+                                © {new Date().getFullYear()} 2edge.co
                               </p>
                             </div>
                           </div>

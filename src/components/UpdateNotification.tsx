@@ -88,7 +88,7 @@ export default function UpdateNotification() {
               {updateInfo.status === 'available' && (
                 <button
                   onClick={handleDownload}
-                  className="flex-1 instrument-accent hover:instrument-accent text-white font-bold py-2.5 instrument-panel transition-all shadow-lg instrument-accent/20 text-sm"
+                  className="flex-1 bg-instrument-accent hover:bg-instrument-accent/90 text-white font-bold py-2.5 instrument-panel transition-all shadow-lg shadow-instrument-accent/20 text-sm"
                 >
                   {t('update_btn_download')}
                 </button>
@@ -96,7 +96,7 @@ export default function UpdateNotification() {
               {updateInfo.status === 'ready' && (
                 <button
                   onClick={handleInstall}
-                  className="flex-1 instrument-accent hover:instrument-accent text-white font-bold py-2.5 instrument-panel transition-all shadow-lg instrument-accent/20 text-sm flex items-center justify-center gap-2"
+                  className="flex-1 bg-instrument-accent hover:bg-instrument-accent/90 text-white font-bold py-2.5 instrument-panel transition-all shadow-lg shadow-instrument-accent/20 text-sm flex items-center justify-center gap-2"
                 >
                   <RefreshCw className="w-4 h-4" />
                   {t('update_btn_install')}

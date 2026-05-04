@@ -94,6 +94,8 @@ function TopologyCanvas() {
     isLiveMonitoring,
     setIsLiveMonitoring,
     requestStartProcess,
+    demoMode,
+    setSelectedSlaveId,
   } = useModbus();
   const { t } = useLanguage();
   const { getDeviceDisplayName } = useProject();
@@ -215,6 +217,7 @@ function TopologyCanvas() {
   // --- Add a node by address ---
   const addNodeByAddress = useCallback(
     (address: number) => {
+      setSelectedSlaveId(address);
       // Check if node already exists
       const exists = nodes.some((n) => n.id === `device-${address}`);
       if (exists) return;
@@ -241,6 +244,7 @@ function TopologyCanvas() {
       setNodes,
       setEdges,
       fitView,
+      setSelectedSlaveId,
     ],
   );
 
@@ -373,6 +377,30 @@ function TopologyCanvas() {
 
       const startTime = Date.now();
       try {
+        if (demoMode) {
+          setNodes((nds) =>
+            nds.map((node) => {
+              if (node.data.isMaster) return node;
+              const address = node.data.address as number;
+              const device = scannedDevices.find((d) => d.address === address);
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  responseTime: device
+                    ? Math.min(
+                        95,
+                        device.responseTime +
+                          (Math.floor(Date.now() / 1000) % 6),
+                      )
+                    : 999,
+                },
+              };
+            }),
+          );
+          return;
+        }
+
         const data = await modbusAPI.readBatch({
           type: connection.type,
           port: connection.port,
@@ -425,7 +453,15 @@ function TopologyCanvas() {
     return () => {
       if (monitoringTimerRef.current) clearInterval(monitoringTimerRef.current);
     };
-  }, [isLiveMonitoring, nodes, connection, isConnectionReady, setNodes]);
+  }, [
+    isLiveMonitoring,
+    nodes,
+    connection,
+    isConnectionReady,
+    setNodes,
+    demoMode,
+    scannedDevices,
+  ]);
 
   // --- Derived: which scanned devices are not yet on the canvas ---
   const availableScannedDevices = useMemo(() => {

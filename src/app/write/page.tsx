@@ -17,7 +17,14 @@ import { useProject } from "@/context/ProjectContext";
 import { modbusAPI } from "@/lib/electron-api";
 
 export default function WritePage() {
-  const { connection, scannedDevices, isConnectionReady } = useModbus();
+  const {
+    connection,
+    scannedDevices,
+    isConnectionReady,
+    demoMode,
+    selectedSlaveId,
+    setSelectedSlaveId,
+  } = useModbus();
   const { t } = useLanguage();
   const { getDeviceDisplayName } = useProject();
 
@@ -49,7 +56,8 @@ export default function WritePage() {
   ];
 
   // Write settings
-  const [slaveAddress, setSlaveAddress] = useState(1);
+  const slaveAddress = selectedSlaveId;
+  const setSlaveAddress = setSelectedSlaveId;
   const [functionCode, setFunctionCode] = useState<5 | 6 | 15 | 16>(6);
   const [address, setAddress] = useState(0);
   const [timeout, setTimeout] = useState(1000);
@@ -138,7 +146,14 @@ export default function WritePage() {
     }
 
     try {
-      const data = await modbusAPI.write(requestBody);
+      const data = demoMode
+        ? {
+            success: scannedDevices.some(
+              (device) => device.address === slaveAddress,
+            ),
+            error: "Demo device not found",
+          }
+        : await modbusAPI.write(requestBody);
 
       if (data.success) {
         setSuccess(t("write_success"));
@@ -227,7 +242,7 @@ export default function WritePage() {
                 onClick={() => setSlaveAddress(device.address)}
                 className={`px-3 py-1.5 instrument-input font-mono text-sm transition-all ${
                   slaveAddress === device.address
-                    ? "instrument-accent text-white shadow-sm"
+                    ? "bg-instrument-accent text-white shadow-sm"
                     : "instrument-button"
                 }`}
               >
@@ -342,7 +357,7 @@ export default function WritePage() {
                 onClick={() => setSingleCoilValue(!singleCoilValue)}
                 className={`px-6 py-3 instrument-input font-medium transition-all ${
                   singleCoilValue
-                    ? "instrument-accent text-white shadow-sm"
+                    ? "bg-instrument-accent text-white shadow-sm"
                     : "bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-500"
                 }`}
               >
@@ -420,7 +435,7 @@ export default function WritePage() {
                       }}
                       className={`flex-1 px-3 py-2 instrument-input font-mono text-sm transition-all ${
                         val
-                          ? "instrument-accent text-white shadow-sm"
+                          ? "bg-instrument-accent text-white shadow-sm"
                           : "bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-500"
                       }`}
                     >

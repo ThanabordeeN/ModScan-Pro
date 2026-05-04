@@ -9,8 +9,7 @@ import {
   useRef,
   useCallback,
 } from "react";
-import { createPortal } from "react-dom";
-import { AlertTriangle } from "lucide-react";
+import ProcessConflictDialog from "@/components/ProcessConflictDialog";
 import type { ModbusDevice, ReadRange, UILogEntry } from "@/types/modbus";
 import {
   modbusAPI,
@@ -18,8 +17,15 @@ import {
   dashboardAPI,
   LogEntry,
 } from "@/lib/electron-api";
-import { DataBufferEntry, bufferToCSV, downloadCSV } from "@/lib/data-buffer";
+import { DataBufferEntry } from "@/lib/data-buffer";
 import { getWindowItem, setWindowItem } from "@/lib/window-storage";
+import {
+  DEMO_DEVICES,
+  buildDemoDevice,
+  buildRandomDemoScan,
+  buildDemoReadValues,
+} from "@/lib/demo-data";
+import { useAnalyzerState } from "@/context/hooks/useAnalyzerState";
 
 interface ConnectionSettings {
   type: "serial" | "tcp";
@@ -176,64 +182,17 @@ const defaultConnection: ConnectionSettings = {
   tcpPort: 502,
 };
 
-const demoDevices: ModbusDevice[] = [
-  { address: 1, responseTime: 18, holdingRegisters: [230, 501, 1200, 60] },
-  { address: 2, responseTime: 24, holdingRegisters: [118, 342, 850, 1] },
-  { address: 5, responseTime: 31, holdingRegisters: [400, 125, 240, 0] },
-  { address: 8, responseTime: 27, holdingRegisters: [75, 220, 16, 95] },
-  { address: 12, responseTime: 36, holdingRegisters: [101, 202, 303, 404] },
-];
-
-const buildDemoDevice = (address: number): ModbusDevice => ({
-  address,
-  responseTime: 12 + Math.floor(Math.random() * 68),
-  holdingRegisters: Array.from({ length: 4 }, () =>
-    Math.floor(Math.random() * 1000),
-  ),
-});
-
-const buildRandomDemoScan = (startAddr: number, endAddr: number) => {
-  const min = Math.min(startAddr, endAddr);
-  const max = Math.max(startAddr, endAddr);
-  const addresses: number[] = [];
-
-  for (let address = min; address <= max; address += 1) {
-    const rangeSize = max - min + 1;
-    const discoveryRate = rangeSize <= 10 ? 0.42 : 0.18;
-    if (Math.random() < discoveryRate) addresses.push(address);
-  }
-
-  if (addresses.length === 0 && max >= min) {
-    addresses.push(min + Math.floor(Math.random() * (max - min + 1)));
-  }
-
-  return addresses
-    .slice(0, 24)
-    .sort((a, b) => a - b)
-    .map((address) => buildDemoDevice(address));
-};
-
-const buildDemoReadValues = (
-  slaveAddress: number,
-  registerAddress: number,
-  quantity: number,
-  functionCode: number,
-) => {
-  const tick = Math.floor(Date.now() / 1000);
-  return Array.from({ length: quantity }, (_, idx) => {
-    const seed = slaveAddress * 97 + registerAddress + idx * 13 + tick;
-    if (functionCode === 1 || functionCode === 2) return seed % 2;
-    return seed % 1000;
-  });
-};
 
 const ModbusContext = createContext<ModbusContextType | undefined>(undefined);
 
 export function ModbusProvider({ children }: { children: ReactNode }) {
+  // --- Analyzer (Logs, Graph, Buffer) ---
+  const analyzer = useAnalyzerState();
+
   // --- Demo Mode ---
   const [demoMode, setDemoModeState] = useState(false);
   const [demoScannedDevices, setDemoScannedDevices] =
-    useState<ModbusDevice[]>(demoDevices);
+    useState<ModbusDevice[]>(DEMO_DEVICES);
 
   // --- Connection ---
   const [connection, setConnection] =
@@ -292,15 +251,6 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
   const [readError, setReadError] = useState<string | null>(null);
   const [isReading, setIsReading] = useState(false);
 
-  // --- Analyzer (Logs & Graph) ---
-  const [logs, setLogs] = useState<UILogEntry[]>([]);
-  const [graphData, setGraphData] = useState<Record<string, unknown>[]>([]);
-  const [selectedRegisters, setSelectedRegisters] = useState<Set<string>>(
-    new Set(),
-  );
-  const [isLogging, setIsLogging] = useState(false);
-  const MAX_GRAPH_POINTS = 500;
-  const [dataBuffer, setDataBuffer] = useState<DataBufferEntry[]>([]);
 
   // --- Topology Global State ---
   const [isLiveMonitoring, setIsLiveMonitoring] = useState(false);
@@ -749,12 +699,9 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
 
               res.data.forEach((val, valIdx) => {
                 const uniqueId = `${range.slaveAddress}-${range.registerAddress + valIdx}`;
-
-                if (selectedRegisters.has(uniqueId)) {
+                if (analyzer.selectedRegisters.has(uniqueId)) {
                   graphPoint[uniqueId] = val;
                 }
-
-                // Always buffer data for CSV export
                 bufferEntries.push({
                   timestamp,
                   timeStr,
@@ -764,8 +711,7 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
                   functionCode: range.functionCode,
                   remark: range.remark,
                 });
-
-                if (isLogging) {
+                if (analyzer.isLogging) {
                   logEntries.push({
                     timestamp,
                     slaveId: range.slaveAddress,
@@ -779,22 +725,11 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
           },
         );
 
-        // Update Graph
-        setGraphData((prev) => {
-          const newData = [...prev, graphPoint];
-          if (newData.length > MAX_GRAPH_POINTS)
-            return newData.slice(newData.length - MAX_GRAPH_POINTS);
-          return newData;
-        });
+        analyzer.appendGraphPoint(graphPoint);
+        analyzer.appendBuffer(bufferEntries);
+        analyzer.appendLogs(uiLogs);
 
-        // Update Data Buffer
-        setDataBuffer((prev) => [...prev, ...bufferEntries]);
-
-        // Update Logs List
-        setLogs((prev) => [...uiLogs, ...prev].slice(0, 200));
-
-        // Write to CSV
-        if (isLogging && logEntries.length > 0) {
+        if (analyzer.isLogging && logEntries.length > 0) {
           loggerAPI
             .log(logEntries)
             .catch((err) => console.error("Logger error:", err));
@@ -814,9 +749,7 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
     readRanges,
     readTimeout,
     autoRefresh,
-    isLogging,
-    selectedRegisters,
-    MAX_GRAPH_POINTS,
+    analyzer,
     demoMode,
     scannedDevices,
   ]);
@@ -883,45 +816,23 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
     await handleRead();
   };
 
-  const toggleRegisterSelection = (uniqueId: string) => {
-    const newSet = new Set(selectedRegisters);
-    if (newSet.has(uniqueId)) newSet.delete(uniqueId);
-    else newSet.add(uniqueId);
-    setSelectedRegisters(newSet);
-  };
-
   const toggleLogging = async () => {
-    if (isLogging) {
-      // Stop
-      setIsLogging(false);
+    if (analyzer.isLogging) {
+      analyzer.setIsLogging(false);
       const res = await loggerAPI.stop();
       if (res.success && res.filePath) {
         alert(`Log saved to: ${res.filePath}`);
       }
     } else {
-      // Start
       const res = await loggerAPI.start();
       if (res.success) {
-        setIsLogging(true);
+        analyzer.setIsLogging(true);
         if (!autoRefresh) setAutoRefresh(true);
       } else {
         setReadError(res.error || "Failed to start logging");
       }
     }
   };
-
-  const clearLogs = () => setLogs([]);
-  const clearGraph = () => setGraphData([]);
-  const clearDataBuffer = () => setDataBuffer([]);
-
-  const exportDataCSV = useCallback(() => {
-    if (dataBuffer.length === 0) return;
-    const csv = bufferToCSV(dataBuffer);
-    const now = new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const filename = `modbus_log_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.csv`;
-    downloadCSV(csv, filename);
-  }, [dataBuffer]);
 
   // --- Scan Diff ---
   const scanDiff = (() => {
@@ -1023,24 +934,24 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
 
         handleWrite,
 
-        logs,
-        setLogs,
-        clearLogs,
+        logs: analyzer.logs,
+        setLogs: analyzer.setLogs,
+        clearLogs: analyzer.clearLogs,
 
-        graphData,
-        setGraphData,
-        clearGraph,
+        graphData: analyzer.graphData,
+        setGraphData: analyzer.setGraphData,
+        clearGraph: analyzer.clearGraph,
 
-        selectedRegisters,
-        setSelectedRegisters,
-        toggleRegisterSelection,
+        selectedRegisters: analyzer.selectedRegisters,
+        setSelectedRegisters: analyzer.setSelectedRegisters,
+        toggleRegisterSelection: analyzer.toggleRegisterSelection,
 
-        isLogging,
+        isLogging: analyzer.isLogging,
         toggleLogging,
 
-        dataBuffer,
-        clearDataBuffer,
-        exportDataCSV,
+        dataBuffer: analyzer.dataBuffer,
+        clearDataBuffer: analyzer.clearDataBuffer,
+        exportDataCSV: analyzer.exportDataCSV,
 
         isLiveMonitoring,
         setIsLiveMonitoring,
@@ -1055,77 +966,14 @@ export function ModbusProvider({ children }: { children: ReactNode }) {
     >
       {children}
 
-      {/* Global Process Conflict Dialog — rendered via Portal to escape parent overflow */}
-      {pendingProcess &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 99999,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "rgba(15, 23, 42, 0.5)",
-              backdropFilter: "blur(4px)",
-              WebkitBackdropFilter: "blur(4px)",
-              animation: "fadeIn 200ms ease-out",
-            }}
-          >
-            <div
-              className="bg-white dark:bg-slate-800"
-              style={{
-                borderRadius: "1rem",
-                boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
-                width: "100%",
-                maxWidth: "28rem",
-                overflow: "hidden",
-                animation: "scaleIn 200ms ease-out",
-              }}
-            >
-              <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-start gap-4">
-                <div className="w-12 h-12 rounded-instrument-full bg-amber-100 dark:instrument-accent/30 flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle className="w-6 h-6 instrument-accent dark:instrument-accent" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">
-                    Process Conflict
-                  </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                    The system is currently running a background process (
-                    <span className="font-semibold text-slate-800 dark:text-slate-200 uppercase">
-                      {pendingProcess.conflicting}
-                    </span>
-                    ). Starting a new process (
-                    <span className="font-semibold text-slate-800 dark:text-slate-200 uppercase">
-                      {pendingProcess.name}
-                    </span>
-                    ) requires stopping the current one.
-                  </p>
-                </div>
-              </div>
-              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 flex gap-3 justify-end">
-                <button
-                  onClick={cancelStartProcess}
-                  className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 instrument-input hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmStartProcess}
-                  className="px-4 py-2 text-sm font-medium text-white bg-slate-900 instrument-input hover:bg-slate-800 transition-colors"
-                >
-                  Stop & Switch Process
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
+      {pendingProcess && (
+        <ProcessConflictDialog
+          conflicting={pendingProcess.conflicting}
+          incoming={pendingProcess.name}
+          onConfirm={confirmStartProcess}
+          onCancel={cancelStartProcess}
+        />
+      )}
     </ModbusContext.Provider>
   );
 }

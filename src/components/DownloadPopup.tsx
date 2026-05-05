@@ -8,12 +8,12 @@ import {
   CreditCard,
   MessageCircle,
 } from "lucide-react";
-import { translations, type Lang } from "../lib/i18n";
+import { i18n, type Language } from "../lib/i18n";
 
 interface DownloadPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  lang: Lang;
+  lang: Language;
 }
 
 export default function DownloadPopup({
@@ -21,7 +21,7 @@ export default function DownloadPopup({
   onClose,
   lang,
 }: DownloadPopupProps) {
-  const t = translations[lang];
+  const t = i18n[lang];
   const [selectedTier, setSelectedTier] = useState(0);
 
   const stripeTiers = [

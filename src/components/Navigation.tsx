@@ -45,7 +45,7 @@ export default function Navigation() {
     { href: "/change-address", label: t("nav_change_id"), icon: Settings },
     { href: "/projects", label: t("nav_projects"), icon: FolderOpen },
     { href: "/remote", label: t("nav_remote"), icon: Globe },
-    { href: "/diagnostics", label: "Diagnostics", icon: Activity },
+    { href: "/diagnostics", label: t("nav_diagnostics"), icon: Activity },
   ];
 
   return (

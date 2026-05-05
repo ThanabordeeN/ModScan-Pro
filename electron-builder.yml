@@ -1,6 +1,6 @@
 appId: com.2edge.modscan-pro
 productName: ModScan Pro
-copyright: Copyright © 2024 2Edge Technology Co.,Ltd.
+copyright: Copyright © 2026 2edge.co
 
 directories:
   output: dist
@@ -26,10 +26,6 @@ asarUnpack:
   - "**/node_modules/serialport/**/*"
   - "**/node_modules/@serialport/**/*"
   - "**/node_modules/modbus-serial/**/*"
-
-extraResources:
-  - from: src/lib/public_key.pem
-    to: public_key.pem
 
 publish:
   provider: github

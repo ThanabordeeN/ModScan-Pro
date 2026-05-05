@@ -118,27 +118,6 @@ interface ElectronWindow extends Window {
       ) => Promise<{ success: boolean }>;
       dashboardStatus: () => Promise<DashboardStatus>;
     };
-    license: {
-      getMachineId: () => Promise<{
-        success: boolean;
-        machineId?: string;
-        error?: string;
-      }>;
-      activate: (
-        serialKey: string,
-      ) => Promise<{
-        success: boolean;
-        valid?: boolean;
-        machineId?: string;
-        error?: string;
-      }>;
-      check: () => Promise<{
-        success: boolean;
-        valid?: boolean;
-        machineId?: string;
-        error?: string;
-      }>;
-    };
     tunnel: {
       control: (data: {
         action: "start" | "stop";
@@ -362,58 +341,6 @@ export const modbusAPI = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(config),
-    });
-    return res.json();
-  },
-};
-
-// License API
-export const licenseAPI = {
-  async getMachineId(): Promise<{
-    success: boolean;
-    machineId?: string;
-    error?: string;
-  }> {
-    const api = getElectronAPI();
-    if (api) {
-      return api.license.getMachineId();
-    }
-    // Fallback - get from license check
-    const res = await fetch("/api/license");
-    const data = await res.json();
-    return { success: true, machineId: data.machineId };
-  },
-
-  async check(): Promise<{
-    success: boolean;
-    valid?: boolean;
-    machineId?: string;
-    error?: string;
-  }> {
-    const api = getElectronAPI();
-    if (api) {
-      return api.license.check();
-    }
-    const res = await fetch("/api/license");
-    return res.json();
-  },
-
-  async activate(
-    licenseKey: string,
-  ): Promise<{
-    success: boolean;
-    valid?: boolean;
-    machineId?: string;
-    error?: string;
-  }> {
-    const api = getElectronAPI();
-    if (api) {
-      return api.license.activate(licenseKey);
-    }
-    const res = await fetch("/api/license", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ licenseKey }),
     });
     return res.json();
   },

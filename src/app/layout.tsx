@@ -10,7 +10,6 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { ProjectProvider } from "@/context/ProjectContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import Navigation from "@/components/Navigation";
-import LicenseGuard from "@/components/LicenseGuard";
 import RemoteGuard from "@/components/RemoteGuard";
 import UpdateNotification from "@/components/UpdateNotification";
 
@@ -51,7 +50,6 @@ export default function RootLayout({
           <ModbusProvider>
             <LanguageProvider>
               <ProjectProvider>
-                <LicenseGuard>
                   <RemoteGuard>
                     <div className="flex min-h-screen">
                       <Navigation />
@@ -85,7 +83,6 @@ export default function RootLayout({
                       </div>
                     </div>
                   </RemoteGuard>
-                </LicenseGuard>
               </ProjectProvider>
             </LanguageProvider>
           </ModbusProvider>

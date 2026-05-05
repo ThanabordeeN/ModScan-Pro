@@ -7,7 +7,6 @@ const crypto = require('crypto');
 // Import IPC handlers
 const { registerSerialHandlers } = require('./ipc/serial');
 const { registerModbusHandlers } = require('./ipc/modbus');
-const { registerLicenseHandlers } = require('./ipc/license');
 const { registerTunnelHandlers } = require('./ipc/tunnel');
 const { registerLoggerHandlers } = require('./ipc/logger');
 const { registerProjectHandlers } = require('./ipc/project');
@@ -109,49 +108,6 @@ function createStaticServer() {
         res.end('Not Found');
       });
       return;
-    }
-
-    if (filePath.startsWith('/api/license')) {
-      const { verifyLicense, saveLicense } = require('./ipc/license');
-
-      if (req.method === 'GET') {
-        const result = verifyLicense();
-        // Since verifyLicense returns { valid, machineId, error }, and frontend expects { success, valid, machineId, error }
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, ...result }));
-        return;
-      }
-
-      if (req.method === 'POST') {
-        // Verify activate body
-        const buffers = [];
-        req.on('data', (chunk) => buffers.push(chunk));
-        req.on('end', async () => {
-          const body = buffers.length ? JSON.parse(Buffer.concat(buffers).toString()) : {};
-          const { licenseKey } = body;
-
-          if (!licenseKey) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: false, error: 'License key is required' }));
-            return;
-          }
-
-          const status = verifyLicense(licenseKey);
-          if (status.valid) {
-            if (saveLicense(licenseKey)) {
-              res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ success: true, valid: true, machineId: status.machineId }));
-            } else {
-              res.writeHead(500, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ success: false, error: 'Failed to save license' }));
-            }
-          } else {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: false, valid: false, machineId: status.machineId, error: status.error || 'Invalid key' }));
-          }
-        });
-        return;
-      }
     }
 
     // --- API HANDLERS for MODBUS and SERIAL ---
@@ -380,7 +336,6 @@ function registerIpcHandlers() {
   try {
     registerSerialHandlers(ipcMain);
     registerModbusHandlers(ipcMain);
-    registerLicenseHandlers(ipcMain);
     registerTunnelHandlers(ipcMain);
     registerLoggerHandlers(ipcMain);
     registerProjectHandlers(ipcMain);

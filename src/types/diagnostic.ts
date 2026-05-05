@@ -8,8 +8,7 @@ export type ErrorModule =
   | 'polling'
   | 'topology'
   | 'project'
-  | 'tunnel'
-  | 'license';
+  | 'tunnel';
 
 export interface OperationalErrorLog {
   id: string;

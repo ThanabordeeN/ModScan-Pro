@@ -39,13 +39,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     dashboardStatus: () => ipcRenderer.invoke('modbus:dashboard-status', windowId),
   },
 
-  // License operations
-  license: {
-    getMachineId: () => ipcRenderer.invoke('license:get-machine-id'),
-    activate: (serialKey) => ipcRenderer.invoke('license:activate', serialKey),
-    check: () => ipcRenderer.invoke('license:check'),
-  },
-
   // Tunnel operations
   tunnel: {
     control: (data) => ipcRenderer.invoke('tunnel:control', data),

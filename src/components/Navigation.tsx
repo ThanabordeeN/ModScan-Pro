@@ -20,7 +20,11 @@ import {
   Moon,
   Languages,
   FlaskConical,
+  Heart,
+  MessageCircle,
+  Activity,
 } from "lucide-react";
+import DownloadPopup from "./DownloadPopup";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useModbus } from "@/context/ModbusContext";
@@ -32,6 +36,7 @@ export default function Navigation() {
   const { theme, toggleTheme } = useTheme();
   const { demoMode, toggleDemoMode } = useModbus();
   const [collapsed, setCollapsed] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
 
   const navItems = [
     { href: "/scan", label: t("nav_scan"), icon: Radar },
@@ -40,6 +45,7 @@ export default function Navigation() {
     { href: "/change-address", label: t("nav_change_id"), icon: Settings },
     { href: "/projects", label: t("nav_projects"), icon: FolderOpen },
     { href: "/remote", label: t("nav_remote"), icon: Globe },
+    { href: "/diagnostics", label: "Diagnostics", icon: Activity },
   ];
 
   return (
@@ -125,6 +131,12 @@ export default function Navigation() {
           </div>
         </div>
       )}
+
+      <DownloadPopup
+        isOpen={supportOpen}
+        onClose={() => setSupportOpen(false)}
+        lang={language}
+      />
 
       {/* Desktop Sidebar */}
       <aside
@@ -234,6 +246,24 @@ export default function Navigation() {
               <Languages className="w-4 h-4 flex-shrink-0" />
               {!collapsed && <span className="uppercase">{language}</span>}
             </button>
+            <button
+              onClick={() => setSupportOpen(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-instrument-sm text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all text-xs"
+              title="Support the Project"
+            >
+              <Heart className="w-4 h-4 flex-shrink-0" />
+              {!collapsed && <span>Support</span>}
+            </button>
+            <a
+              href="https://discord.gg/kBD4uD2XtH"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-instrument-sm text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all text-xs"
+              title="Join Discord"
+            >
+              <MessageCircle className="w-4 h-4 flex-shrink-0" />
+              {!collapsed && <span>Discord</span>}
+            </a>
             <button
               onClick={() => setCollapsed(!collapsed)}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-instrument-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all text-xs"

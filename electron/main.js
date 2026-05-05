@@ -12,6 +12,7 @@ const { registerTunnelHandlers } = require('./ipc/tunnel');
 const { registerLoggerHandlers } = require('./ipc/logger');
 const { registerProjectHandlers } = require('./ipc/project');
 const { registerUpdateHandlers } = require('./ipc/update');
+const { registerDiagnosticHandlers } = require('./ipc/diagnostic');
 const logger = require('./logger');
 
 // Multi-window manager: windowId -> BrowserWindow
@@ -384,6 +385,7 @@ function registerIpcHandlers() {
     registerLoggerHandlers(ipcMain);
     registerProjectHandlers(ipcMain);
     registerUpdateHandlers(ipcMain);
+    registerDiagnosticHandlers(ipcMain);
   } catch (error) {
     logger.error('Failed to register some IPC handlers:', error);
   }

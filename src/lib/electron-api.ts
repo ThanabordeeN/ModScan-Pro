@@ -1,5 +1,11 @@
 import type { ProjectData, RecentProject } from "@/types/project";
 import type {
+  OperationalErrorLog,
+  ActionLog,
+  FeedbackPayload,
+  AppInfo,
+} from "@/types/diagnostic";
+import type {
   SerialPortInfo,
   ModbusDevice,
   ConnectionConfig,
@@ -196,6 +202,15 @@ interface ElectronWindow extends Window {
       onStatus: (callback: (info: UpdateInfo) => void) => void;
       onProgress: (callback: (progress: UpdateProgress) => void) => void;
       removeListeners: () => void;
+    };
+    diagnostic: {
+      getErrors: (limit?: number) => Promise<{ success: boolean; errors: OperationalErrorLog[] }>;
+      getActions: (limit?: number) => Promise<{ success: boolean; actions: ActionLog[] }>;
+      getInfo: () => Promise<{ success: boolean; info: AppInfo }>;
+      clearErrors: () => Promise<{ success: boolean }>;
+      clearActions: () => Promise<{ success: boolean }>;
+      exportBundle: (options?: { feedback?: string }) => Promise<{ success: boolean; filePath?: string; cancelled?: boolean; error?: string }>;
+      submitFeedback: (feedback: FeedbackPayload) => Promise<{ success: boolean; filePath?: string; cancelled?: boolean; error?: string }>;
     };
   };
 }
@@ -727,6 +742,51 @@ export const updateAPI = {
   removeListeners() {
     const api = getElectronAPI();
     if (api) api.update.removeListeners();
+  },
+};
+
+// Diagnostic API (Electron-only, no web fallback needed)
+export const diagnosticAPI = {
+  async getErrors(limit?: number): Promise<{ success: boolean; errors: OperationalErrorLog[] }> {
+    const api = getElectronAPI();
+    if (api?.diagnostic) return api.diagnostic.getErrors(limit);
+    return { success: true, errors: [] };
+  },
+
+  async getActions(limit?: number): Promise<{ success: boolean; actions: ActionLog[] }> {
+    const api = getElectronAPI();
+    if (api?.diagnostic) return api.diagnostic.getActions(limit);
+    return { success: true, actions: [] };
+  },
+
+  async getInfo(): Promise<{ success: boolean; info: AppInfo }> {
+    const api = getElectronAPI();
+    if (api?.diagnostic) return api.diagnostic.getInfo();
+    return { success: true, info: { appVersion: 'n/a', os: navigator.userAgent, electronVersion: 'n/a', nodeVersion: 'n/a', platform: 'web' } };
+  },
+
+  async clearErrors(): Promise<{ success: boolean }> {
+    const api = getElectronAPI();
+    if (api?.diagnostic) return api.diagnostic.clearErrors();
+    return { success: true };
+  },
+
+  async clearActions(): Promise<{ success: boolean }> {
+    const api = getElectronAPI();
+    if (api?.diagnostic) return api.diagnostic.clearActions();
+    return { success: true };
+  },
+
+  async exportBundle(options?: { feedback?: string }): Promise<{ success: boolean; filePath?: string; cancelled?: boolean; error?: string }> {
+    const api = getElectronAPI();
+    if (api?.diagnostic) return api.diagnostic.exportBundle(options);
+    return { success: false, error: 'Not available in web mode' };
+  },
+
+  async submitFeedback(feedback: FeedbackPayload): Promise<{ success: boolean; filePath?: string; cancelled?: boolean; error?: string }> {
+    const api = getElectronAPI();
+    if (api?.diagnostic) return api.diagnostic.submitFeedback(feedback);
+    return { success: false, error: 'Not available in web mode' };
   },
 };
 

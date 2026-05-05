@@ -1,6 +1,7 @@
 const ModbusRTU = require('modbus-serial');
 const { connectClient, getErrorMessage } = require('./modbus-helpers');
 const { ModbusQueue } = require('./dashboard-poller');
+const { diagnosticService } = require('./diagnostic');
 
 /**
  * Register Modbus IPC handlers
@@ -80,7 +81,23 @@ const ModbusService = {
     } catch (error) {
       try { await client.close(() => { }); } catch { }
       if (windowId) scanAbortFlags.delete(windowId);
-      return { success: false, error: getErrorMessage(error) };
+      const msg = getErrorMessage(error);
+      diagnosticService.logError({
+        module: 'scan',
+        action: 'scan_failed',
+        message: error.message,
+        userMessage: msg,
+        severity: 'error',
+        rawError: error.stack,
+        context: {
+          connectionType: config.type,
+          port: config.port,
+          tcpIp: config.tcpIp,
+          tcpPort: config.tcpPort,
+          startAddress: config.startAddress,
+        },
+      });
+      return { success: false, error: msg };
     }
   },
 
@@ -123,13 +140,49 @@ const ModbusService = {
       return { success: true, data, slaveAddress, functionCode, registerAddress, quantity };
     } catch (error) {
       try { await client.close(() => { }); } catch { }
-      return { success: false, error: getErrorMessage(error) };
+      const msg = getErrorMessage(error);
+      diagnosticService.logError({
+        module: 'read',
+        action: 'read_failed',
+        message: error.message,
+        userMessage: msg,
+        severity: 'error',
+        rawError: error.stack,
+        context: {
+          connectionType: config.type,
+          port: config.port,
+          tcpIp: config.tcpIp,
+          slaveId: config.slaveAddress,
+          functionCode: config.functionCode,
+          startAddress: config.registerAddress,
+          quantity: config.quantity,
+        },
+      });
+      return { success: false, error: msg };
     }
   },
 
   write: async (config) => {
     const { slaveAddress, functionCode, address, value, values, coilValue, coilValues, timeout = 1000 } = config;
     const client = new ModbusRTU();
+
+    const riskLevel = (functionCode === 15 || functionCode === 16) ? 'high' : 'medium';
+    const writeContext = {
+      connectionType: config.type,
+      port: config.port,
+      tcpIp: config.tcpIp,
+      slaveId: slaveAddress,
+      functionCode,
+      startAddress: address,
+    };
+
+    diagnosticService.logAction({
+      action: 'write_attempt',
+      module: 'write',
+      description: `FC${functionCode} write to slave ${slaveAddress} addr ${address}`,
+      riskLevel,
+      context: writeContext,
+    });
 
     try {
       await connectClient(client, config);
@@ -154,10 +207,36 @@ const ModbusService = {
       }
 
       await client.close(() => { });
+      diagnosticService.logAction({
+        action: 'write_success',
+        module: 'write',
+        description: `FC${functionCode} write success slave ${slaveAddress} addr ${address}`,
+        riskLevel,
+        context: writeContext,
+        result: 'success',
+      });
       return { success: true, functionCode, address, message: `Successfully wrote to address ${address}` };
     } catch (error) {
       try { await client.close(() => { }); } catch { }
-      return { success: false, error: getErrorMessage(error) };
+      const msg = getErrorMessage(error);
+      diagnosticService.logAction({
+        action: 'write_failed',
+        module: 'write',
+        description: `FC${functionCode} write failed slave ${slaveAddress} addr ${address}: ${msg}`,
+        riskLevel,
+        context: writeContext,
+        result: 'failed',
+      });
+      diagnosticService.logError({
+        module: 'write',
+        action: 'write_failed',
+        message: error.message,
+        userMessage: msg,
+        severity: 'error',
+        rawError: error.stack,
+        context: writeContext,
+      });
+      return { success: false, error: msg };
     }
   },
 

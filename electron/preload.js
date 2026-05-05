@@ -81,6 +81,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
   },
 
+  // Diagnostic operations
+  diagnostic: {
+    getErrors: (limit) => ipcRenderer.invoke('diagnostic:get-errors', limit),
+    getActions: (limit) => ipcRenderer.invoke('diagnostic:get-actions', limit),
+    getInfo: () => ipcRenderer.invoke('diagnostic:get-info'),
+    clearErrors: () => ipcRenderer.invoke('diagnostic:clear-errors'),
+    clearActions: () => ipcRenderer.invoke('diagnostic:clear-actions'),
+    exportBundle: (options) => ipcRenderer.invoke('diagnostic:export-bundle', options),
+    submitFeedback: (feedback) => ipcRenderer.invoke('diagnostic:submit-feedback', feedback),
+  },
+
   // Utility
   isElectron: true,
 });

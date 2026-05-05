@@ -86,12 +86,23 @@ export default function UpdateNotification() {
 
             <div className="flex gap-2 mt-4">
               {updateInfo.status === 'available' && (
-                <button
-                  onClick={handleDownload}
-                  className="flex-1 bg-instrument-accent hover:bg-instrument-accent/90 text-white font-bold py-2.5 instrument-panel transition-all shadow-lg shadow-instrument-accent/20 text-sm"
-                >
-                  {t('update_btn_download')}
-                </button>
+                <>
+                  <button
+                    onClick={handleDownload}
+                    className="flex-1 bg-instrument-accent hover:bg-instrument-accent/90 text-white font-bold py-2.5 instrument-panel transition-all shadow-lg shadow-instrument-accent/20 text-sm"
+                  >
+                    {t('update_btn_download')}
+                  </button>
+                  <a
+                    href={`https://github.com/ThanabordeeN/ModScan-Pro/releases/tag/v${updateInfo.version}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 instrument-panel transition-all text-sm font-medium flex items-center gap-1.5"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    GitHub
+                  </a>
+                </>
               )}
               {updateInfo.status === 'ready' && (
                 <button

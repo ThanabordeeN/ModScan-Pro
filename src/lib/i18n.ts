@@ -300,6 +300,23 @@ export const i18n = {
     update_btn_download: "ดาวน์โหลดตอนนี้",
     update_btn_install: "เริ่มใหม่เพื่ออัปเดต",
     update_error: "การอัปเดตล้มเหลว: {error}",
+
+    // Download / Support Popup
+    popup_title: "สนับสนุนโปรเจกต์",
+    popup_donate_title: "บริจาคเพื่อสนับสนุน",
+    popup_donate_desc: "สนับสนุนการพัฒนา ModScan Pro ผ่านพร้อมเพย์",
+    popup_tier_1_desc: "ขอบคุณสำหรับการสนับสนุนเล็กน้อย",
+    popup_tier_2_desc: "ช่วยรักษาเซิร์ฟเวอร์ให้ทำงานได้",
+    popup_tier_3_desc: "สนับสนุนการพัฒนาฟีเจอร์ใหม่",
+    popup_tier_4_desc: "ผู้สนับสนุนหลักของโปรเจกต์",
+    popup_tier_5_desc: "สนับสนุนระดับสูงสุด ขอบคุณมากครับ",
+    popup_tier_selected: "ระดับที่เลือก",
+    popup_donate_btn: "สนับสนุนผ่าน Stripe",
+    popup_discord_title: "เข้าร่วม Discord",
+    popup_discord_desc: "พูดคุย รายงานบั๊ก และติดตามการอัปเดตในชุมชน",
+    popup_discord_btn: "เข้าร่วม Discord",
+    popup_divider: "หรือ",
+    popup_download: "ดาวน์โหลดเวอร์ชันล่าสุด",
   },
   en: {
     // Navigation
@@ -596,7 +613,27 @@ export const i18n = {
     update_btn_download: "Download Now",
     update_btn_install: "Restart & Update",
     update_error: "Update failed: {error}",
+
+    // Download / Support Popup
+    popup_title: "Support the Project",
+    popup_donate_title: "Donate to Support",
+    popup_donate_desc: "Help keep ModScan Pro actively developed and maintained.",
+    popup_tier_1_desc: "Thanks for your small contribution!",
+    popup_tier_2_desc: "Helps keep the servers running.",
+    popup_tier_3_desc: "Supports new feature development.",
+    popup_tier_4_desc: "Core project backer — thank you!",
+    popup_tier_5_desc: "Top-tier supporter — hugely appreciated!",
+    popup_tier_selected: "Selected tier",
+    popup_donate_btn: "Support via Stripe",
+    popup_discord_title: "Join the Discord",
+    popup_discord_desc: "Chat, report bugs, and follow project updates in the community.",
+    popup_discord_btn: "Join Discord",
+    popup_divider: "or",
+    popup_download: "Download Latest Release",
   },
 };
 
 export type TranslationKey = keyof typeof i18n.th;
+
+export const translations = i18n;
+export type Lang = Language;

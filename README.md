@@ -1,82 +1,83 @@
-# Modbus Scanner & Configuration Tool
+# ModScan Community
 
-A comprehensive tool for scanning, configuring, and managing Modbus RTU devices. Designed for System Integrators (SIs) and engineers.
+An open-source desktop Modbus RTU/TCP scanner, reader, writer, topology mapper, and diagnostic utility for technicians, system integrators, automation engineers, and developers.
 
 ## Features
 
-- **Device Scanning**: Quickly scan for Modbus devices across a range of addresses.
-- **Read/Write Operations**: Support for all standard Modbus function codes (FC01, FC02, FC03, FC04, FC05, FC06, FC15, FC16).
-- **Address Configuration**: Change Modbus Slave IDs easily.
-- **Licensing System**: Secure, node-locked licensing system for commercial distribution.
+- **Device Scanning** — Scan for Modbus devices across a range of slave addresses
+- **Read/Write Operations** — Support for standard Modbus function codes: FC01, FC02, FC03, FC04, FC05, FC06, FC15, FC16
+- **Dashboard Polling** — Monitor multiple registers across multiple devices in real time
+- **Topology Mapping** — Visualize device topology on an RS-485 bus
+- **Data Logging** — Export register values to CSV
+- **Project Management** — Save and load device configurations and register aliases
+- **Demo Mode** — Explore the UI without a physical device connected
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- USB-to-RS485 Converter
+- Node.js v18 or higher
+- npm v9 or higher
+- USB-to-RS485 converter (for RTU) or network access (for TCP)
 
 ### Installation
 
-1.  Clone the repository:
+```bash
+git clone https://github.com/ThanabordeeN/modscan-pro.git
+cd modscan-pro
+npm install
+```
 
-    ```bash
-    git clone <repository-url>
-    cd modbus-scanner
-    ```
+### Run (web dev server)
 
-2.  Install dependencies:
+```bash
+npm run dev
+```
 
-    ```bash
-    npm install
-    ```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-    _Note: This includes `node-machine-id` which requires a rebuild of some native modules._
+### Run (Electron desktop app)
 
-3.  Run the development server:
+```bash
+npm run electron:dev
+```
 
-    ```bash
-    npm run dev
-    ```
+### Build
 
-4.  Open [http://localhost:3000](http://localhost:3000) in your browser.
+```bash
+npm run build
+npm run electron:build
+```
 
-## Licensing System
+## Tech Stack
 
-This application is protected by a hardware-locked licensing system.
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 14, Tailwind CSS, Lucide React |
+| Desktop shell | Electron |
+| Modbus protocol | `modbus-serial` |
+| Tests | Jest, `@testing-library/react` |
 
-### How it Works
+## Contributing
 
-1.  On first launch, the user will be redirected to the **Activation Page**.
-2.  The application displays a unique **Machine ID**.
-3.  The user sends this Machine ID to the vendor (You).
-4.  The vendor generates a **License Key** and sends it back.
-5.  The user enters the key to unlock the application.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines, branch naming, commit conventions, and architecture notes.
 
-### Generating License Keys (For Vendor)
+## Safety
 
-You can generate license keys using the included script.
+ModScan can write to Modbus devices. Writing coils or registers may affect real equipment. See [SAFETY.md](./SAFETY.md) before use.
 
-1.  Get the **Machine ID** from the customer (e.g., `595f44f4-78d2-4d76-8e43-8515e0a0d631`).
-2.  Run the key generator script:
-    ```bash
-    node scripts/keygen.js <MACHINE_ID>
-    ```
-3.  Copy the generated key output and send it to the customer.
+## Security
 
-### Security Note
-
-- The system uses RSA 2048-bit signatures.
-- **Private Key**: Located at `scripts/private_key.pem`. **KEEP THIS SAFE AND SECRET.** Do not distribute it.
-- **Public Key**: Located at `src/lib/public_key.pem`. This is distributed with the app to verify keys.
-
-## Development
-
-- **Frontend**: Next.js 14, Tailwind CSS, Lucide React
-- **Backend / API**: Next.js API Routes
-- **Modbus Protocol**: `modbus-serial`
-- **Hardware ID**: `node-machine-id`
+To report a vulnerability, see [SECURITY.md](./SECURITY.md).
 
 ## License
 
-[Your License Type]
+ModScan Community is licensed under the **GNU Affero General Public License v3.0 only (AGPL-3.0-only)**.
+
+You may use, study, modify, and redistribute this software under the terms of the AGPLv3.
+
+See [LICENSE](./LICENSE) for the full license text.
+
+The **ModScan** name and **2edge** branding are trademarks and are not covered by AGPLv3. See [TRADEMARK.md](./TRADEMARK.md).
+
+Copyright © 2026 2edge / Thanabordee N.

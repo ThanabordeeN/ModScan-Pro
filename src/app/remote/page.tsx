@@ -114,9 +114,14 @@ export default function RemotePage() {
           <h1 className="text-2xl font-bold text-app-text">
             {t("nav_remote")}
           </h1>
-          <p className="text-sm text-app-muted">
-            Securely access your Modbus network remotely
-          </p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <p className="text-sm text-app-muted">
+              Securely access your Modbus network remotely
+            </p>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800">
+              Powered by Cloudflare Tunnel
+            </span>
+          </div>
         </div>
       </div>
 

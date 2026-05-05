@@ -1,4 +1,4 @@
-# Contributing to ModScan Pro Community
+# Contributing to ModScan Community
 
 Thank you for considering a contribution. This document covers everything you need to get started, what we expect from PRs, and how to keep the codebase healthy.
 
@@ -25,7 +25,7 @@ Thank you for considering a contribution. This document covers everything you ne
 
 By submitting a pull request you agree that your contribution is licensed under **AGPLv3**, the same license as this project.
 
-The **ModScan Pro** name, logo, and 2edge branding are trademarks of 2edge and are **not** covered by AGPLv3. Forks and redistributed versions must use a distinct name and must not imply endorsement by 2edge. See [TRADEMARK.md](TRADEMARK.md) for details.
+The **ModScan Community** name, logo, and 2edge branding are trademarks of 2edge and are **not** covered by AGPLv3. Forks and redistributed versions must use a distinct name and must not imply endorsement by 2edge. See [TRADEMARK.md](TRADEMARK.md) for details.
 
 ---
 
@@ -35,8 +35,8 @@ The **ModScan Pro** name, logo, and 2edge branding are trademarks of 2edge and a
 
 ```bash
 # 1. Fork the repository on GitHub, then clone your fork
-git clone https://github.com/<your-username>/modbus-scanner.git
-cd modbus-scanner
+git clone https://github.com/<your-username>/modscan-pro.git
+cd modscan-pro
 
 # 2. Install dependencies
 npm install
@@ -262,4 +262,4 @@ Test files live next to the source file they test (e.g., `window-storage.ts` →
 - Direct `localStorage` access outside `window-storage.ts` (breaks multi-window isolation)
 - PRs that disable or skip existing tests to make CI pass
 - Adding JSX or React components inside Context providers — UI belongs in `src/components/`
-- Rebranding forks as "ModScan Pro" or using 2edge branding (see [TRADEMARK.md](TRADEMARK.md))
+- Rebranding forks as "ModScan" or using 2edge branding without permission (see [TRADEMARK.md](TRADEMARK.md))

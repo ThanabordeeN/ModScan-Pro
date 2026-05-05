@@ -48,6 +48,15 @@ next-env.d.ts
 license.dat
 *.lic
 
+# license system — private keys and key generation scripts
+scripts/private_key.pem
+scripts/public_key.pem
+scripts/keygen.js
+scripts/generate-keys.js
+src/lib/public_key.pem
+src/lib/license.ts
+src/app/license/
+
 # AI / tool session data
 .claude/
 .codex

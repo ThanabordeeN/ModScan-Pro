@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
   AlertTriangle,
   ClipboardList,
@@ -125,7 +125,7 @@ export default function DiagnosticsPage() {
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  async function load() {
     setLoading(true);
     const [errRes, actRes, infoRes] = await Promise.all([
       diagnosticAPI.getErrors(200),
@@ -136,11 +136,23 @@ export default function DiagnosticsPage() {
     if (actRes.success) setActions(actRes.actions);
     if (infoRes.success) setAppInfo(infoRes.info);
     setLoading(false);
-  }, []);
+  }
 
   useEffect(() => {
-    load();
-  }, [load]);
+    let active = true;
+    Promise.all([
+      diagnosticAPI.getErrors(200),
+      diagnosticAPI.getActions(200),
+      diagnosticAPI.getInfo(),
+    ]).then(([errRes, actRes, infoRes]) => {
+      if (!active) return;
+      if (errRes.success) setErrors(errRes.errors);
+      if (actRes.success) setActions(actRes.actions);
+      if (infoRes.success) setAppInfo(infoRes.info);
+      setLoading(false);
+    });
+    return () => { active = false; };
+  }, []);
 
   async function handleExportBundle() {
     setExporting(true);

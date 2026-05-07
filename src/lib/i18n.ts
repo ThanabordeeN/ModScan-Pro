@@ -303,15 +303,15 @@ export const i18n = {
 
     // Download / Support Popup
     popup_title: "สนับสนุนโปรเจกต์",
-    popup_donate_title: "บริจาคเพื่อสนับสนุน",
-    popup_donate_desc: "สนับสนุนการพัฒนา ModScan Pro ผ่านพร้อมเพย์",
+    popup_donate_title: "พร้อมเพย์",
+    popup_donate_desc: "สนับสนุนการพัฒนาอย่างต่อเนื่องด้วยเงินบริจาคครั้งเดียวผ่านพร้อมเพย์ ทุกการสนับสนุนช่วยให้ ModScan Pro ยังคงฟรีและเป็น open-source ต่อไป",
     popup_tier_1_desc: "ขอบคุณสำหรับการสนับสนุนเล็กน้อย",
     popup_tier_2_desc: "ช่วยรักษาเซิร์ฟเวอร์ให้ทำงานได้",
     popup_tier_3_desc: "สนับสนุนการพัฒนาฟีเจอร์ใหม่",
     popup_tier_4_desc: "ผู้สนับสนุนหลักของโปรเจกต์",
     popup_tier_5_desc: "สนับสนุนระดับสูงสุด ขอบคุณมากครับ",
     popup_tier_selected: "ระดับที่เลือก",
-    popup_donate_btn: "สนับสนุนผ่าน Stripe",
+    popup_donate_btn: "บริจาคผ่านพร้อมเพย์",
     popup_discord_title: "เข้าร่วม Discord",
     popup_discord_desc: "พูดคุย รายงานบั๊ก และติดตามการอัปเดตในชุมชน",
     popup_discord_btn: "เข้าร่วม Discord",
@@ -666,8 +666,8 @@ export const i18n = {
 
     // Download / Support Popup
     popup_title: "Support the Project",
-    popup_donate_title: "Donate to Support",
-    popup_donate_desc: "Help keep ModScan Pro actively developed and maintained.",
+    popup_donate_title: "Stripe",
+    popup_donate_desc: "Choose a tier to support ongoing development. Every contribution helps keep ModScan Pro free and open-source.",
     popup_tier_1_desc: "Thanks for your small contribution!",
     popup_tier_2_desc: "Helps keep the servers running.",
     popup_tier_3_desc: "Supports new feature development.",

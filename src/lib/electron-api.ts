@@ -14,6 +14,7 @@ import type {
   WriteConfig,
   BatchReadRequest,
   BatchReadConfig,
+  BatchReadResult,
   ChangeAddressConfig,
   LogEntry,
   DashboardCardConfig,
@@ -36,6 +37,7 @@ export type {
   WriteConfig,
   BatchReadRequest,
   BatchReadConfig,
+  BatchReadResult,
   ChangeAddressConfig,
   LogEntry,
   DashboardCardConfig,
@@ -98,7 +100,7 @@ interface ElectronWindow extends Window {
       readBatch: (
         config: BatchReadConfig,
       ) => Promise<{
-        results: Array<{ success: boolean; data?: number[]; error?: string }>;
+        results: BatchReadResult[];
         error?: string;
       }>;
       changeAddress: (
@@ -310,7 +312,7 @@ export const modbusAPI = {
   async readBatch(
     config: BatchReadConfig,
   ): Promise<{
-    results: Array<{ success: boolean; data?: number[]; error?: string }>;
+    results: BatchReadResult[];
     error?: string;
   }> {
     const api = getElectronAPI();

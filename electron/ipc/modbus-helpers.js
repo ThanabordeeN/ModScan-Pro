@@ -41,4 +41,51 @@ function getErrorMessage(error) {
   return msg || 'Unknown Error';
 }
 
-module.exports = { connectClient, getErrorMessage };
+/**
+ * Extract Modbus exception metadata from an error thrown by modbus-serial.
+ * modbus-serial throws errors with a `modbusCode` property for exception responses.
+ *
+ * @param {Error} error
+ * @param {number} [originalFunctionCode]
+ * @returns {{ isException: boolean, exceptionCode?: number, exceptionName?: string }}
+ */
+function extractExceptionInfo(error, originalFunctionCode) {
+  if (!error) return { isException: false };
+
+  // modbus-serial structured: error.modbusCode contains the exception code
+  if (typeof error.modbusCode === 'number') {
+    const code = error.modbusCode;
+    const names = {
+      1: 'Illegal Function',
+      2: 'Illegal Data Address',
+      3: 'Illegal Data Value',
+      4: 'Slave Device Failure',
+      5: 'Acknowledge',
+      6: 'Slave Device Busy',
+      8: 'Memory Parity Error',
+      10: 'Gateway Path Unavailable',
+      11: 'Gateway Target Device Failed to Respond',
+    };
+    return {
+      isException: true,
+      exceptionCode: code,
+      exceptionName: names[code] || `Unknown Exception 0x${code.toString(16).toUpperCase()}`,
+    };
+  }
+
+  // Parse from message string: "Modbus exception X"
+  const msg = error.message || '';
+  const match = msg.match(/Modbus exception (\d+)/i);
+  if (match) {
+    const code = parseInt(match[1], 10);
+    return {
+      isException: true,
+      exceptionCode: code,
+      exceptionName: `Exception 0x${code.toString(16).toUpperCase()}`,
+    };
+  }
+
+  return { isException: false };
+}
+
+module.exports = { connectClient, getErrorMessage, extractExceptionInfo };

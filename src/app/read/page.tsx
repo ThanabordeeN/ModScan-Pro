@@ -120,6 +120,7 @@ export default function ReadPage() {
                         : null,
                       error: online ? null : "Demo device not found",
                       lastUpdated: new Date().toISOString(),
+                      latencyMs: online ? Math.round(5 + Math.random() * 25) : undefined,
                     },
                   ];
                 }),
@@ -398,7 +399,7 @@ export default function ReadPage() {
           <p className="text-slate-400 dark:text-slate-500 text-sm">{t("dashboard_no_cards")}</p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(380px,1fr))] gap-4">
           {cards.map((card) => (
             <RegisterCard
               key={card.cardId}

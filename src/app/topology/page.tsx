@@ -53,6 +53,8 @@ const LAYOUT_STORAGE_KEY = "topo_save_default";
 // Dimensions for the modbusDevice node (estimate based on ModbusDeviceNode size)
 const nodeWidth = 160;
 const nodeHeight = 80;
+const TOPOLOGY_MONITOR_TIMEOUT = 500;
+const TOPOLOGY_OFFLINE_RESPONSE_TIME = 999;
 
 const getLayoutedElements = (
   nodes: Node[],
@@ -375,25 +377,22 @@ function TopologyCanvas() {
         quantity: 1,
       }));
 
-      const startTime = Date.now();
       try {
         if (demoMode) {
+          const tick = Math.floor(Date.now() / 2000);
           setNodes((nds) =>
             nds.map((node) => {
               if (node.data.isMaster) return node;
               const address = node.data.address as number;
               const device = scannedDevices.find((d) => d.address === address);
+              const jitter = ((address * 13 + tick * 7) % 21) - 10;
               return {
                 ...node,
                 data: {
                   ...node.data,
                   responseTime: device
-                    ? Math.min(
-                        95,
-                        device.responseTime +
-                          (Math.floor(Date.now() / 1000) % 6),
-                      )
-                    : 999,
+                    ? Math.max(1, Math.round(device.responseTime + jitter))
+                    : TOPOLOGY_OFFLINE_RESPONSE_TIME,
                 },
               };
             }),
@@ -411,9 +410,8 @@ function TopologyCanvas() {
           tcpIp: connection.tcpIp,
           tcpPort: connection.tcpPort,
           requests,
-          timeout: 500,
+          timeout: TOPOLOGY_MONITOR_TIMEOUT,
         });
-        const elapsed = Date.now() - startTime;
 
         if (!data.error && data.results) {
           setNodes((nds) =>
@@ -428,7 +426,9 @@ function TopologyCanvas() {
                   ...node,
                   data: {
                     ...node.data,
-                    responseTime: res.success ? Math.min(elapsed, 95) : 999,
+                    responseTime: res.success
+                      ? (res.latencyMs ?? 0)
+                      : TOPOLOGY_OFFLINE_RESPONSE_TIME,
                   },
                 };
               }
@@ -442,7 +442,13 @@ function TopologyCanvas() {
           nds.map((node) =>
             node.data.isMaster
               ? node
-              : { ...node, data: { ...node.data, responseTime: 999 } },
+              : {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    responseTime: TOPOLOGY_OFFLINE_RESPONSE_TIME,
+                  },
+                },
           ),
         );
       }

@@ -11,6 +11,12 @@ interface RegisterCellProps {
   polling: boolean;
   isEditing: boolean;
   editingValue: string;
+  /** Decoded display string (e.g., "0x0042", "50.0", "-1") */
+  displayValue?: string;
+  /** Format label badge shown below value */
+  formatBadge?: string;
+  /** Number of registers this cell spans (for multi-register formats) */
+  regSpan?: number;
   onTogglePlot: () => void;
   onStartEdit: () => void;
   onSaveAlias: () => void;
@@ -27,6 +33,9 @@ export default function RegisterCell({
   polling,
   isEditing,
   editingValue,
+  displayValue,
+  formatBadge,
+  regSpan,
   onTogglePlot,
   onStartEdit,
   onSaveAlias,
@@ -34,6 +43,7 @@ export default function RegisterCell({
   onEditingValueChange,
 }: RegisterCellProps) {
   const labelText = regAlias || `Reg ${regAddr}`;
+  const showValue = displayValue !== undefined ? displayValue : String(val);
 
   if (isEditing) {
     return (
@@ -71,6 +81,11 @@ export default function RegisterCell({
     );
   }
 
+  const wrapperStyle: React.CSSProperties = {
+    ...(isSelected ? { borderColor, boxShadow: `0 0 0 2px ${borderColor}33` } : {}),
+    ...(regSpan && regSpan > 1 ? { gridColumn: `span ${regSpan}` } : {}),
+  };
+
   return (
     <div
       className={`relative group w-full text-center p-1.5 rounded-instrument border transition-all ${
@@ -78,11 +93,7 @@ export default function RegisterCell({
           ? "bg-emerald-50 dark:bg-emerald-900/20 ring-2 shadow-sm"
           : "bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700"
       }`}
-      style={
-        isSelected
-          ? { borderColor, boxShadow: `0 0 0 2px ${borderColor}33` }
-          : {}
-      }
+      style={wrapperStyle}
     >
       {/* Pencil icon — always available, hover to reveal */}
       <button
@@ -124,8 +135,13 @@ export default function RegisterCell({
               : "text-slate-800 dark:text-slate-100"
           }`}
         >
-          {val}
+          {showValue}
         </div>
+        {formatBadge && (
+          <div className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-sans">
+            {formatBadge}
+          </div>
+        )}
         <div
           className={`w-2 h-2 rounded-instrument-full mx-auto mt-1 ${isSelected ? "" : "invisible"}`}
           style={{ backgroundColor: isSelected ? borderColor : undefined }}

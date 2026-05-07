@@ -1,5 +1,5 @@
 const ModbusRTU = require('modbus-serial');
-const { connectClient, getErrorMessage } = require('./modbus-helpers');
+const { connectClient, getErrorMessage, extractExceptionInfo } = require('./modbus-helpers');
 const { ModbusQueue } = require('./dashboard-poller');
 const { diagnosticService } = require('./diagnostic');
 
@@ -104,11 +104,14 @@ const ModbusService = {
   read: async (config) => {
     const { slaveAddress, functionCode, registerAddress, quantity, timeout = 1000 } = config;
     const client = new ModbusRTU();
+    let startTime = Date.now();
 
     try {
       await connectClient(client, config);
       client.setID(slaveAddress);
       client.setTimeout(timeout);
+
+      startTime = Date.now();
 
       let data;
       switch (functionCode) {
@@ -136,11 +139,14 @@ const ModbusService = {
           throw new Error(`Unsupported function code: ${functionCode}`);
       }
 
+      const latencyMs = Date.now() - startTime;
       await client.close(() => { });
-      return { success: true, data, slaveAddress, functionCode, registerAddress, quantity };
+      return { success: true, data, slaveAddress, functionCode, registerAddress, quantity, latencyMs };
     } catch (error) {
+      const latencyMs = Date.now() - startTime;
       try { await client.close(() => { }); } catch { }
       const msg = getErrorMessage(error);
+      const excInfo = extractExceptionInfo(error, functionCode);
       diagnosticService.logError({
         module: 'read',
         action: 'read_failed',
@@ -156,9 +162,17 @@ const ModbusService = {
           functionCode: config.functionCode,
           startAddress: config.registerAddress,
           quantity: config.quantity,
+          latencyMs,
         },
       });
-      return { success: false, error: msg };
+      return {
+        success: false,
+        error: msg,
+        latencyMs,
+        exceptionCode: excInfo.exceptionCode,
+        exceptionName: excInfo.exceptionName,
+        isException: excInfo.isException,
+      };
     }
   },
 
@@ -251,8 +265,10 @@ const ModbusService = {
 
       for (const req of requests) {
         client.setID(req.slaveAddress);
+        let reqStartTime = Date.now();
         try {
           let data;
+          reqStartTime = Date.now();
           switch (req.functionCode) {
             case 1: {
               const result = await client.readCoils(req.registerAddress, req.quantity);
@@ -275,9 +291,19 @@ const ModbusService = {
               break;
             }
           }
-          results.push({ success: true, data });
+          const latencyMs = Date.now() - reqStartTime;
+          results.push({ success: true, data, latencyMs });
         } catch (error) {
-          results.push({ success: false, error: getErrorMessage(error) });
+          const latencyMs = Date.now() - reqStartTime;
+          const excInfo = extractExceptionInfo(error, req.functionCode);
+          results.push({
+            success: false,
+            error: getErrorMessage(error),
+            latencyMs,
+            exceptionCode: excInfo.exceptionCode,
+            exceptionName: excInfo.exceptionName,
+            isException: excInfo.isException,
+          });
         }
       }
 

@@ -1,8 +1,47 @@
 import type { DashboardCardConfig } from "@/lib/electron-api";
+import type { DecodeFormat, ByteOrder } from "@/lib/modbus-decoder";
+import { FORMAT_LABELS, BYTE_ORDER_LABELS, FORMAT_REGISTER_COUNT } from "@/lib/modbus-decoder";
 
 export interface DashboardCard extends DashboardCardConfig {
   name: string;
+  decodeFormat?: DecodeFormat;
+  byteOrder?: ByteOrder;
 }
+
+/** Single-register formats suitable for per-cell display */
+export const SINGLE_REGISTER_FORMATS: DecodeFormat[] = [
+  "raw", "hex", "binary", "int16", "uint16", "bitfield",
+];
+
+/** Multi-register formats that group cells */
+export const MULTI_REGISTER_FORMATS: DecodeFormat[] = [
+  "int32", "uint32", "float32", "float64",
+];
+
+/** All formats available for selection */
+export const ALL_DECODE_FORMATS: DecodeFormat[] = [
+  ...SINGLE_REGISTER_FORMATS,
+  ...MULTI_REGISTER_FORMATS,
+  "ascii",
+];
+
+export const DECODE_FORMAT_OPTIONS: { value: DecodeFormat; label: string; regCount: number }[] = ALL_DECODE_FORMATS.map(
+  (fmt) => ({
+    value: fmt,
+    label: FORMAT_LABELS[fmt],
+    regCount: FORMAT_REGISTER_COUNT[fmt],
+  }),
+);
+
+export const BYTE_ORDER_OPTIONS: { value: ByteOrder; label: string }[] = (
+  Object.keys(BYTE_ORDER_LABELS) as ByteOrder[]
+).map((bo) => ({
+  value: bo,
+  label: BYTE_ORDER_LABELS[bo],
+}));
+
+export { FORMAT_LABELS, BYTE_ORDER_LABELS, FORMAT_REGISTER_COUNT };
+export type { DecodeFormat, ByteOrder };
 
 export interface PlotDataPoint {
   time: string;

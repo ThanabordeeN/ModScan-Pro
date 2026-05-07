@@ -108,8 +108,10 @@ class ModbusQueue {
 
       for (const card of this.cards) {
         if (!this.running) break;
+        let reqStartTime = Date.now();
         try {
           client.setID(card.slaveAddress);
+          reqStartTime = Date.now();
           let data;
           switch (card.functionCode) {
             case 1: {
@@ -135,18 +137,22 @@ class ModbusQueue {
             default:
               throw new Error(`Unsupported function code: ${card.functionCode}`);
           }
+          const latencyMs = Date.now() - reqStartTime;
           this.cardResults[card.cardId] = {
             success: true,
             data,
             error: null,
             lastUpdated: new Date().toISOString(),
+            latencyMs,
           };
         } catch (error) {
+          const latencyMs = Date.now() - reqStartTime;
           this.cardResults[card.cardId] = {
             success: false,
             data: null,
             error: getErrorMessage(error),
             lastUpdated: new Date().toISOString(),
+            latencyMs,
           };
         }
       }

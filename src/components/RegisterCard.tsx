@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   AlertCircle,
   CheckCircle2,
   Clock,
+  Gauge,
   Hash,
+  Info,
   Trash2,
 } from "lucide-react";
 import {
@@ -21,11 +23,19 @@ import RegisterCell from "@/components/RegisterCell";
 import { useProject } from "@/context/ProjectContext";
 import { useLanguage } from "@/context/LanguageContext";
 import {
+  decodeRegisters,
+  FORMAT_REGISTER_COUNT,
+} from "@/lib/modbus-decoder";
+import { getExceptionInfo } from "@/lib/modbus-exceptions";
+import {
   DashboardCard,
   PlotDataPoint,
   PLOT_COLORS,
   FC_LABELS,
   getRegKey,
+  DECODE_FORMAT_OPTIONS,
+  BYTE_ORDER_OPTIONS,
+  FORMAT_LABELS,
 } from "@/types/dashboard";
 import type { DashboardStatus } from "@/lib/electron-api";
 
@@ -56,7 +66,7 @@ export default function RegisterCard({
   formatTime,
   getDeviceDisplayName,
 }: RegisterCardProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { registerAliases, setRegisterAliases } = useProject();
 
   const [editingAlias, setEditingAlias] = useState<{
@@ -65,7 +75,68 @@ export default function RegisterCard({
   } | null>(null);
   const [editingValue, setEditingValue] = useState("");
 
+  const decodeFormat = card.decodeFormat || "raw";
+  const byteOrder = card.byteOrder || "ABCD";
+  const regCount = FORMAT_REGISTER_COUNT[decodeFormat];
+
   const hasData = result?.success && result.data && result.data.length > 0;
+
+  // Decode all register values into cell display data
+  interface CellData {
+    val: number;
+    regIdx: number;
+    regAddr: number;
+    displayValue: string;
+    formatBadge?: string;
+    regSpan?: number;
+  }
+
+  const cellData: CellData[] = useMemo(() => {
+    if (!hasData || !result?.data) return [];
+    const data = result.data;
+    const cells: CellData[] = [];
+
+    if (regCount === 1) {
+      // Single-register format: one cell per register
+      for (let i = 0; i < data.length; i++) {
+        const decoded = decodeRegisters([data[i]], decodeFormat, byteOrder);
+        cells.push({
+          val: data[i],
+          regIdx: i,
+          regAddr: card.registerAddress + i,
+          displayValue: decoded.display,
+          formatBadge: decodeFormat !== "raw" ? FORMAT_LABELS[decodeFormat]?.replace(/^\w+\s/, "") : undefined,
+        });
+      }
+    } else {
+      // Multi-register format: group registers into chunks
+      for (let i = 0; i < data.length; i += regCount) {
+        const chunk = data.slice(i, i + regCount);
+        if (chunk.length < regCount) {
+          // Partial final chunk — show raw values
+          for (let j = 0; j < chunk.length; j++) {
+            cells.push({
+              val: chunk[j],
+              regIdx: i + j,
+              regAddr: card.registerAddress + i + j,
+              displayValue: String(chunk[j]),
+            });
+          }
+          break;
+        }
+        const decoded = decodeRegisters(chunk, decodeFormat, byteOrder);
+        cells.push({
+          val: chunk[0],
+          regIdx: i,
+          regAddr: card.registerAddress + i,
+          displayValue: decoded.display,
+          formatBadge: decodeFormat !== "raw" ? FORMAT_LABELS[decodeFormat]?.replace(/^\w+\s/, "") : undefined,
+          regSpan: regCount,
+        });
+      }
+    }
+    return cells;
+  }, [hasData, result?.data, decodeFormat, byteOrder, card.registerAddress, regCount]);
 
   const startEditAlias = (regIndex: number, regKey: string, currentAlias?: string) => {
     setEditingAlias({ regIndex, regKey });
@@ -83,6 +154,25 @@ export default function RegisterCard({
   const cancelEditAlias = () => {
     setEditingAlias(null);
     setEditingValue("");
+  };
+
+  const exceptionInfo =
+    result?.isException && result.exceptionCode != null
+      ? getExceptionInfo(result.exceptionCode, language)
+      : undefined;
+
+  // Format a compact exception string
+  const formatException = () => {
+    if (!result?.error) return null;
+    if (result.isException && result.exceptionCode != null) {
+      const code = `0x${result.exceptionCode.toString(16).toUpperCase().padStart(2, "0")}`;
+      const name = exceptionInfo?.name || result.exceptionName || "Unknown Exception";
+      return `Modbus Exception ${code} — ${name}`;
+    }
+    if (result.isException && result.exceptionName) {
+      return `Modbus Exception — ${result.exceptionName}`;
+    }
+    return result.error;
   };
 
   return (
@@ -205,6 +295,36 @@ export default function RegisterCard({
               max={125}
             />
           </div>
+          <div>
+            <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Decode Format
+            </label>
+            <select
+              value={decodeFormat}
+              onChange={(e) => onUpdate("decodeFormat", e.target.value)}
+              className="w-full mt-1 px-2 py-1 rounded-instrument border border-slate-200 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-slate-400"
+            >
+              {DECODE_FORMAT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Byte Order
+            </label>
+            <select
+              value={byteOrder}
+              onChange={(e) => onUpdate("byteOrder", e.target.value)}
+              className="w-full mt-1 px-2 py-1 rounded-instrument border border-slate-200 dark:border-slate-600 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-slate-400"
+            >
+              {BYTE_ORDER_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
       )}
 
@@ -217,6 +337,19 @@ export default function RegisterCard({
           <span>{FC_LABELS[card.functionCode]}</span>
           <span>Addr: {card.registerAddress}</span>
           <span>Qty: {card.quantity}</span>
+          {decodeFormat !== "raw" && (
+            <span className="flex items-center gap-1 text-indigo-500 dark:text-indigo-400 font-medium">
+              <Info className="w-3 h-3" />
+              {FORMAT_LABELS[decodeFormat]}
+              {regCount > 1 && ` (${byteOrder})`}
+            </span>
+          )}
+          {result?.latencyMs != null && (
+            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-mono">
+              <Gauge className="w-3 h-3" />
+              {result.latencyMs}ms
+            </span>
+          )}
           {selectedRegisters.size > 0 && (
             <span className="instrument-accent dark:instrument-accent font-medium">
               Plotting {selectedRegisters.size} reg(s)
@@ -228,18 +361,41 @@ export default function RegisterCard({
       {/* Register Data Grid */}
       <div className="px-4 py-3">
         {result?.error && (
-          <div className="text-xs text-red-500 dark:text-red-400 flex items-center gap-1 mb-2">
-            <AlertCircle className="w-3 h-3" />
-            {result.error}
+          <div className="text-xs flex flex-col gap-1 mb-2">
+            <div className="text-red-500 dark:text-red-400 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              {formatException()}
+            </div>
+            {result.isException && result.exceptionCode != null && (
+              <div className="text-red-400/70 dark:text-red-400/60 pl-4 font-mono">
+                Exception Code: 0x{result.exceptionCode.toString(16).toUpperCase().padStart(2, '0')}
+              </div>
+            )}
+            {exceptionInfo && (
+              <div className="pl-4 mt-1 space-y-1 text-[11px] text-red-500/80 dark:text-red-300/80">
+                <div>
+                  <span className="font-semibold">
+                    {language === "th" ? "ความหมาย:" : "Meaning:"}
+                  </span>{" "}
+                  {exceptionInfo.description}
+                </div>
+                <div>
+                  <span className="font-semibold">
+                    {language === "th" ? "สาเหตุที่เป็นไปได้:" : "Possible cause:"}
+                  </span>{" "}
+                  {exceptionInfo.possibleCause}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {hasData && result?.data ? (
+        {cellData.length > 0 ? (
           <div className="grid grid-cols-5 gap-1">
-            {result.data.map((val: number, idx: number) => {
-              const isSelected = selectedRegisters.has(idx);
+            {cellData.map((cell) => {
+              const isSelected = selectedRegisters.has(cell.regIdx);
               const colorIdx = isSelected
-                ? [...selectedRegisters].sort().indexOf(idx)
+                ? [...selectedRegisters].sort().indexOf(cell.regIdx)
                 : -1;
               const borderColor = isSelected
                 ? PLOT_COLORS[colorIdx % PLOT_COLORS.length]
@@ -248,25 +404,27 @@ export default function RegisterCard({
                 card.slaveAddress,
                 card.functionCode,
                 card.registerAddress,
-                idx,
+                cell.regIdx,
               );
               const regAlias = registerAliases[regKey];
-              const regAddr = card.registerAddress + idx;
-              const isEditing = editingAlias?.regIndex === idx;
+              const isEditing = editingAlias?.regIndex === cell.regIdx;
 
               return (
                 <RegisterCell
-                  key={idx}
-                  val={val}
-                  regAddr={regAddr}
+                  key={cell.regIdx}
+                  val={cell.val}
+                  regAddr={cell.regAddr}
                   regAlias={regAlias}
                   isSelected={isSelected}
                   borderColor={borderColor}
                   polling={polling}
                   isEditing={isEditing}
                   editingValue={editingValue}
-                  onTogglePlot={() => onToggleRegisterPlot(idx)}
-                  onStartEdit={() => startEditAlias(idx, regKey, regAlias)}
+                  displayValue={cell.displayValue}
+                  formatBadge={cell.formatBadge}
+                  regSpan={cell.regSpan}
+                  onTogglePlot={() => onToggleRegisterPlot(cell.regIdx)}
+                  onStartEdit={() => startEditAlias(cell.regIdx, regKey, regAlias)}
                   onSaveAlias={saveAlias}
                   onCancelEdit={cancelEditAlias}
                   onEditingValueChange={setEditingValue}

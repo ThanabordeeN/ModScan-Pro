@@ -64,6 +64,16 @@ export interface BatchReadConfig extends ConnectionConfig {
   timeout?: number;
 }
 
+export interface BatchReadResult {
+  success: boolean;
+  data?: number[];
+  error?: string;
+  latencyMs?: number;
+  exceptionCode?: number;
+  exceptionName?: string;
+  isException?: boolean;
+}
+
 export interface ChangeAddressConfig extends ConnectionConfig {
   currentAddress: number;
   newAddress: number;
@@ -107,6 +117,10 @@ export interface DashboardCardResult {
   data: number[] | null;
   error: string | null;
   lastUpdated: string | null;
+  latencyMs?: number;
+  exceptionCode?: number;
+  exceptionName?: string;
+  isException?: boolean;
 }
 
 export interface DashboardStatus {

@@ -1,5 +1,5 @@
 const ModbusRTU = require('modbus-serial');
-const { connectClient, getErrorMessage } = require('./modbus-helpers');
+const { connectClient, getErrorMessage, extractExceptionInfo } = require('./modbus-helpers');
 
 /**
  * ModbusQueue - Sequential polling queue for multi-device dashboard.
@@ -147,12 +147,16 @@ class ModbusQueue {
           };
         } catch (error) {
           const latencyMs = Date.now() - reqStartTime;
+          const excInfo = extractExceptionInfo(error, card.functionCode);
           this.cardResults[card.cardId] = {
             success: false,
             data: null,
             error: getErrorMessage(error),
             lastUpdated: new Date().toISOString(),
             latencyMs,
+            exceptionCode: excInfo.exceptionCode,
+            exceptionName: excInfo.exceptionName,
+            isException: excInfo.isException,
           };
         }
       }

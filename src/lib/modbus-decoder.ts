@@ -164,13 +164,17 @@ export function reorderRegisters(
           result[i] = swapBytes16(result[i]);
         }
         break;
-      case 'DCBA':
-        // Word swap + byte swap: reverse order with byte swap
-        result[0] = swapBytes16(result[3]);
-        result[1] = swapBytes16(result[2]);
-        result[2] = swapBytes16(result[1]);
-        result[3] = swapBytes16(result[0]);
+      case 'DCBA': {
+        const a = swapBytes16(registers[3]);
+        const b = swapBytes16(registers[2]);
+        const c = swapBytes16(registers[1]);
+        const d = swapBytes16(registers[0]);
+        result[0] = a;
+        result[1] = b;
+        result[2] = c;
+        result[3] = d;
         break;
+      }
     }
     return result;
   }

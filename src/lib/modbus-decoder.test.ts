@@ -46,6 +46,11 @@ describe('modbus-decoder', () => {
       expect(reorderRegisters([0x4248, 0x0000], 2, 'DCBA')).toEqual([0x0000, 0x4842]);
     });
 
+    it('DCBA should reverse and byte-swap 4 registers without overwrite', () => {
+      expect(reorderRegisters([0x0102, 0x0304, 0x0506, 0x0708], 4, 'DCBA'))
+        .toEqual([0x0807, 0x0605, 0x0403, 0x0201]);
+    });
+
     it('should byte-swap single register with BADC', () => {
       expect(reorderRegisters([0x1234], 1, 'BADC')).toEqual([0x3412]);
     });
@@ -270,6 +275,12 @@ describe('modbus-decoder', () => {
 
     it('should decode float64', () => {
       const result = decodeRegisters([16478, 56636, 2030, 2827], 'float64');
+      expect(result.numericValue).toBeCloseTo(123.456789, 6);
+      expect(result.display).toBe('123.456789');
+    });
+
+    it('should decode float64 with DCBA byte order', () => {
+      const result = decodeRegisters([0x0B0B, 0xEE07, 0x3CDD, 0x5E40], 'float64', 'DCBA');
       expect(result.numericValue).toBeCloseTo(123.456789, 6);
       expect(result.display).toBe('123.456789');
     });

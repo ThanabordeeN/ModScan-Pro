@@ -244,6 +244,30 @@ describe('ModbusQueue', () => {
       expect(queue.cardResults['fail'].error).toContain('Timed Out');
     });
 
+    test('adds exception metadata to per-card polling errors', async () => {
+      const exception = new Error('Modbus exception 2: Illegal Data Address') as Error & { modbusCode?: number };
+      exception.modbusCode = 2;
+      mockReadHoldingRegisters.mockRejectedValueOnce(exception);
+
+      queue.cards = [
+        { cardId: 'exc', slaveAddress: 1, functionCode: 3, registerAddress: 9999, quantity: 1 },
+      ];
+      queue.connectionConfig = { type: 'tcp', tcpIp: '127.0.0.1', tcpPort: 502 };
+      queue.timeout = 500;
+      queue.running = true;
+      queue.cardResults = {
+        exc: { success: false, data: null, error: null, lastUpdated: null },
+      };
+
+      await queue._pollAll();
+
+      expect(queue.cardResults['exc'].success).toBe(false);
+      expect(queue.cardResults['exc'].isException).toBe(true);
+      expect(queue.cardResults['exc'].exceptionCode).toBe(2);
+      expect(queue.cardResults['exc'].exceptionName).toBe('Illegal Data Address');
+      expect(queue.cardResults['exc'].latencyMs).toEqual(expect.any(Number));
+    });
+
     test('handles connection-level failure', async () => {
       mockConnectTCP.mockRejectedValue(new Error('ECONNREFUSED'));
 

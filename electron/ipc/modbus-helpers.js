@@ -46,10 +46,10 @@ function getErrorMessage(error) {
  * modbus-serial throws errors with a `modbusCode` property for exception responses.
  *
  * @param {Error} error
- * @param {number} [originalFunctionCode]
+ * @param {number} [_originalFunctionCode]
  * @returns {{ isException: boolean, exceptionCode?: number, exceptionName?: string }}
  */
-function extractExceptionInfo(error, originalFunctionCode) {
+function extractExceptionInfo(error, _originalFunctionCode) {
   if (!error) return { isException: false };
 
   // modbus-serial structured: error.modbusCode contains the exception code

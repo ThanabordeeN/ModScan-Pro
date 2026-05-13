@@ -139,13 +139,14 @@ export function reorderRegisters(
         result[0] = swapBytes16(result[0]);
         result[1] = swapBytes16(result[1]);
         break;
-      case 'DCBA':
+      case 'DCBA': {
         // Byte + word swap (use temps to avoid overwrite)
         const a = swapBytes16(result[1]);
         const b = swapBytes16(result[0]);
         result[0] = a;
         result[1] = b;
         break;
+      }
     }
     return result;
   }

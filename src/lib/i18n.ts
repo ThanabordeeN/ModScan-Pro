@@ -367,6 +367,17 @@ export const i18n = {
     diag_info_unavailable: "ไม่สามารถโหลดข้อมูลแอปได้",
     diag_export_success: "ส่งออกสำเร็จ:",
     diag_export_error: "ข้อผิดพลาด:",
+
+    // Home Page - What's New
+    whats_new_title: "มีอะไรใหม่ใน v1.1.0",
+    whats_new_diag_title: "Register Diagnostics",
+    whats_new_diag_desc: "แผงวินิจฉัยรายการ Register พร้อมวัด Latency รายอุปกรณ์ เพื่อแยกแยะปัญหาได้รวดเร็วขึ้น",
+    whats_new_float_title: "แก้ไข Float64 DCBA",
+    whats_new_float_desc: "แก้ไขการเรียงลำดับ Byte สำหรับการอ่านค่า float64 แบบ DCBA ให้ถูกต้อง",
+    whats_new_exception_title: "แจ้งเตือน Polling Exception",
+    whats_new_exception_desc: "Exception ระหว่าง Polling จะแสดงต่อผู้ใช้แทนที่จะถูกซ่อนไว้เงียบ ๆ",
+    whats_new_sponsor_title: "แก้ไขหน้าสนับสนุน",
+    whats_new_sponsor_desc: "คืนค่า QR PromptPay และตั้งค่าภาษาเริ่มต้นเป็นภาษาอังกฤษ",
   },
   en: {
     // Navigation
@@ -730,6 +741,17 @@ export const i18n = {
     diag_info_unavailable: "App info not available",
     diag_export_success: "Exported:",
     diag_export_error: "Error:",
+
+    // Home Page - What's New
+    whats_new_title: "What's New in v1.1.0",
+    whats_new_diag_title: "Register Diagnostics",
+    whats_new_diag_desc: "Per-register diagnostic panel with per-device latency tracking for faster fault isolation",
+    whats_new_float_title: "Float64 DCBA Fix",
+    whats_new_float_desc: "Corrected byte-order handling for DCBA float64 register reads",
+    whats_new_exception_title: "Polling Error Surfacing",
+    whats_new_exception_desc: "Polling exceptions now propagate to the user instead of silently failing",
+    whats_new_sponsor_title: "Sponsor Page Fix",
+    whats_new_sponsor_desc: "Restored PromptPay QR code and fixed default language to English",
   },
 };
 

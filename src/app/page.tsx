@@ -9,6 +9,7 @@ import {
   Zap,
   PenLine,
   LayoutGrid,
+  Sparkles,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -126,8 +127,51 @@ export default function Home() {
         })}
       </div>
 
+      {/* What's New */}
+      <div className="mt-6 p-5 instrument-panel max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-instrument-accent" />
+            <h3 className="text-sm font-semibold text-app-text">{t("whats_new_title")}</h3>
+          </div>
+          <span className="text-xs px-2 py-0.5 rounded-instrument font-mono bg-instrument-accent/10 text-instrument-accent border border-instrument-accent/20">
+            v1.1.0
+          </span>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
+          <div className="flex items-start gap-2.5">
+            <span className="mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-instrument-ok" />
+            <div>
+              <p className="text-sm font-medium text-app-text">{t("whats_new_diag_title")}</p>
+              <p className="text-xs text-app-muted leading-relaxed">{t("whats_new_diag_desc")}</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2.5">
+            <span className="mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-amber-400" />
+            <div>
+              <p className="text-sm font-medium text-app-text">{t("whats_new_float_title")}</p>
+              <p className="text-xs text-app-muted leading-relaxed">{t("whats_new_float_desc")}</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2.5">
+            <span className="mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-amber-400" />
+            <div>
+              <p className="text-sm font-medium text-app-text">{t("whats_new_exception_title")}</p>
+              <p className="text-xs text-app-muted leading-relaxed">{t("whats_new_exception_desc")}</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2.5">
+            <span className="mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-amber-400" />
+            <div>
+              <p className="text-sm font-medium text-app-text">{t("whats_new_sponsor_title")}</p>
+              <p className="text-xs text-app-muted leading-relaxed">{t("whats_new_sponsor_desc")}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Quick Info */}
-      <div className="mt-10 p-5 instrument-panel max-w-4xl mx-auto">
+      <div className="mt-6 p-5 instrument-panel max-w-4xl mx-auto">
         <div className="flex items-start gap-3">
           <Zap className="w-5 h-5 text-app-text mt-0.5" />
           <div>
